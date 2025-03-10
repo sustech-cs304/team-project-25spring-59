@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "element-plus": "^2.9.6"
+    "element-plus": "^2.9.6",
+    "particles.js": "^2.0.0"
   }
 }

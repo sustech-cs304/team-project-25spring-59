@@ -1,5 +1,4 @@
 <script setup>
-import HelloWorld from './components/HelloWorld.vue'
 import Carousel from './views/Carousel.vue';
 </script>
 
