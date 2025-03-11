@@ -21,11 +21,12 @@ onMounted(() => {
     height = canvas.height = window.innerHeight;
   });
 
+  // 🌟 监听鼠标移动，生成鼠标拖尾的三角形
   document.addEventListener("mousemove", (e) => {
     // 记录鼠标轨迹
     trail.push({ x: e.clientX, y: e.clientY, opacity: 1 });
 
-    // 生成粒子（三角形）
+    // 生成鼠标拖尾的三角形粒子
     particles.push({
       x: e.clientX,
       y: e.clientY,
@@ -36,13 +37,37 @@ onMounted(() => {
       rotation: Math.random() * 360,
     });
 
+    // 限制轨迹长度
     if (trail.length > 15) {
       trail.shift();
     }
   });
 
-  // 🌟 监听鼠标按下，创建光环动画
+  // 🌟 监听鼠标按下，生成三角形粒子和光环动画
   document.addEventListener("mousedown", (e) => {
+    // 生成多个三角形粒子
+    for (let i = 0; i < 10; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const distance = Math.random() * 30 + 10; // 随机距离
+      const x = e.clientX + Math.cos(angle) * distance;
+      const y = e.clientY + Math.sin(angle) * distance;
+      const size = Math.random() * 3 + 2;
+      const speedX = Math.random() * 1.5 - 0.75;
+      const speedY = Math.random() * 1.5 - 0.75;
+      const rotation = Math.random() * 360;
+
+      particles.push({
+        x,
+        y,
+        size,
+        opacity: 1,
+        speedX,
+        speedY,
+        rotation,
+      });
+    }
+
+    // 生成光环
     rings.push({
       x: e.clientX,
       y: e.clientY,
@@ -55,7 +80,7 @@ onMounted(() => {
   });
 
   function animate() {
-    ctx.clearRect(0, 0, width, height);
+    ctx.clearRect(0, 0, width, height); // 清空画布
 
     // 🔹 1. 绘制蓝色渐变线条（鼠标拖尾）
     if (trail.length > 1) {
@@ -73,7 +98,7 @@ onMounted(() => {
       ctx.stroke();
     }
 
-    // 🔹 2. 绘制蓝色三角形粒子
+    // 🔹 2. 绘制蓝色渐变三角形粒子（保留所有粒子）
     particles.forEach((p, i) => {
       ctx.save();
       ctx.translate(p.x, p.y);
@@ -93,13 +118,16 @@ onMounted(() => {
       ctx.fill();
       ctx.restore();
 
+      // 更新粒子位置和透明度
       p.x += p.speedX;
       p.y += p.speedY;
       p.opacity -= 0.03;
+
+      // 删除透明度为0的粒子
       if (p.opacity <= 0) particles.splice(i, 1);
     });
 
-    // 🌟 3. 旋转光点生成光环
+    // 🌟 3. 绘制旋转光环
     rings.forEach((ring, i) => {
       ctx.globalAlpha = ring.opacity;
 
@@ -110,7 +138,7 @@ onMounted(() => {
       let light2X = ring.x + Math.cos(ring.angle + Math.PI) * ring.radius2;
       let light2Y = ring.y + Math.sin(ring.angle + Math.PI) * ring.radius2;
 
-      // 🎯 绘制旋转光点
+      // 绘制旋转光点
       ctx.beginPath();
       ctx.fillStyle = `rgba(255, 255, 255, ${ring.opacity})`;
       ctx.arc(light1X, light1Y, 3, 0, Math.PI * 2);
@@ -121,7 +149,7 @@ onMounted(() => {
       ctx.arc(light2X, light2Y, 3, 0, Math.PI * 2);
       ctx.fill();
 
-      // 🎯 绘制光泽感的光环
+      // 绘制光泽感的光环
       ctx.beginPath();
       let ringGradient = ctx.createRadialGradient(ring.x, ring.y, ring.radius1 - 2, ring.x, ring.y, ring.radius2 + 5);
       ringGradient.addColorStop(0, `rgba(255, 255, 255, ${ring.opacity * 0.5})`);
@@ -131,7 +159,7 @@ onMounted(() => {
       ctx.arc(ring.x, ring.y, (ring.radius1 + ring.radius2) / 2, 0, Math.PI * 2);
       ctx.stroke();
 
-      // 🔄 旋转 & 扩展
+      // 旋转 & 扩展
       ring.angle += 0.1; // 旋转速度
       ring.radius1 += 0.2;
       ring.radius2 += 0.3;
@@ -140,10 +168,10 @@ onMounted(() => {
       if (ring.opacity <= 0) rings.splice(i, 1);
     });
 
-    requestAnimationFrame(animate);
+    requestAnimationFrame(animate); // 动画循环
   }
 
-  animate();
+  animate(); // 启动动画
 });
 </script>
 
@@ -154,7 +182,7 @@ onMounted(() => {
   left: 0;
   width: 100%;
   height: 100%;
-  pointer-events: none;
-  z-index: 1000;
+  pointer-events: none; /* 确保画布不会干扰鼠标事件 */
+  z-index: 1000; /* 使画布显示在页面的最上层 */
 }
 </style>

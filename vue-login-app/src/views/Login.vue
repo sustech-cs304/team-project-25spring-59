@@ -42,9 +42,18 @@ const login = () => {
   loading.value = true;
   setTimeout(() => {
     loading.value = false;
-    ElMessage.success("登录成功！");
-    router.push("/carousel");
-  }, 1000);
+
+    // 模拟后端验证
+    if (username.value === '1' && password.value === '1') {
+      // 存储 token 到 localStorage
+      sessionStorage.setItem('token', 'mock-token'); // 或者 sessionStorage.setItem('token', 'mock-token')
+
+      ElMessage.success("登录成功！");
+      router.push("/carousel"); // 登录成功后跳转到 Carousel 页面
+    } else {
+      ElMessage.error("用户名或密码错误");
+    }
+  }, 1000); // 模拟异步登录验证
 };
 </script>
 

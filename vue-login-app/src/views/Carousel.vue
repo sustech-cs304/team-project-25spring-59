@@ -5,6 +5,11 @@
       返回仪表盘
     </el-button>
 
+    <!-- 右上角登出按钮 -->
+    <el-button class="logout-button" type="danger" @click="logout">
+      登出
+    </el-button>
+
     <div
       class="shell"
       @mousedown="startDrag"
@@ -16,9 +21,15 @@
         class="content"
         :style="{ transform: `translateZ(-50vw) rotateY(${currentRotation}deg)` }"
       >
-        <div class="item" @click="goToTrainMission"></div>
-        <div class="item" @click="goToDetail(2)"></div>
-        <div class="item" @click="goToDetail(3)"></div>
+        <div class="item" @click="goToTrainMission">
+          <div class="text">训练任务</div>
+        </div>
+        <div class="item" @click="goToDetail(2)">
+          <div class="text">图片详情 2</div>
+        </div>
+        <div class="item" @click="goToDetail(3)">
+          <div class="text">图片详情 3</div>
+        </div>
       </div>
     </div>
   </div>
@@ -54,7 +65,13 @@ export default {
       router.push(`/trainMission`);
     };
 
-    return { goToDetail, goToDashboard, goToTrainMission };
+    // 登出方法
+    const logout = () => {
+      sessionStorage.removeItem('token');  // 删除 sessionStorage 中的 token
+      router.push('/login'); // 跳转到登录页面
+    };
+
+    return { goToDetail, goToDashboard, goToTrainMission, logout };
   },
   methods: {
     startDrag(event) {
@@ -99,6 +116,14 @@ export default {
   z-index: 10;
 }
 
+/* 登出按钮 */
+.logout-button {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 10;
+}
+
 /* 轮播图 */
 .shell {
   position: absolute;
@@ -133,21 +158,31 @@ export default {
   border-radius: 8px;
   background-size: cover;
   cursor: pointer;
+  background-color: white; /* 改为纯白背景, 需要图片的话把这一行注释掉 */
+}
+
+/* 文字框 */
+.text {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  text-align: center;
+  padding: 10px;
 }
 
 /* 轮播图三张图片 */
 .item:nth-child(1) {
-  background-image: url('/01.jpg');
+  //background-image: url('/01.jpg');
   transform: rotateY(0) translateZ(50vw);
 }
 
 .item:nth-child(2) {
-  background-image: url('/01.jpg');
+  //background-image: url('/01.jpg');
   transform: rotateY(120deg) translateZ(50vw);
 }
 
 .item:nth-child(3) {
-  background-image: url('/01.jpg');
+  //background-image: url('/01.jpg');
   transform: rotateY(240deg) translateZ(50vw);
 }
 </style>
