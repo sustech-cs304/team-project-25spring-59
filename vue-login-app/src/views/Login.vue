@@ -1,5 +1,5 @@
 <template>
-  <div class="login-container">
+  <div class="login-container" @click="showLoginForm = true">
     <!-- 背景视频 -->
     <video autoplay loop muted playsinline class="background-video">
       <source src="../assets/login_background.mp4" type="video/mp4" />
@@ -9,8 +9,15 @@
     <!-- 鼠标特效 -->
     <MouseTrail />
 
+    <!-- 闪烁的点击进入登录界面文本 -->
+    <div v-if="!showLoginForm" class="login-button-container">
+      <div class="line top-line"></div>
+      <span class="login-button-text">点击进入登录界面</span>
+      <div class="line bottom-line"></div>
+    </div>
+
     <!-- 登录卡片 -->
-    <el-card class="login-card">
+    <el-card v-if="showLoginForm" class="login-card">
       <div class="title">
         <img src="/vite.svg" alt="logo" class="logo" />
         <h2>个人健康信息管理系统</h2>
@@ -49,6 +56,7 @@ const router = useRouter();
 const username = ref("");
 const password = ref("");
 const loading = ref(false);
+const showLoginForm = ref(false); // 控制登录卡片显示
 
 const login = async () => {
   if (!username.value || !password.value) {
@@ -98,6 +106,7 @@ const goToRegister = () => {
   align-items: center;
   height: 100vh;
   position: relative;
+  cursor: pointer; /* 让鼠标变为点击状态 */
 }
 
 /* 📌 登录卡片美化 */
@@ -115,5 +124,44 @@ const goToRegister = () => {
 .login-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+}
+
+/* 📌 “点击进入登录界面” */
+.login-button-container {
+  position: fixed;
+  bottom: 100px; /* 距离底部100px */
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  color: white;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* 📌 上下横线 */
+.line {
+  width: 100%;
+  height: 1px;
+  background-color: white;
+  margin: 10px auto;
+}
+
+.top-line {
+  margin-bottom: 10px;
+}
+
+.bottom-line {
+  margin-top: 10px;
+}
+
+/* 📌 闪烁动画 */
+.login-button-text {
+  animation: blink 1.5s infinite alternate;
+}
+
+@keyframes blink {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
 }
 </style>

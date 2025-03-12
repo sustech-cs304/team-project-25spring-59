@@ -7,11 +7,12 @@ const router = useRouter();
 const isLoading = ref(true); // 控制是否显示启动页面
 const progress = ref(0); // 加载进度
 const statusText = ref("正在初始化应用..."); // 状态文字
+const showLoginButton = ref(false); // 控制是否显示“点击进入登录界面”
 
 onMounted(async () => {
   await initializeApp();
-  isLoading.value = false; // 加载完成后进入 Login 界面
-  router.push("/login"); // 自动跳转到登录页面
+  isLoading.value = false; // 加载完成后不会跳转
+  showLoginButton.value = true; // 显示登录按钮
 });
 
 // **前置准备任务**
@@ -56,7 +57,16 @@ const simulateLoadingStep = (text, percentage) => {
     }, 1500); // 模拟每个任务耗时 1.5 秒
   });
 };
+
+// **跳转到登录界面**
+const goToLogin = () => {
+  router.push("/login");
+};
 </script>
+
+
+
+
 
 <template>
   <div v-if="isLoading" class="splash-container">
@@ -66,12 +76,11 @@ const simulateLoadingStep = (text, percentage) => {
       您的浏览器不支持 HTML5 视频
     </video>
 
-<!-- 状态文本 -->
-  <div class="status-text">
-    <span class="loading-spinner"></span>
-    {{ statusText }}
-  </div>
-
+    <!-- 状态文本 -->
+    <div class="status-text">
+      <span class="loading-spinner"></span>
+      {{ statusText }}
+    </div>
 
     <!-- 加载进度条 -->
     <div class="progress-bar-container">
@@ -79,8 +88,20 @@ const simulateLoadingStep = (text, percentage) => {
     </div>
   </div>
 
-  <router-view v-else />
+  <!-- 点击进入登录界面文本 -->
+  <div v-if="showLoginButton" class="login-button-container" @click="goToLogin">
+    <div class="line top-line"></div>
+    <span class="login-button-text">点击进入登录界面</span>
+    <div class="line bottom-line"></div>
+  </div>
+
+  <!-- 此处移除 <router-view v-else /> -->
+  <router-view v-if="!isLoading" />
 </template>
+
+
+
+
 
 <style scoped>
 /* 📌 背景视频 */
@@ -160,5 +181,44 @@ const simulateLoadingStep = (text, percentage) => {
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+/* 📌 “点击进入登录界面” */
+.login-button-container {
+  position: fixed;
+  bottom: 100px; /* 距离底部100px */
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  color: white;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* 📌 上下横线 */
+.line {
+  width: 60%;
+  height: 1px;
+  background-color: white;
+  margin: 10px auto;
+}
+
+.top-line {
+  margin-bottom: 10px;
+}
+
+.bottom-line {
+  margin-top: 10px;
+}
+
+/* 📌 闪烁动画 */
+.login-button-text {
+  animation: blink 1.5s infinite alternate;
+}
+
+@keyframes blink {
+  0% { opacity: 0.5; }
+  100% { opacity: 1; }
 }
 </style>
