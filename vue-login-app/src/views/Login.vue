@@ -1,11 +1,19 @@
 <template>
   <div class="login-container">
+    <!-- 背景视频 -->
+    <video autoplay loop muted playsinline class="background-video">
+      <source src="../assets/login_background.mp4" type="video/mp4" />
+      您的浏览器不支持 HTML5 视频
+    </video>
+
+    <!-- 鼠标特效 -->
     <MouseTrail />
 
+    <!-- 登录卡片 -->
     <el-card class="login-card">
       <div class="title">
         <img src="/vite.svg" alt="logo" class="logo" />
-        <h2>健康管理系统</h2>
+        <h2>个人健康信息管理系统</h2>
       </div>
 
       <el-form label-width="80px">
@@ -19,7 +27,10 @@
 
         <el-form-item>
           <el-button type="primary" @click="login" :loading="loading" class="login-btn">
-            登录
+            用户登录
+          </el-button>
+          <el-button type="primary" @click="goToRegister" class="login-btn">
+            用户注册
           </el-button>
         </el-form-item>
       </el-form>
@@ -31,6 +42,7 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
+import axios from "axios";
 import MouseTrail from "../components/MouseTrail.vue";
 
 const router = useRouter();
@@ -38,34 +50,54 @@ const username = ref("");
 const password = ref("");
 const loading = ref(false);
 
-const login = () => {
+const login = async () => {
+  if (!username.value || !password.value) {
+    ElMessage.error("请输入用户名和密码");
+    return;
+  }
+
   loading.value = true;
-  setTimeout(() => {
+  try {
+    const response = await axios.post("http://127.0.0.1:8000/login", {
+      username: username.value,
+      password: password.value,
+    });
+
+    ElMessage.success(response.data.message);
+    sessionStorage.setItem("token", response.data.token);
+    router.push("/carousel"); // 登录成功后跳转到 Carousel 页面
+  } catch (error) {
+    ElMessage.error(error.response?.data?.detail || "登录失败");
+  } finally {
     loading.value = false;
+  }
+};
 
-    // 模拟后端验证
-    if (username.value === '1' && password.value === '1') {
-      // 存储 token 到 localStorage
-      sessionStorage.setItem('token', 'mock-token'); // 或者 sessionStorage.setItem('token', 'mock-token')
-
-      ElMessage.success("登录成功！");
-      router.push("/carousel"); // 登录成功后跳转到 Carousel 页面
-    } else {
-      ElMessage.error("用户名或密码错误");
-    }
-  }, 1000); // 模拟异步登录验证
+// 点击按钮跳转到 注册用户的界面/register
+const goToRegister = () => {
+  router.push("/register");
 };
 </script>
 
 <style scoped>
-/* 📌 背景渐变 */
+/* 📌 背景视频 */
+.background-video {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -1;
+}
+
+/* 📌 登录界面布局 */
 .login-container {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background: linear-gradient(to right, #42a5f5, #478ed1, #42b983);
-  position: relative; /* 确保粒子背景不会遮挡内容 */
+  position: relative;
 }
 
 /* 📌 登录卡片美化 */
@@ -77,6 +109,7 @@ const login = () => {
   backdrop-filter: blur(10px); /* 毛玻璃效果 */
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+  z-index: 10;
 }
 
 .login-card:hover {
