@@ -6,11 +6,13 @@ import ImageDetail from "../views/ImageDetail.vue";
 import TrainMission from "../views/TrainMission.vue";
 import Register from "../views/Register.vue";
 import Transition from "../components/Transition.vue";
+import BeforeLogin from "../views/BeforeLogin.vue";
 
 const routes = [
-  { path: '/', redirect: '/login'}, // 默认跳转到登录页
+  { path: '/', redirect: '/beforeLogin' },
   { path: '/login', component: Login },
   { path: '/register', component: Register },
+  { path: '/beforeLogin', component: BeforeLogin },
   { path: '/dashboard', component: Dashboard, meta: { requiresAuth: true } },
   { path: '/carousel', component: Carousel, meta: { requiresAuth: true } },
   { path: '/trainMission', component: TrainMission, meta: { requiresAuth: true } },
@@ -31,7 +33,10 @@ router.beforeEach((to, from, next) => {
   const isAuthenticated = sessionStorage.getItem('token'); // 获取存储的 token
 
   // 如果从 '/' 跳转到 '/login'，则直接进入 login 页面，不经过过渡页面
-  if (from.path === '/' && to.path === '/login') {
+  if ((from.path === '/' && to.path === '/login')
+      || (from.path === '/beforeLogin' && to.path === '/login') // 从login前缓冲动画到login也不需要
+      || (from.path === '/' && to.path === '/beforeLogin')
+  ) {
     next(); // 直接跳转到 /login
   } else if (from.path !== '/transition' && to.path !== "/transition" && to.path !== from.path) {
     // 其他跳转都经过 /transition 页面
