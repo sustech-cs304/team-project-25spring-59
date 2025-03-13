@@ -179,19 +179,19 @@
 
 ### 4. 技术需求：
 
-- 前端：Vue
-- 后端：Python
-- 数据库：PostgreSQL
+- 前端：Vue3为主要框架，用axios与后端API链接
+- 后端：基于FastAPI框架以及Python构建后端服务器
+- 数据库：PostgreSQL/MongoDB
 
 
 
 ## 三、任务分解与规划
 
-见Github-Product
+见Github-Product，已上传
 
 
 
 ## 四、AI使用情况
 
-见腾讯问卷
+见腾讯问卷，已提交
 
