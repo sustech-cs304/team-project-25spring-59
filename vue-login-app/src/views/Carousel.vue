@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 import { Spine } from 'pixi-spine'
 import * as PIXI from 'pixi.js'
 import { sound } from '@pixi/sound'
+import FooterMenu from "../components/FooterMenu.vue";
 
 // 定义 L2D 资源路径
 const spinePath = '/l2d/hina_swimsuit/CH0063_home.skel';
@@ -16,8 +17,7 @@ onMounted(async () => {
   try {
     // 创建 PixiJS 应用
     const app = new PIXI.Application({
-      width: 2560,
-      height: 1440,
+      resizeTo: window, // ⬅️ 让 PixiJS 自动适应浏览器窗口大小
       backgroundAlpha: 0
     });
 
@@ -78,9 +78,18 @@ onMounted(async () => {
 });
 </script>
 
+
+
 <template>
   <div id="background"></div>
+
+  <div class="main-container">
+    <router-view />
+    <FooterMenu />
+  </div>
 </template>
+
+
 
 <style scoped>
 #background {
@@ -90,5 +99,16 @@ onMounted(async () => {
   top: 0;
   left: 0;
   z-index: -1;
+}
+
+/* 📌 确保页面下方留出空间 */
+.main-container {
+  padding-bottom: 200px; /* 确保不遮挡内容 */
+}
+
+/* 字体 */
+@font-face {
+  font-family: TVPS-Vain-Capital-2;
+  src: url(https://webcnstatic.yostar.net/ba_cn_web/prod/web/assets/TVPS-Vain-Capital-2.cca90a05.ttf);
 }
 </style>

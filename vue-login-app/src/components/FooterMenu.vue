@@ -1,0 +1,172 @@
+<template>
+  <footer class="footer-menu">
+    <!-- 📌 1. 灰色背景（圆角平行四边形） -->
+    <div class="footer-bg">
+      <!-- 📌 2. 反向白色装饰（圆角平行四边形） -->
+      <div class="footer-decoration"></div>
+
+      <!-- 📌 3. 菜单项 -->
+      <nav class="footer-nav">
+        <ul>
+          <li>
+            <img src="../assets/icons/Raid_RankIcon_01.png" alt="训练任务" class="menu-icon" />
+            <span @click="navigateTo('/trainMission')">训练任务</span>
+          </li>
+          <li>
+            <img src="../assets/icons/Raid_RankIcon_02.png" alt="健身排课" class="menu-icon" />
+            <span @click="navigateTo('/about')">健身排课</span>
+          </li>
+          <li>
+            <img src="../assets/icons/Raid_RankIcon_03.png" alt="竞技排行" class="menu-icon" />
+            <span @click="navigateTo('/services')">竞技排行</span>
+          </li>
+          <li>
+            <img src="../assets/icons/Raid_RankIcon_04.png" alt="社交分享" class="menu-icon" />
+            <span @click="navigateTo('/contact')">社交分享</span>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- 📌 4. 右侧符号 + 时间 -->
+      <div class="footer-right">
+        <div class="symbols">△×+○</div>
+        <div class="time">{{ currentTime }}</div>
+      </div>
+    </div>
+  </footer>
+</template>
+
+<script setup>
+import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
+const currentTime = ref("");
+
+// **更新当前时间**
+const updateTime = () => {
+  const now = new Date();
+  currentTime.value = now.toLocaleTimeString();
+};
+
+// **每秒更新时间**
+onMounted(() => {
+  updateTime();
+  setInterval(updateTime, 1000);
+});
+
+// **导航跳转**
+const navigateTo = (path) => {
+  router.push(path);
+};
+</script>
+
+<style scoped>
+/* 📌 整体 Footer 位置 */
+.footer-menu {
+  position: fixed;
+  bottom: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 95%;
+  height: 100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* 📌 主要圆角灰色平行四边形背景 */
+.footer-bg {
+  width: 100%;
+  height: 100%;
+  background-color: #dde7f6;
+  transform: skewX(-10deg);
+  border-radius: 15px;
+  //overflow: hidden;
+  overflow: visible;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  position: relative;
+}
+
+/* 📌 反向白色装饰（圆角平行四边形） */
+.footer-decoration {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 80%;
+  height: 100%;
+  background-color: white;
+  border-radius: 10px;
+  transform: skewX(30deg) translate(-50%, -50%);
+}
+
+/* 📌 菜单导航 */
+.footer-nav {
+  position: relative;
+  z-index: 10;
+  transform: skewX(10deg);
+}
+
+.footer-nav ul {
+  display: flex;
+  gap: 150px; /* 🔹 调整菜单项间距 */
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  margin-left: 100px;
+  align-items: flex-end; /* 🔹 让文字和图标更贴合 */
+}
+
+/* 📌 每个菜单项 */
+.footer-nav ul li {
+  cursor: pointer;
+  color: black;
+  font-size: 20px;
+  font-weight: bold;
+  transition: color 0.3s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+}
+
+/* 📌 鼠标悬停颜色 */
+.footer-nav ul li span:hover {
+  color: #ffd700;
+}
+
+/* 📌 菜单项上方的图标 */
+.menu-icon {
+  width: 100px; /* 🔹 缩小图片 */
+  height: 100px;
+  position: absolute;
+  top: -100px; /* 🔹 让图片超出 footer */
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* 📌 右侧符号 + 时间 */
+.footer-right {
+  text-align: right;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+/* 📌 符号（△×+○） */
+.symbols {
+  color: #abb3c4;
+  font-size: 28px;
+  margin-bottom: 5px;
+}
+
+/* 📌 时间 */
+.time {
+  color: #525f72;
+  font-size: 24px;
+}
+</style>
