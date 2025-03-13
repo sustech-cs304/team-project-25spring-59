@@ -33,7 +33,7 @@ const initializeApp = async () => {
 // **检查后端服务器是否可用**
 const checkServerStatus = async () => {
   try {
-    await axios.get("http://127.0.0.1:8000/");
+    await axios.get("http://127.0.0.1:5000/");
     console.log("✅ 服务器正常运行");
   } catch (error) {
     console.warn("⚠ 服务器无法连接");

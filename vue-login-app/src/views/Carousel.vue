@@ -1,188 +1,94 @@
-<template>
-  <div class="container">
-    <!-- 左上角返回按钮 -->
-    <el-button class="back-button" type="primary" @click="goToDashboard">
-      返回仪表盘
-    </el-button>
+<script setup>
+import { onMounted, ref } from 'vue'
+import { Spine } from 'pixi-spine'
+import * as PIXI from 'pixi.js'
+import { sound } from '@pixi/sound'
 
-    <!-- 右上角登出按钮 -->
-    <el-button class="logout-button" type="danger" @click="logout">
-      登出
-    </el-button>
+// 定义 L2D 资源路径
+const spinePath = '/l2d/hina_swimsuit/CH0063_home.skel';
+const atlasPath = '/l2d/hina_swimsuit/CH0063_home.atlas';
+const bgmPath = '/l2d/hina_swimsuit/Theme_21.mp3';
 
-    <div
-      class="shell"
-      @mousedown="startDrag"
-      @mousemove="onDrag"
-      @mouseup="endDrag"
-      @mouseleave="endDrag"
-    >
-      <div
-        class="content"
-        :style="{ transform: `translateZ(-50vw) rotateY(${currentRotation}deg)` }"
-      >
-        <div class="item" @click="goToTrainMission">
-          <div class="text">训练任务</div>
-        </div>
-        <div class="item" @click="goToDetail(2)">
-          <div class="text">图片详情 2</div>
-        </div>
-        <div class="item" @click="goToDetail(3)">
-          <div class="text">图片详情 3</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
+// 存储解析后的 Spine 数据
+const studentL2D = ref(null);
 
-<script>
-import { useRouter } from 'vue-router';
+onMounted(async () => {
+  try {
+    // 创建 PixiJS 应用
+    const app = new PIXI.Application({
+      width: 2560,
+      height: 1440,
+      backgroundAlpha: 0
+    });
 
-export default {
-  data() {
-    return {
-      startX: 0,
-      currentRotation: 0,
-      isDragging: false,
-      canRotate: true,
-    };
-  },
-  setup() {
-    const router = useRouter();
+    const container = document.querySelector('#background');
+    if (!container) {
+      console.error('❌ 未找到 #background 元素！');
+      return;
+    }
+    container.appendChild(app.view);
 
-    // 点击图片跳转详情页面
-    const goToDetail = (id) => {
-      router.push(`/image/${id}`);
-    };
+    // **加载 Atlas 资源**
+    await PIXI.Assets.load(atlasPath).catch(err => {
+      console.error('🔥 Atlas 文件加载失败:', err);
+      return null;
+    });
 
-    // 点击按钮跳转到 Dashboard
-    const goToDashboard = () => {
-      router.push('/dashboard');
-    };
+    // **加载 Spine 资源**
+    studentL2D.value = await PIXI.Assets.load(spinePath).catch(err => {
+      console.error('🔥 Spine 文件加载失败:', err);
+      return null;
+    });
 
-    // 点击图片跳转详情页面
-    const goToTrainMission = () => {
-      router.push(`/trainMission`);
-    };
+    if (!studentL2D.value) {
+      console.error('❌ Spine 数据加载失败！');
+      return;
+    }
 
-    // 登出方法
-    const logout = () => {
-      sessionStorage.removeItem('token');  // 删除 sessionStorage 中的 token
-      router.push('/login'); // 跳转到登录页面
-    };
+    // **确保数据格式正确**
+    if (!studentL2D.value.spineData) {
+      console.error('❌ Spine 解析失败，spineData 不存在');
+      return;
+    }
 
-    return { goToDetail, goToDashboard, goToTrainMission, logout };
-  },
-  methods: {
-    startDrag(event) {
-      this.startX = event.clientX;
-      this.isDragging = true;
-      this.canRotate = true;
-    },
-    onDrag(event) {
-      if (!this.isDragging || !this.canRotate) return;
-      const deltaX = event.clientX - this.startX;
-      if (Math.abs(deltaX) > 100) {
-        this.currentRotation += deltaX > 0 ? 120 : -120;
-        this.canRotate = false;
-      }
-    },
-    endDrag() {
-      this.isDragging = false;
-      this.canRotate = true;
-    },
+    // 创建 Spine 动画
+    const animation = new Spine(studentL2D.value.spineData);
+    app.stage.addChild(animation);
+
+    if (animation.state.hasAnimation('Idle_01')) {
+      animation.scale.set(0.85);
+      animation.state.setAnimation(0, 'Idle_01', true);
+      animation.state.timeScale = 1;
+      animation.autoUpdate = true;
+      animation.y = 1440;
+      animation.x = 2560 / 2;
+    }
+
+    // **预加载并播放背景音乐**
+    sound.add('bgm', {
+      url: bgmPath,
+      loop: true,
+      preload: true
+    });
+    sound.play('bgm');
+
+  } catch (error) {
+    console.error('🔥 发生错误:', error);
   }
-};
+});
 </script>
 
+<template>
+  <div id="background"></div>
+</template>
+
 <style scoped>
-/* 全局容器 */
-.container {
-  position: relative;
-  width: 100vw;
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-image: linear-gradient(to top, #9795f0 0%, #fbc8d4 100%);
-  overflow: hidden;
-}
-
-/* 返回按钮 */
-.back-button {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  z-index: 10;
-}
-
-/* 登出按钮 */
-.logout-button {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  z-index: 10;
-}
-
-/* 轮播图 */
-.shell {
-  position: absolute;
-  width: 80vw;
-  height: 55vw;
-  max-width: 600px;
-  max-height: 400px;
-  perspective: 1200px;
-}
-
-/* 3D 轮播内容 */
-.content {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+#background {
   position: absolute;
   width: 100%;
   height: 100%;
-  transform-origin: center;
-  transform-style: preserve-3d;
-  transition: transform 0.5s ease-out;
-}
-
-/* 图片卡片 */
-.item {
-  position: absolute;
-  width: 80vw;
-  height: 55vw;
-  max-width: 600px;
-  max-height: 400px;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
-  border-radius: 8px;
-  background-size: cover;
-  cursor: pointer;
-  background-color: white; /* 改为纯白背景, 需要图片的话把这一行注释掉 */
-}
-
-/* 文字框 */
-.text {
-  font-size: 24px;
-  font-weight: bold;
-  color: #333;
-  text-align: center;
-  padding: 10px;
-}
-
-/* 轮播图三张图片 */
-.item:nth-child(1) {
-  //background-image: url('/01.jpg');
-  transform: rotateY(0) translateZ(50vw);
-}
-
-.item:nth-child(2) {
-  //background-image: url('/01.jpg');
-  transform: rotateY(120deg) translateZ(50vw);
-}
-
-.item:nth-child(3) {
-  //background-image: url('/01.jpg');
-  transform: rotateY(240deg) translateZ(50vw);
+  top: 0;
+  left: 0;
+  z-index: -1;
 }
 </style>

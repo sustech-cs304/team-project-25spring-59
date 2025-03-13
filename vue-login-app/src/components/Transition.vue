@@ -3,8 +3,8 @@
     <!-- 背景图片 -->
     <div class="background"></div>
 
-    <!-- 轮换图片 -->
-    <img class="center-image" :src="currentImage" alt="Loading..." />
+    <!-- 轮换图片（添加上下浮动效果） -->
+    <img class="center-image floating" :src="currentImage" alt="Loading..." />
 
     <!-- 进度条 -->
     <div class="progress-wrapper">
@@ -46,14 +46,11 @@ onMounted(() => {
 
   // **2.5 秒后跳转到目标页面**
   setTimeout(() => {
-  clearInterval(intervalId);
-  clearInterval(progressInterval);
-  // 获取从路由中传递过来的目标页面路径
-  const redirectPath = route.query.redirect || '/';
-  // 执行页面跳转
-  router.push(redirectPath);
+    clearInterval(intervalId);
+    clearInterval(progressInterval);
+    const redirectPath = route.query.redirect || '/';
+    router.push(redirectPath);
   }, 2500);
-
 });
 
 // **清除定时器**
@@ -79,11 +76,24 @@ onUnmounted(() => {
   background-size: cover;
 }
 
-/* 📌 轮换图片样式 */
+/* 📌 轮换图片样式（增加浮动动画） */
 .center-image {
   width: 200px;
   height: auto;
-  animation: fadeIn 0.5s ease-in-out;
+  animation: fadeIn 0.5s ease-in-out, floatUpDown 3s ease-in-out infinite;
+}
+
+/* 📌 让图片有上下浮动效果 */
+@keyframes floatUpDown {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-50px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
 }
 
 /* 📌 进度条区域 */
