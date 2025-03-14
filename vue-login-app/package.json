@@ -12,6 +12,7 @@
     "@arco-design/web-vue": "^2.57.0",
     "@pixi/sound": "^5.2.3",
     "@tsparticles/vue3": "^3.0.1",
+    "ant-design-vue": "^4.2.6",
     "axios": "^1.8.2",
     "chart": "^0.1.2",
     "chart.js": "^4.4.8",

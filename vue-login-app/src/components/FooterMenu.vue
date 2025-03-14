@@ -69,7 +69,7 @@ const navigateTo = (path) => {
   left: 50%;
   transform: translateX(-50%);
   width: 95%;
-  height: 100px;
+  height: 80px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -133,6 +133,7 @@ const navigateTo = (path) => {
   align-items: center;
   text-align: center;
   position: relative;
+  font-family: "BlueakaBeta", sans-serif;
 }
 
 /* 📌 鼠标悬停颜色 */
@@ -145,7 +146,7 @@ const navigateTo = (path) => {
   width: 100px; /* 🔹 缩小图片 */
   height: 100px;
   position: absolute;
-  top: -100px; /* 🔹 让图片超出 footer */
+  top: -90px; /* 🔹 让图片超出 footer */
   left: 50%;
   transform: translateX(-50%);
 }
@@ -159,6 +160,7 @@ const navigateTo = (path) => {
 
 /* 📌 符号（△×+○） */
 .symbols {
+  font-family: "BlueakaBeta", sans-serif;
   color: #abb3c4;
   font-size: 28px;
   margin-bottom: 5px;
@@ -168,5 +170,12 @@ const navigateTo = (path) => {
 .time {
   color: #525f72;
   font-size: 24px;
+}
+
+@font-face {
+  font-family: "BlueakaBeta";
+  src: url("../assets/fonts/BlueakaBeta2GBK-Bold.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
 }
 </style>
