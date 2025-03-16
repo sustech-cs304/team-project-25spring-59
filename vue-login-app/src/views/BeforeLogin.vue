@@ -3,7 +3,7 @@
     <!-- 📌 1. 加载动画 -->
     <div v-if="isLoading" class="splash-container">
       <video autoplay loop muted playsinline class="background-video">
-        <source src="../assets/login_background.mp4" type="video/mp4" />
+        <source src="../assets/title_4nd_2.mp4" type="video/mp4" />
         您的浏览器不支持 HTML5 视频
       </video>
 

@@ -2,7 +2,7 @@
   <div class="login-container" @click="showLoginForm = true">
     <!-- 背景视频 -->
     <video autoplay loop muted playsinline class="background-video">
-      <source src="../assets/login_background.mp4" type="video/mp4" />
+      <source src="../assets/title_4nd_2.mp4" type="video/mp4" />
       您的浏览器不支持 HTML5 视频
     </video>
 
