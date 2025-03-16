@@ -12,8 +12,8 @@ import LevelBox from "../components/LevelBox.vue";
 
 
 // 定义 L2D 资源路径
-const spinePath = '/l2d/hina_swimsuit/CH0063_home.skel';
-const atlasPath = '/l2d/hina_swimsuit/CH0063_home.atlas';
+const spinePath = '/l2d/aris/Aris_home.skel';
+const atlasPath = '/l2d/aris/Aris_home.atlas';
 const bgmPath = '/l2d/hina_swimsuit/Theme_21.mp3';
 
 // 存储解析后的 Spine 数据
