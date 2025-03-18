@@ -66,13 +66,14 @@ const login = async () => {
 
   loading.value = true;
   try {
-    const response = await axios.post("http://127.0.0.1:5000/login", {
+    const response = await axios.post("http://127.0.0.1:8000/login", {
       username: username.value,
       password: password.value,
     });
 
     ElMessage.success(response.data.message);
     sessionStorage.setItem("token", response.data.token);
+    sessionStorage.setItem("user", JSON.stringify(response.data.user));
     router.push("/carousel"); // 登录成功后跳转到 Carousel 页面
   } catch (error) {
     ElMessage.error(error.response?.data?.detail || "登录失败");
