@@ -18,10 +18,13 @@
     "chart.js": "^4.4.8",
     "element-plus": "^2.9.6",
     "live2d-widget": "^3.1.4",
+    "markdown-it-custom-attrs": "^1.0.2",
+    "markdown-it-mathjax3": "^4.3.2",
     "pixi": "^0.3.1",
     "pixi-spine": "^4.0.4",
     "pixi.js": "^7.4.3",
     "three": "^0.174.0",
+    "vitepress": "^1.6.3",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0"
   },

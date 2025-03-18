@@ -15,7 +15,8 @@ const routes = [
   { path: '/beforeLogin', component: BeforeLogin },
   { path: '/dashboard', component: Dashboard, meta: { requiresAuth: true } },
   { path: '/carousel', component: Carousel, meta: { requiresAuth: true } }, // 主页面
-  { path: '/trainMission', component: TrainMission, meta: { requiresAuth: true } },
+  // { path: '/trainMission', component: TrainMission, meta: { requiresAuth: true } },
+  { path: '/trainMission/*', component: () => import('vitepress/dist/client/PathComponent') },// 使用 VitePress 页面
   { path: '/transition', component: Transition }, // 新增过渡页面路由
   { path: '/image/:id', component: ImageDetail, meta: { requiresAuth: true } },
 

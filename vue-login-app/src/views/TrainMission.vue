@@ -4,6 +4,8 @@
     <Banner />
     <!-- Name Banner -->
     <NameBanner />
+    <Footer />
+
 
     <div class="container">
       <!-- 其他内容 -->
@@ -14,6 +16,7 @@
 <script setup>
 import Banner from '../../src/components/TrainMissionComponents/Banner.vue'
 import NameBanner from "../components/TrainMissionComponents/NameBanner.vue";
+import Footer from "../components/TrainMissionComponents/Footer.vue";
 </script>
 
 <style scoped>
