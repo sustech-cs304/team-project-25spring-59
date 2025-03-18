@@ -7,9 +7,8 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(current_dir)
 sys.path.insert(0, project_root)
 
-
-from database import engine
-from models import Base
+from backapp.databases.database import engine
+from backapp.databases.models import Base
 
 def init_db():
     # 创建所有表
