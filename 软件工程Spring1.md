@@ -181,7 +181,7 @@
 
 - 前端：Vue3为主要框架，用axios与后端API链接
 - 后端：基于FastAPI框架以及Python构建后端服务器
-- 数据库：SQLite
+- 数据库：Mysql
 
 
 

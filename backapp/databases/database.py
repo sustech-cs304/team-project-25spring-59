@@ -3,12 +3,16 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 # 使用同步SQLite连接
-SQLALCHEMY_DATABASE_URL = "sqlite:///./health_assistant.db"
+SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:shiyansong123@localhost:3306/health_assistant"
 
 # 创建同步引擎
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, 
-    connect_args={"check_same_thread": False}
+    SQLALCHEMY_DATABASE_URL,
+    # 可以添加MySQL特有的参数
+    pool_size=5,  # 连接池大小
+    max_overflow=10,  # 超过连接池大小时，最多可创建的连接数
+    pool_timeout=30,  # 等待获取连接的超时时间
+    pool_recycle=1800  # 连接在池中保持时间（秒）
 )
 
 # 创建会话工厂
