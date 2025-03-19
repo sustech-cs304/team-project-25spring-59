@@ -86,16 +86,26 @@ date: "${new Date().toISOString()}"
 `;
 
   // 生成唯一文件名（基于当前时间）
-  const fileName = `posts/${new Date().toISOString().replace(/[:.-]/g, "_")}.md`;
+  const fileName = `${new Date().toISOString().replace(/[:.-]/g, "_")}.md`;
 
-  // 如果是前端应用，使用 API 发送到后端存储
-  await fetch('/api/saveMarkdown', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ fileName, content: mdContent })
-  });
+  try {
+    const response = await fetch('http://localhost:5000/saveMission', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fileName, content: mdContent })
+    });
 
-  console.log("保存运动记录到:", fileName);
+    const result = await response.json();
+
+    if (response.ok) {
+      alert("运动记录已成功保存！");
+    } else {
+      alert("保存失败: " + result.detail);
+    }
+  } catch (error) {
+    alert("请求失败，请检查网络连接。");
+  }
+
   showModal.value = false;
 };
 
