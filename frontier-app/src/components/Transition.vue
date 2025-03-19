@@ -46,11 +46,21 @@ onMounted(() => {
 
   // **2.5 秒后跳转到目标页面**
   setTimeout(() => {
-    clearInterval(intervalId);
-    clearInterval(progressInterval);
-    const redirectPath = route.query.redirect || '/';
+  clearInterval(intervalId);
+  clearInterval(progressInterval);
+
+  // 获取跳转路径
+  const redirectPath = route.query.redirect || '/';
+
+  if (redirectPath === '/trainMission') {
+    // 目标是 /trainMission，跳转到 3000 端口
+    window.location.href = 'http://localhost:3000/';
+  } else {
+    // 其他路径正常跳转
     router.push(redirectPath);
+  }
   }, 2500);
+
 });
 
 // **清除定时器**
