@@ -1,7 +1,7 @@
 <template>
   <div class="bloglist">
     <div class="section">
-      <i class="fa-solid fa-book"></i> 文章列表
+      <i class="fa-solid fa-book"></i> 运动记录列表
       <hr />
       <!-- 运动记录按钮 -->
       <button class="add-record-btn" @click="showModal = true">➕ 记录运动</button>
