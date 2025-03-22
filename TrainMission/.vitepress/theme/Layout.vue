@@ -1,15 +1,20 @@
 <template>
-  <Header />
-  <aside />
-  <main>
-    <ToTop />
-    <template v-if="path === ''">
-      <Banner />
-      <BlogList :posts="posts" />
-    </template>
-    <Tag v-else-if="path === 'tags/'" />
-    <Article v-else />
-  </main>
+  <div class="layout-wrapper">
+      <div class="background-color-layer" />
+      <div class="background-image-layer" />
+    <Header />
+    <aside />
+    <main>
+      <ToTop />
+      <template v-if="path === ''">
+        <Banner />
+        <BlogList :posts="posts" />
+      </template>
+      <Tag v-else-if="path === 'tags/'" />
+      <Plans v-else-if="path === 'plans/'" />
+      <Article v-else />
+    </main>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -18,6 +23,7 @@ import Banner from './components/Banner.vue'
 import Article from './Article.vue'
 import BlogList from './BlogList.vue'
 import Tag from './Tag.vue'
+import Plans from './Plans.vue'
 import ToTop from './ToTop.vue'
 import { computed } from 'vue'
 import { useRoute, useData } from 'vitepress'
@@ -76,4 +82,34 @@ hr {
   border-radius: 4px;
   background: var(--color-accent);
 }
+
+.layout-wrapper {
+  position: relative;
+  min-height: 100vh;
+  overflow-x: hidden;
+
+  .background-color-layer {
+    background-color: #eaebed; // RGB: 234, 235, 237
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1000;
+  }
+
+  .background-image-layer {
+    background: url('/assets/background.svg') no-repeat center bottom;
+    background-size: cover;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -999;
+    pointer-events: none;
+  }
+}
+
+
 </style>

@@ -39,10 +39,10 @@
 
         <label>运动类型：</label>
         <select v-model="exerciseType">
-          <option>🏃‍♂️ 跑步</option>
-          <option>🚴 骑行</option>
-          <option>💪 健身</option>
-          <option>🏊 游泳</option>
+          <option>跑步</option>
+          <option>骑行</option>
+          <option>健身</option>
+          <option>游泳</option>
         </select>
 
         <button @click="saveWorkout">✅ 保存</button>
@@ -77,12 +77,15 @@ const saveWorkout = async () => {
   const mdContent = `---
 title: "${exerciseType.value} 运动记录"
 date: "${new Date().toISOString()}"
+tags: [${exerciseType.value.replace(/\s/g, '')}]
+cover: ""
 ---
 ## 运动详情
 - **开始时间**: ${startTime.value}
 - **结束时间**: ${endTime.value}
 - **运动类型**: ${exerciseType.value}
 - **时长**: ${calculateDuration()} 分钟
+
 `;
 
   // 生成唯一文件名（基于当前时间）

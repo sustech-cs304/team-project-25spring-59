@@ -45,8 +45,8 @@ interface MenuItem {
 
 const menuList: MenuItem[] = [
   { name: '首页', url: '' },
-  { name: '标签', url: 'tags/' },
-  { name: '关于', url: 'readme.html' }
+  { name: '运动标签', url: 'tags/' },
+  { name: '任务列表', url: 'plans/' }
 ]
 
 // 切换移动端菜单
