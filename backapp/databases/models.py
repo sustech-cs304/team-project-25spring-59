@@ -1,6 +1,9 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Float, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
+import enum
+from sqlalchemy.orm import relationship
+from .database import Base
 
 Base = declarative_base()
 
@@ -18,10 +21,43 @@ class User(Base):
     height = Column(Float, nullable=True)  
     weight = Column(Float, nullable=True) 
     is_active = Column(Boolean, default=True)
+
+    # training_records = relationship("TrainingRecord", back_populates="user", cascade="all, delete-orphan",passive_deletes=True)
+    # def __repr__(self):
+    #     return f"<User(id={self.id}, username={self.username})>"
+
+class TrainingRecord(Base):
+    __tablename__ = "training_records"
     
-    # 可以添加MySQL特有的表选项
-    __table_args__ = {
-        'mysql_engine': 'InnoDB',  # 使用InnoDB引擎
-        'mysql_charset': 'utf8mb4',  # 使用utf8mb4字符集
-        'mysql_collate': 'utf8mb4_unicode_ci'  # 使用unicode校对规则
-    }
+    id = Column(Integer, primary_key=True, index=True)
+    # # 外键关联用户表
+    # user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
+    
+    # 基本训练信息
+    start_time = Column(DateTime, nullable=True)
+    end_time = Column(DateTime, nullable=True)
+    activity_type = Column(String(20), nullable=True)
+    duration_minutes = Column(Integer, nullable=True)  # 运动时长(分钟)
+    
+    # # 详细训练数据
+    # average_heart_rate = Column(Integer, nullable=True)  # 平均心率
+    # max_heart_rate = Column(Integer, nullable=True)  # 最大心率
+    
+    # # 记录管理
+    # created_at = Column(DateTime, server_default=func.now())  # 记录创建时间
+    # updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())  # 记录更新时间
+    
+    # 关系定义 - 建立与用户表的关联
+    # user = relationship("User", back_populates="training_records")
+    
+    # def __repr__(self):
+    #     return f"<TrainingRecord(id={self.id}, user_id={self.user_id}, activity={self.activity_type}, duration={self.duration_minutes})>"
+    
+
+
+    # # 可以添加MySQL特有的表选项
+    # __table_args__ = {
+    #     'mysql_engine': 'InnoDB',  # 使用InnoDB引擎
+    #     'mysql_charset': 'utf8mb4',  # 使用utf8mb4字符集
+    #     'mysql_collate': 'utf8mb4_unicode_ci'  # 使用unicode校对规则
+    # }

@@ -92,7 +92,7 @@ cover: ""
   const fileName = `${new Date().toISOString().replace(/[:.-]/g, "_")}.md`;
 
   try {
-    const response = await fetch('http://localhost:5000/saveMission', {
+    const response = await fetch('http://127.0.0.1:8000/saveMission', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ fileName, content: mdContent })
