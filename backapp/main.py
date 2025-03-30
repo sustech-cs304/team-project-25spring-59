@@ -5,6 +5,9 @@ from fastapi.middleware.cors import CORSMiddleware
 import sys
 import os
 import re
+from backapp.auth.token import create_access_token
+from fastapi.security import OAuth2PasswordRequestForm
+from backapp.auth.dependencies import get_current_user
 # 添加当前目录到路径
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
@@ -115,7 +118,11 @@ def save_mission(data: SaveMissionRequest, db: Session = Depends(get_db)):
     try:
         file_path = os.path.join(SAVE_DIR, data.fileName)
         file_directory = os.path.dirname(file_path)
-
+        user = db.query(models.User).filter(models.User.id == 1).first()
+        if not user:
+            print("用户不存在")
+        else:
+            print("用户存在")   
         # 确保目标目录存在
         os.makedirs(file_directory, exist_ok=True)
         with open(file_path, "w", encoding="utf-8") as file:
@@ -138,23 +145,13 @@ def save_mission(data: SaveMissionRequest, db: Session = Depends(get_db)):
         duration_minutes = int(duration_match.group(1)) if duration_match else None
         print(duration_minutes)
 
-
-            # 转换时间格式 (假设格式为 ISO 8601 或类似)
-        # try:
-        #     start_time = datetime.fromisoformat(start_time_str)
-        #     end_time = datetime.fromisoformat(end_time_str)
-        # except ValueError:
-        #     # 如果不是标准 ISO 格式，尝试其他格式
-        #     try:
-        #         start_time = datetime.strptime(start_time_str, "%Y-%m-%dT%H:%M")
-        #         end_time = datetime.strptime(end_time_str, "%Y-%m-%dT%H:%M")
-        #     except ValueError as e:
-        #         raise ValueError(f"时间格式解析失败: {e}")
-
-        user_id = 1
+        # user_id = 1
+        # user_id = current_user.id
+        # print(f"使用当前登录用户ID: {user_id}")
+        # print(f"正则提取结果: 开始时间={start_time}, 结束时间={end_time}, 活动类型={activity_type}, 时长={duration_minutes}")
         db_record = crud.create_training_record(
             db=db,
-            # user_id=user_id,
+            user_id=1,
             start_time=start_time if start_time else datetime.now(),
             end_time=end_time if end_time else datetime.now(),
             activity_type=activity_type if activity_type else "未知",

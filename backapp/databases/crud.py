@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from databases import models
+from backapp.databases import models
 from datetime import datetime
 
 # 用户相关操作
@@ -17,7 +17,7 @@ def create_user(db: Session, username: str, email: str, password: str):
     return db_user
 
 def create_training_record(db: Session,
-        # user_id: int,
+        user_id: int,
         start_time: datetime,
         end_time: datetime,
         activity_type: str,
@@ -25,7 +25,7 @@ def create_training_record(db: Session,
 ):
     """创建新的训练记录"""
     db_record = models.TrainingRecord(
-        # user_id=user_id,
+        user_id=user_id,
         start_time=start_time,
         end_time=end_time,
         activity_type=activity_type,

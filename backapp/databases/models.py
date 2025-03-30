@@ -3,7 +3,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
 import enum
 from sqlalchemy.orm import relationship
-from .database import Base
+# from .database import Base
 
 Base = declarative_base()
 
@@ -31,7 +31,7 @@ class TrainingRecord(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     # # 外键关联用户表
-    # user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
     
     # 基本训练信息
     start_time = Column(DateTime, nullable=True)
