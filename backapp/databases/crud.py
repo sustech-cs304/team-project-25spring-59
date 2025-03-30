@@ -35,3 +35,48 @@ def create_training_record(db: Session,
     db.commit()
     db.refresh(db_record)
     return db_record
+
+def create_training_task(db: Session, 
+                         user_id: int, 
+                         task_name: str,
+                         start_time: datetime,
+                         end_time: datetime):
+    """创建新的训练任务"""
+    db_task = models.TrainingTask(
+        user_id=user_id,
+        task_name=task_name,
+        start_time=start_time,
+        end_time=end_time
+    )
+    db.add(db_task)
+    db.commit()
+    db.refresh(db_task)
+    return db_task
+
+def get_training_tasks(db: Session, user_id: int, skip: int = 0, limit: int = 100):
+    """获取该用户的所有训练任务"""
+    return db.query(models.TrainingTask).filter(
+        models.TrainingTask.user_id == user_id
+    ).offset(skip).limit(limit).all()
+
+def get_training_task(db: Session, task_id: int):
+    """获取指定的训练任务"""
+    return db.query(models.TrainingTask).filter(models.TrainingTask.id == task_id).first()
+
+def update_training_task(db: Session, task_id: int, task_data: dict):
+    """更新训练任务信息"""
+    db_task = db.query(models.TrainingTask).filter(models.TrainingTask.id == task_id).first()
+    if db_task:
+        for key, value in task_data.items():
+            setattr(db_task, key, value)
+        db.commit()
+        db.refresh(db_task)
+    return db_task
+def delete_training_task(db: Session, task_id: int):
+    """删除指定的训练任务"""
+    db_task = db.query(models.TrainingTask).filter(models.TrainingTask.id == task_id).first()
+    if db_task:
+        db.delete(db_task)
+        db.commit()
+        return True
+    return False

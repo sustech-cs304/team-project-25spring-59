@@ -58,6 +58,18 @@ class SaveMissionRequest(BaseModel):
     fileName: str
     content: str
 
+class TrainingTaskCreate(BaseModel):
+    task_name: str
+    start_time: datetime
+    end_time: datetime
+
+class TrainingTaskResponse(BaseModel):
+    id: int
+    user_id: int
+    task_name: str
+    start_time: datetime
+    end_time: datetime
+    created_at: datetime
 
 @app.get("/")
 def read_root():
@@ -118,11 +130,11 @@ def save_mission(data: SaveMissionRequest, db: Session = Depends(get_db)):
     try:
         file_path = os.path.join(SAVE_DIR, data.fileName)
         file_directory = os.path.dirname(file_path)
-        user = db.query(models.User).filter(models.User.id == 1).first()
-        if not user:
-            print("用户不存在")
-        else:
-            print("用户存在")   
+        # user = db.query(models.User).filter(models.User.id == 1).first()
+        # if not user:
+        #     print("用户不存在")
+        # else:
+        #     print("用户存在")   
         # 确保目标目录存在
         os.makedirs(file_directory, exist_ok=True)
         with open(file_path, "w", encoding="utf-8") as file:
@@ -160,3 +172,61 @@ def save_mission(data: SaveMissionRequest, db: Session = Depends(get_db)):
         return {"message": "文件保存成功", "filePath": file_path, "status": "success"}   
     except Exception as e:
         raise HTTPException(status_code=500, detail={"message": "文件保存失败", "error": str(e), "status": "failure"})
+    
+
+@app.post("/training-tasks", response_model=TrainingTaskResponse)
+def create_task(task: TrainingTaskCreate, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """创建新的训练任务"""
+    
+    user_dict = current_user.__dict__
+    user_id = user_dict["id"]
+        
+    return crud.create_training_task(
+        db=db,
+        user_id=user_id,
+        task_name=task.task_name,
+        start_time=task.start_time,
+        end_time=task.end_time
+    )
+@app.get("/training-tasks", response_model=list[TrainingTaskResponse])
+def read_tasks(skip: int = 0, limit: int = 100, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """获取当前用户的所有训练任务"""
+    user_dict = current_user.__dict__
+    user_id = user_dict["id"]
+    tasks = crud.get_training_tasks(db=db, user_id=user_id, skip=skip, limit=limit)
+    return tasks
+
+@app.get("/training-tasks/{task_id}", response_model=TrainingTaskResponse)
+def read_task(task_id: int, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """获取指定的训练任务"""
+    task = crud.get_training_task(db=db, task_id=task_id)
+    user_dict = current_user.__dict__
+    if task is None or task.__dict__["user_id"] != user_dict["id"]:
+        raise HTTPException(status_code=404, detail="训练任务不存在或无权访问")
+    return task
+
+@app.put("/training-tasks/{task_id}", response_model=TrainingTaskResponse)
+def update_task(task_id: int, task: TrainingTaskCreate, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """更新训练任务"""
+    db_task = crud.get_training_task(db=db, task_id=task_id)
+    user_dict = current_user.__dict__
+    if db_task is None or db_task.__dict__["user_id"] != user_dict["id"]:
+        raise HTTPException(status_code=404, detail="训练任务不存在或无权访问")
+    
+    task_data = task.dict()
+    updated_task = crud.update_training_task(db=db, task_id=task_id, task_data=task_data)
+    return updated_task
+
+@app.delete("/training-tasks/{task_id}")
+def delete_task(task_id: int, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """删除训练任务"""
+    db_task = crud.get_training_task(db=db, task_id=task_id)
+    user_dict = current_user.__dict__
+    if db_task is None or db_task.__dict__["user_id"] != user_dict["id"]:
+        raise HTTPException(status_code=404, detail="训练任务不存在或无权访问")
+    
+    success = crud.delete_training_task(db=db, task_id=task_id)
+    if success:
+        return {"message": "训练任务已成功删除"}
+    else:
+        raise HTTPException(status_code=500, detail="删除训练任务失败")

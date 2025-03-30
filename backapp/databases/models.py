@@ -54,10 +54,23 @@ class TrainingRecord(Base):
     #     return f"<TrainingRecord(id={self.id}, user_id={self.user_id}, activity={self.activity_type}, duration={self.duration_minutes})>"
     
 
-
-    # # 可以添加MySQL特有的表选项
-    # __table_args__ = {
-    #     'mysql_engine': 'InnoDB',  # 使用InnoDB引擎
-    #     'mysql_charset': 'utf8mb4',  # 使用utf8mb4字符集
-    #     'mysql_collate': 'utf8mb4_unicode_ci'  # 使用unicode校对规则
-    # }
+class TrainingTask(Base):
+    __tablename__ = "training_tasks"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    # 外键关联用户表
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    
+    # 任务基本信息
+    task_name = Column(String(100), nullable=False)
+    start_time = Column(DateTime, nullable=False)
+    end_time = Column(DateTime, nullable=False)
+    
+    # 关系定义 - 与用户表建立关联
+    user = relationship("User", backref="training_tasks")
+    
+    # 记录管理
+    # created_at = Column(DateTime, server_default=func.now())
+    # updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+    # def __repr__(self):
+    #     return f"<TrainingTask(id={self.id}, user_id={self.user_id}, task_name={self.task_name})>"
