@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, timedelta
 from fastapi.middleware.cors import CORSMiddleware
 import sys
 import os
@@ -79,6 +79,15 @@ class UserIdRequest(BaseModel):
 
 class DeleteRecordRequest(BaseModel):
     filename: str
+
+class EditRecordRequest(BaseModel):
+    filename: str
+    content: str
+    user_id: int
+
+class WeeklyPlanRequest(BaseModel):
+    user_id: int
+    date_str: str  # 格式为"x月x日"
 
 @app.get("/")
 def read_root():
@@ -327,3 +336,133 @@ def delete_record(request: DeleteRecordRequest, db: Session = Depends(get_db)):
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"删除训练记录失败: {str(e)}")
+
+@app.post("/edit-record")
+def edit_record(data: EditRecordRequest, db: Session = Depends(get_db)):
+    """
+    编辑指定文件名的训练记录及其文件
+    """
+    try:
+        # 1. 更新文件内容
+        file_path = os.path.join(SAVE_DIR, data.filename)
+        if not os.path.exists(file_path):
+            raise HTTPException(status_code=404, detail=f"文件不存在: {data.filename}")
+        
+        # 保存新内容到文件
+        with open(file_path, "w", encoding="utf-8") as file:
+            file.write(data.content)
+            
+        # 2. 提取数据并更新数据库记录
+        # 提取开始时间
+        start_time_match = re.search(r"开始时间\*\*:\s*([^\n]+)", data.content)
+        start_time = datetime.fromisoformat(start_time_match.group(1)) if start_time_match else None
+
+        # 提取结束时间
+        end_time_match = re.search(r"结束时间\*\*:\s*([^\n]+)", data.content)
+        end_time = datetime.fromisoformat(end_time_match.group(1)) if end_time_match else None
+
+        # 提取运动类型
+        activity_type_match = re.search(r"运动类型\*\*:\s*([^\n]+)", data.content)
+        activity_type = activity_type_match.group(1) if activity_type_match else None
+
+        # 提取时长（分钟）
+        duration_match = re.search(r"时长\*\*:\s*(\d+)", data.content)
+        duration_minutes = int(duration_match.group(1)) if duration_match else None
+        
+        # 更新数据库记录
+        record_data = {
+            "user_id": data.user_id,
+            "start_time": start_time if start_time else datetime.now(),
+            "end_time": end_time if end_time else datetime.now(),
+            "activity_type": activity_type if activity_type else "未知",
+            "duration_minutes": duration_minutes if duration_minutes else 0
+        }
+        
+        updated_record = crud.update_training_record(db=db, filename=data.filename, record_data=record_data)
+        
+        if updated_record:
+            return {
+                "message": "训练记录已成功更新", 
+                "filename": data.filename,
+                "status": "success"
+            }
+        else:
+            raise HTTPException(status_code=404, detail="未找到数据库中的训练记录")
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"更新训练记录失败: {str(e)}")
+
+@app.post("/get-weekly-plan")
+def get_weekly_plan(request: WeeklyPlanRequest, db: Session = Depends(get_db)):
+    """
+    获取指定用户和日期所在周的训练计划
+    """
+    try:
+        user_id = request.user_id
+        date_str = request.date_str
+        
+        # 1. 解析日期字符串
+        current_year = datetime.now().year
+        # 处理"x月x日"格式
+        match = re.match(r'(\d+)月(\d+)日', date_str)
+        if not match:
+            raise HTTPException(status_code=400, detail="日期格式不正确，应为'x月x日'")
+        
+        month, day = int(match.group(1)), int(match.group(2))
+        
+        # 创建日期对象
+        try:
+            given_date = datetime(current_year, month, day)
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=f"无效日期: {str(e)}")
+        
+        # 2. 计算这一周的起止日期（周一到周日）
+        # 计算给定日期是周几（0是周一，6是周日）
+        weekday = given_date.weekday()
+        
+        # 计算这周的周一日期
+        monday = given_date - timedelta(days=weekday)
+        
+        # 生成周一到周日的日期列表
+        week_dates = [(monday + timedelta(days=i)).date() for i in range(7)]
+        
+        # 3. 查询用户在这周每天的训练记录
+        week_start = datetime.combine(week_dates[0], datetime.min.time())
+        week_end = datetime.combine(week_dates[6], datetime.max.time())
+        
+        records = crud.get_training_records_by_date_range(
+            db=db, 
+            user_id=user_id,
+            start_date=week_start,
+            end_date=week_end
+        )
+        
+        # 4. 按天组织数据
+        week_tasks = []
+        weekday_names = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
+        
+        for i, date in enumerate(week_dates):
+            date_records = [
+                f"{record.activity_type} {record.duration_minutes}分钟" 
+                for record in records 
+                if record.start_time.date() == date
+            ]
+            
+            # 如果没有记录，提供一个默认值
+            if not date_records:
+                date_records = ["暂无训练"]
+                
+            week_tasks.append({
+                "title": weekday_names[i],
+                "date": f"{date.month}月{date.day}日",
+                "tasks": date_records
+            })
+        
+        return {
+            "week_start": week_dates[0].strftime("%Y-%m-%d"),
+            "week_end": week_dates[6].strftime("%Y-%m-%d"),
+            "weekTasks": week_tasks
+        }
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取周计划失败: {str(e)}")

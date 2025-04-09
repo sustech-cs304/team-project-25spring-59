@@ -97,3 +97,25 @@ def delete_training_record(db: Session, filename: str):
         db.commit()
         return True
     return False
+
+def update_training_record(db: Session, filename: str, record_data: dict):
+    """更新训练记录信息"""
+    db_record = db.query(models.TrainingRecord).filter(models.TrainingRecord.filename == filename).first()
+    if db_record:
+        for key, value in record_data.items():
+            setattr(db_record, key, value)
+        db.commit()
+        db.refresh(db_record)
+        return db_record
+    return None
+
+def get_training_records_by_date_range(db: Session, user_id: int, start_date: datetime, end_date: datetime):
+    """获取用户在指定日期范围内的训练记录"""
+    return db.query(models.TrainingRecord).filter(
+        models.TrainingRecord.user_id == user_id,
+        models.TrainingRecord.start_time >= start_date,
+        models.TrainingRecord.start_time <= end_date
+    ).all()
+
+
+
