@@ -72,8 +72,21 @@ const login = async () => {
     });
 
     ElMessage.success(response.data.message);
-    sessionStorage.setItem("token", response.data.token);
+    localStorage.setItem("token", response.data.token);
+    localStorage.setItem("user_id", response.data.user_id);  // 存储用户ID
+
+    // 直接从response中获取并打印
+    console.log("登录用户ID:", response.data.user_id);
+    
+    // 从sessionStorage中获取并打印
+    const userId = localStorage.getItem("user_id");
+    console.log("从sessionStorage获取的用户ID:", userId);
+    
     router.push("/carousel"); // 登录成功后跳转到 Carousel 页面
+
+    const blogUrl = `http://localhost:3000/vitepress-theme-sakura/?user_id=${userId}`;
+    window.open(blogUrl, '_blank');
+
   } catch (error) {
     ElMessage.error(error.response?.data?.detail || "登录失败");
   } finally {

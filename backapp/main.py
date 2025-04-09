@@ -17,6 +17,7 @@ from databases import models, crud
 from databases.init_db import init_db
 from sqlalchemy.orm import Session
 
+current_user_id = None
 app = FastAPI()
 SAVE_DIR = "./TrainMission/posts"
 # 启动时初始化数据库
@@ -57,6 +58,7 @@ class RegisterRequest(BaseModel):
 class SaveMissionRequest(BaseModel):
     fileName: str
     content: str
+    user_id: int
 
 class TrainingTaskCreate(BaseModel):
     task_name: str
@@ -89,11 +91,13 @@ def login(user: LoginRequest, db: Session = Depends(get_db)):
     user_dict = db_user.__dict__
     if user_dict["password"] != user.password:
         raise HTTPException(status_code=401, detail="用户名或密码错误")
-    
+    global current_user_id
+    current_user_id = db_user.id    
     # 创建响应
     return {
         "message": "登录成功", 
-        "token": "mock-token",
+        "token": "mock-token",  
+        "user_id": db_user.id,
         "user": {
             "id": db_user.id,
             "username": db_user.username,
@@ -130,6 +134,9 @@ def save_mission(data: SaveMissionRequest, db: Session = Depends(get_db)):
     try:
         file_path = os.path.join(SAVE_DIR, data.fileName)
         file_directory = os.path.dirname(file_path)
+
+        user_id = data.user_id
+        print(f"保存记录使用的用户ID: {user_id}")
         # user = db.query(models.User).filter(models.User.id == 1).first()
         # if not user:
         #     print("用户不存在")
@@ -163,7 +170,7 @@ def save_mission(data: SaveMissionRequest, db: Session = Depends(get_db)):
         # print(f"正则提取结果: 开始时间={start_time}, 结束时间={end_time}, 活动类型={activity_type}, 时长={duration_minutes}")
         db_record = crud.create_training_record(
             db=db,
-            user_id=1,
+            user_id=user_id,
             start_time=start_time if start_time else datetime.now(),
             end_time=end_time if end_time else datetime.now(),
             activity_type=activity_type if activity_type else "未知",
