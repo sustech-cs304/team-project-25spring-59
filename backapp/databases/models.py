@@ -29,7 +29,8 @@ class User(Base):
 class TrainingRecord(Base):
     __tablename__ = "training_records"
     
-    id = Column(Integer, primary_key=True, index=True)
+    # filename作为主键
+    filename = Column(String(255), primary_key=True, index=True)
     # # 外键关联用户表
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
     

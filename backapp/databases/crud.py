@@ -17,6 +17,7 @@ def create_user(db: Session, username: str, email: str, password: str):
     return db_user
 
 def create_training_record(db: Session,
+        filename: str,
         user_id: int,
         start_time: datetime,
         end_time: datetime,
@@ -25,6 +26,7 @@ def create_training_record(db: Session,
 ):
     """创建新的训练记录"""
     db_record = models.TrainingRecord(
+        filename=filename,
         user_id=user_id,
         start_time=start_time,
         end_time=end_time,
@@ -77,6 +79,21 @@ def delete_training_task(db: Session, task_id: int):
     db_task = db.query(models.TrainingTask).filter(models.TrainingTask.id == task_id).first()
     if db_task:
         db.delete(db_task)
+        db.commit()
+        return True
+    return False
+
+def get_training_records_by_user(db: Session, user_id: int):
+    """获取指定用户的所有训练记录"""
+    return db.query(models.TrainingRecord).filter(
+        models.TrainingRecord.user_id == user_id
+    ).all()
+
+def delete_training_record(db: Session, filename: str):
+    """删除指定的训练记录"""
+    db_record = db.query(models.TrainingRecord).filter(models.TrainingRecord.filename == filename).first()
+    if db_record:
+        db.delete(db_record)
         db.commit()
         return True
     return False

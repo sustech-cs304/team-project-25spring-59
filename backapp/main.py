@@ -73,6 +73,13 @@ class TrainingTaskResponse(BaseModel):
     end_time: datetime
     created_at: datetime
 
+# 添加请求模型
+class UserIdRequest(BaseModel):
+    user_id: int
+
+class DeleteRecordRequest(BaseModel):
+    filename: str
+
 @app.get("/")
 def read_root():
     return {"message": "FastAPI 服务器运行成功！"}
@@ -170,6 +177,7 @@ def save_mission(data: SaveMissionRequest, db: Session = Depends(get_db)):
         # print(f"正则提取结果: 开始时间={start_time}, 结束时间={end_time}, 活动类型={activity_type}, 时长={duration_minutes}")
         db_record = crud.create_training_record(
             db=db,
+            filename=data.fileName,
             user_id=user_id,
             start_time=start_time if start_time else datetime.now(),
             end_time=end_time if end_time else datetime.now(),
@@ -237,3 +245,85 @@ def delete_task(task_id: int, current_user: models.User = Depends(get_current_us
         return {"message": "训练任务已成功删除"}
     else:
         raise HTTPException(status_code=500, detail="删除训练任务失败")
+
+@app.post("/generate-user-records")
+def generate_user_records(request: UserIdRequest, db: Session = Depends(get_db)):
+    """
+    根据用户ID生成所有训练记录的MD文件
+    """
+    try:
+        user_id = request.user_id
+        # 获取该用户的所有训练记录
+        records = crud.get_training_records_by_user(db, user_id)
+        print(f"获取到的训练记录: {records}")
+        
+        if not records:
+            return {"message": "未找到该用户的训练记录", "count": 0}
+        
+        # 确保目录存在
+        os.makedirs(SAVE_DIR, exist_ok=True)
+        
+        generated_files = []
+        
+        # 为每条记录生成MD文件
+        for record in records:
+            # 使用数据库中存储的文件名，确保转换为字符串
+            filename = str(record.filename)
+            
+            # 构建MD内容
+            md_content = f"""---
+title: "{record.activity_type} 运动记录"
+date: "{datetime.now().isoformat()}"
+---
+## 运动详情
+- **开始时间**: {record.start_time.isoformat()}
+- **结束时间**: {record.end_time.isoformat()}
+- **运动类型**: {record.activity_type}
+- **时长**: {record.duration_minutes} 分钟
+"""
+            
+            # 保存文件
+            file_path = os.path.join(SAVE_DIR, filename)
+            with open(file_path, "w", encoding="utf-8") as file:
+                file.write(md_content)
+            
+            generated_files.append(filename)
+        
+        return {
+            "message": "成功生成训练记录文件",
+            "count": len(generated_files),
+            "files": generated_files
+        }
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"生成训练记录失败: {str(e)}")
+
+@app.post("/delete-record")
+def delete_record(request: DeleteRecordRequest, db: Session = Depends(get_db)):
+    """
+    删除指定文件名的训练记录及其文件
+    """
+    try:
+        filename = request.filename
+        
+        # 1. 先删除文件系统中的文件
+        file_path = os.path.join(SAVE_DIR, filename)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            print(f"已删除文件: {file_path}")
+        else:
+            print(f"文件不存在: {file_path}")
+        
+        # 2. 再删除数据库中的记录
+        success = crud.delete_training_record(db=db, filename=filename)
+        
+        if success:
+            return {"message": "训练记录已成功删除", "filename": filename}
+        else:
+            # 如果数据库记录不存在但文件已删除，仍返回成功
+            if not os.path.exists(file_path):
+                return {"message": "文件已删除，但数据库记录不存在", "filename": filename}
+            raise HTTPException(status_code=404, detail="未找到该训练记录")
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"删除训练记录失败: {str(e)}")
