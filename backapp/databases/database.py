@@ -2,7 +2,13 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-# 使用同步SQLite连接
+"""
+AI-generated-content 
+tool: ChatGPT 
+version: 4o
+usage: I used the prompt "pymysql如何连接mysql数据库，设定账号和密码”", and 
+directly copy the code from its response 
+"""
 SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:123456@localhost:3306/health_assistant"
 
 # 创建同步引擎
