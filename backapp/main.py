@@ -1,3 +1,5 @@
+
+
 from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
 from datetime import datetime, timedelta
@@ -8,13 +10,16 @@ import re
 from backapp.auth.token import create_access_token
 from fastapi.security import OAuth2PasswordRequestForm
 from backapp.auth.dependencies import get_current_user
+
+
+
 # 添加当前目录到路径
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 # 导入数据库模块
-from databases.database import get_db
+from databases.database import get_db, SessionLocal
 from databases import models, crud
-from databases.init_db import init_db
+from databases.init_db import init_db, insert_mock_data
 from sqlalchemy.orm import Session
 
 current_user_id = None
@@ -24,6 +29,7 @@ SAVE_DIR = "./TrainMission/posts"
 @app.on_event("startup")
 def startup_db_client():
     init_db()
+    insert_mock_data()  # 👈 启动时自动插入数据
 
 # 允许跨域请求，方便前端访问
 app.add_middleware(
@@ -466,3 +472,57 @@ def get_weekly_plan(request: WeeklyPlanRequest, db: Session = Depends(get_db)):
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取周计划失败: {str(e)}")
+
+
+@app.post("/stats/summary")
+def get_training_summary(data: UserIdRequest, db: Session = Depends(get_db)):
+    print(f"[summary] 收到 user_id: {data.user_id}")
+
+    records = crud.get_training_records_by_user(db, user_id=data.user_id)
+    print(f"[summary] 获取到记录数: {len(records)}")
+
+    total_minutes = sum([r.duration_minutes or 0 for r in records])
+    print(f"[summary] 总训练时长: {total_minutes} 分钟")
+
+    user = crud.get_user_by_id(db, data.user_id)
+    if not user:
+        print("[summary] 用户不存在")
+        raise HTTPException(status_code=404, detail="用户不存在")
+
+    weight = user.weight or 60
+    print(f"[summary] 用户体重: {weight} kg")
+
+    MET = 8
+    total_calories = MET * weight * (total_minutes / 60)
+    print(f"[summary] 估算卡路里: {total_calories} kcal")
+
+    return {
+        "total_minutes": total_minutes,
+        "estimated_calories": round(total_calories, 2)
+    }
+
+
+@app.post("/stats/weekly-trend")
+def get_weekly_trend(data: UserIdRequest, db: Session = Depends(get_db)):
+    print(f"[trend] 收到 user_id: {data.user_id}")
+
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=6)
+    print(f"[trend] 查询时间范围: {start_date.date()} 到 {end_date.date()}")
+
+    records = crud.get_training_records_by_date_range(
+        db, user_id=data.user_id, start_date=start_date, end_date=end_date)
+    print(f"[trend] 获取到记录数: {len(records)}")
+
+    trend = {}
+    for i in range(7):
+        day = (start_date + timedelta(days=i)).strftime("%Y-%m-%d")
+        trend[day] = 0
+
+    for r in records:
+        date_str = r.start_time.strftime("%Y-%m-%d")
+        trend[date_str] += r.duration_minutes or 0
+
+    print(f"[trend] 构造出的趋势数据: {trend}")
+
+    return trend
