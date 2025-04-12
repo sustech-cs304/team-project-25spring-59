@@ -5,9 +5,9 @@ from fastapi.middleware.cors import CORSMiddleware
 import sys
 import os
 import re
-from backapp.auth.token import create_access_token
+from auth.token import create_access_token
 from fastapi.security import OAuth2PasswordRequestForm
-from backapp.auth.dependencies import get_current_user
+from auth.dependencies import get_current_user
 # 添加当前目录到路径
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
@@ -18,7 +18,7 @@ from databases.init_db import init_db
 from sqlalchemy.orm import Session
 
 app = FastAPI()
-SAVE_DIR = "./TrainMission/posts"
+SAVE_DIR = os.path.join(os.path.dirname(__file__), "TrainMission", "posts")
 # 启动时初始化数据库
 @app.on_event("startup")
 def startup_db_client():
@@ -230,3 +230,137 @@ def delete_task(task_id: int, current_user: models.User = Depends(get_current_us
         return {"message": "训练任务已成功删除"}
     else:
         raise HTTPException(status_code=500, detail="删除训练任务失败")
+
+from pydantic.alias_generators import to_camel
+class DTO(BaseModel):
+    model_config = {"alias_generator": to_camel, "populate_by_name": True, "from_attributes": True,
+                    "json_encoders": {datetime: lambda dt: dt.strftime("%Y-%m-%d %H:%M:%S")}}
+
+# 健身房课程相关模型
+class GymCourseResponse(DTO):
+    id: int
+    gym_id: int
+    course_name: str
+    coach_name: str
+    start_time: datetime
+    end_time: datetime
+    capacity: int
+    current_reservations: int
+
+class CourseReservationCreate(DTO):
+    course_id: int
+
+class CourseReservationResponse(DTO):
+    id: int
+    user_id: int
+    course_id: int
+    reservation_time: datetime
+    status: str
+
+# 健身房预约相关模型
+class GymReservationCreate(DTO):
+    gym_id: int
+    reservation_date: datetime
+    start_time: datetime
+    end_time: datetime
+
+class GymReservationResponse(DTO):
+    id: int
+    user_id: int
+    gym_id: int
+    reservation_date: datetime
+    start_time: datetime
+    end_time: datetime
+    status: str
+
+class GymResponse(DTO):
+    id: int
+    name: str
+    open_time: str  # 格式如: "09:00:00-21:00:00"
+    address: str
+
+
+
+@app.get("/gym/getCourses", summary="获取健身房课程列表", response_model=list[GymCourseResponse])
+async def get_gym_courses(
+    gym_id: int,
+    skip: int = 0,
+    limit: int = 100,
+    # current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """获取指定健身房的所有课程"""
+    courses = crud.get_gym_courses(db=db, gym_id=gym_id, skip=skip, limit=limit)
+    return courses
+
+@app.post("/gym/reserveCourse", summary="预约健身课程", response_model=CourseReservationResponse)
+async def reserve_course(
+    reservation: CourseReservationCreate,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """预约健身课程"""
+    user_dict = current_user.__dict__
+    user_id = user_dict["id"]
+    
+    # 创建课程预约
+    db_reservation = crud.create_course_reservation(
+        db=db,
+        user_id=user_id,
+        course_id=reservation.course_id
+    )
+    
+    if db_reservation is None:
+        raise HTTPException(status_code=400, detail="课程不存在或已满")
+    
+    return db_reservation
+
+@app.post("/gym/reserveGym", summary="预约健身房", response_model=GymReservationResponse)
+async def reserve_gym(
+    reservation: GymReservationCreate,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """预约健身房"""
+    user_dict = current_user.__dict__
+    user_id = user_dict["id"]
+    
+    # 创建健身房预约
+    db_reservation = crud.create_gym_reservation(
+        db=db,
+        user_id=user_id,
+        gym_id=reservation.gym_id,
+        reservation_date=reservation.reservation_date,
+        start_time=reservation.start_time,
+        end_time=reservation.end_time
+    )
+    
+    if db_reservation is None:
+        raise HTTPException(status_code=400, detail="健身房不存在或预约失败")
+    
+    return db_reservation
+
+@app.get("/gym/getGyms", summary="获取健身房列表", response_model=list[GymResponse])
+async def get_gyms(
+    skip: int = 0,
+    limit: int = 100,
+    # current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    # 获取用户信息
+    # user_dict = current_user.__dict__
+    # user_id = user_dict["id"]
+    #
+    # # 调用推荐函数，获取个性化推荐的健身房列表
+    # gyms = crud.recommend_gyms_for_user(
+    #     db=db,
+    #     user_id=user_id,
+    #     skip=skip,
+    #     limit=limit
+    # )
+    gyms = crud.get_gyms(db, skip, limit)
+    return gyms
+
+if __name__ == '__main__':
+    import uvicorn
+    uvicorn.run("main:app", host="localhost", port=8000, reload=True)
