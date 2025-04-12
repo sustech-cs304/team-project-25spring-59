@@ -74,3 +74,75 @@ class TrainingTask(Base):
     # updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
     # def __repr__(self):
     #     return f"<TrainingTask(id={self.id}, user_id={self.user_id}, task_name={self.task_name})>"
+
+class Gym(Base):
+    """健身房表"""
+    __tablename__ = "gyms"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), nullable=False)
+    open_time = Column(String(50), nullable=False)  # 格式如: "09:00:00-21:00:00"
+    address = Column(String(200), nullable=False)
+    
+    # 关系定义 - 与课程表建立关联
+    courses = relationship("GymCourse", back_populates="gym", cascade="all, delete-orphan")
+    reservations = relationship("GymReservation", back_populates="gym", cascade="all, delete-orphan")
+    
+    def __repr__(self):
+        return f"<Gym(id={self.id}, name={self.name})>"
+
+class GymCourse(Base):
+    """健身房课程表"""
+    __tablename__ = "gym_courses"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    gym_id = Column(Integer, ForeignKey("gyms.id", ondelete="CASCADE"), nullable=False)
+    course_name = Column(String(100), nullable=False)
+    coach_name = Column(String(50), nullable=False)
+    start_time = Column(DateTime, nullable=False)
+    end_time = Column(DateTime, nullable=False)
+    capacity = Column(Integer, nullable=False, default=20)  # 课程容量
+    current_reservations = Column(Integer, nullable=False, default=0)  # 当前预约人数
+    
+    # 关系定义
+    gym = relationship("Gym", back_populates="courses")
+    reservations = relationship("CourseReservation", back_populates="course", cascade="all, delete-orphan")
+    
+    def __repr__(self):
+        return f"<GymCourse(id={self.id}, course_name={self.course_name}, gym_id={self.gym_id})>"
+
+class CourseReservation(Base):
+    """课程预约表"""
+    __tablename__ = "course_reservations"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    course_id = Column(Integer, ForeignKey("gym_courses.id", ondelete="CASCADE"), nullable=False)
+    reservation_time = Column(DateTime, server_default=func.now())
+    status = Column(String(20), nullable=False, default="confirmed")  # confirmed, cancelled
+    
+    # 关系定义
+    user = relationship("User")
+    course = relationship("GymCourse", back_populates="reservations")
+    
+    def __repr__(self):
+        return f"<CourseReservation(id={self.id}, user_id={self.user_id}, course_id={self.course_id})>"
+
+class GymReservation(Base):
+    """健身房预约表"""
+    __tablename__ = "gym_reservations"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    gym_id = Column(Integer, ForeignKey("gyms.id", ondelete="CASCADE"), nullable=False)
+    reservation_date = Column(DateTime, nullable=False)
+    start_time = Column(DateTime, nullable=False)
+    end_time = Column(DateTime, nullable=False)
+    status = Column(String(20), nullable=False, default="confirmed")  # confirmed, cancelled
+    
+    # 关系定义
+    user = relationship("User")
+    gym = relationship("Gym", back_populates="reservations")
+    
+    def __repr__(self):
+        return f"<GymReservation(id={self.id}, user_id={self.user_id}, gym_id={self.gym_id})>"
