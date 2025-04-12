@@ -55,7 +55,13 @@ class LoginRequest(BaseModel):
     username: str
     password: str
 
-
+"""
+AI-generated-content 
+tool: ChatGPT 
+version: 4o
+usage: I used the prompt "使用python写一个BaseModel，内容是username, email, password”", and 
+directly copy the code from its response 
+"""
 class RegisterRequest(BaseModel):
     username: str
     email: str
@@ -531,7 +537,13 @@ def edit_record(data: EditRecordRequest, db: Session = Depends(get_db)):
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"更新训练记录失败: {str(e)}")
-
+"""
+AI-generated-content 
+tool: ChatGPT 
+version: 4o
+usage: I used the prompt "我需要使用python实现一个功能：解析“x月y日的格式，提取x和y”", and 
+directly copy the code from its response 
+"""
 @app.post("/get-weekly-plan")
 def get_weekly_plan(request: WeeklyPlanRequest, db: Session = Depends(get_db)):
     """
@@ -615,7 +627,7 @@ def get_training_summary(data: UserIdRequest, db: Session = Depends(get_db)):
     records = crud.get_training_records_by_user(db, user_id=data.user_id)
     print(f"[summary] 获取到记录数: {len(records)}")
 
-    total_minutes = sum([r.duration_minutes or 0 for r in records])
+    total_minutes = sum([r.duration_minutes or 0 for r in records]) # type: ignore
     print(f"[summary] 总训练时长: {total_minutes} 分钟")
 
     user = crud.get_user_by_id(db, data.user_id)
@@ -623,7 +635,7 @@ def get_training_summary(data: UserIdRequest, db: Session = Depends(get_db)):
         print("[summary] 用户不存在")
         raise HTTPException(status_code=404, detail="用户不存在")
 
-    weight = user.weight or 60
+    weight = user.weight or 60 # type: ignore
     print(f"[summary] 用户体重: {weight} kg")
 
     MET = 8

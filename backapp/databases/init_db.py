@@ -6,7 +6,12 @@ from .models import TrainingRecord, User
 from .database import SessionLocal
 import uuid
 
-# 确保项目根目录在Python路径中
+"""
+AI-generated-content 
+tool: ChatGPT 
+version: 4o
+usage: I used the prompt "提示path不存在，如何解决”"
+"""
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(current_dir)
 sys.path.insert(0, project_root)
