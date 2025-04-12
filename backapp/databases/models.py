@@ -59,6 +59,8 @@ class TrainingTask(Base):
     __tablename__ = "training_tasks"
     
     id = Column(Integer, primary_key=True, index=True)
+
+
     # 外键关联用户表
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     

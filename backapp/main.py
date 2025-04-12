@@ -521,6 +521,7 @@ def get_weekly_trend(data: UserIdRequest, db: Session = Depends(get_db)):
 
     for r in records:
         date_str = r.start_time.strftime("%Y-%m-%d")
+        #注释注释
         trend[date_str] += r.duration_minutes or 0
 
     print(f"[trend] 构造出的趋势数据: {trend}")
