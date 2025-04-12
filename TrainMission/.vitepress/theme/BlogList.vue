@@ -55,7 +55,7 @@
 <script setup lang="ts">
 import { type PostData } from '../posts.data'
 import { useData } from 'vitepress'
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 
 const base = useData().site.value.base
 const { posts } = defineProps<{ posts: PostData[] }>()
@@ -65,6 +65,22 @@ const showModal = ref(false)
 const startTime = ref('')
 const endTime = ref('')
 const exerciseType = ref('🏃‍♂️ 跑步')
+
+const getUserIdFromUrl = () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const userId = urlParams.get('user_id');
+  if (userId) {
+    console.log("从URL获取用户ID:", userId);
+    localStorage.setItem('user_id', userId);
+    return userId;
+  }
+  return null;
+}
+
+// 在setup中添加onMounted
+onMounted(() => {
+  getUserIdFromUrl();
+});
 
 // 生成 `.md` 记录
 const saveWorkout = async () => {
@@ -92,10 +108,14 @@ cover: ""
   const fileName = `${new Date().toISOString().replace(/[:.-]/g, "_")}.md`;
 
   try {
+    const userId = localStorage.getItem('user_id') || getUserIdFromUrl();
+    console.log("用户ID:", userId);
+
     const response = await fetch('http://127.0.0.1:8000/saveMission', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fileName, content: mdContent })
+      body: JSON.stringify({ fileName, content: mdContent,
+         user_id: userId ? parseInt(userId) : null })
     });
 
     const result = await response.json();

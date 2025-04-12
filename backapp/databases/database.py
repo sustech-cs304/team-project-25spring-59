@@ -3,7 +3,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 # 使用同步SQLite连接
-SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:shiyansong123@localhost:3306/health_assistant"
+SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:123456@localhost:3306/health_assistant"
 SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:123456@localhost:3306/health_assistant"
 
 # 创建同步引擎

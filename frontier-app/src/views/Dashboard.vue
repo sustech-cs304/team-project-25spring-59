@@ -1,6 +1,7 @@
 <template>
   <div class="dashboard-container">
     <h2>📊 训练数据仪表板</h2>
+     <el-button type="primary" @click="fetchTrainingData">刷新数据</el-button>
 
     <!-- 训练总览 -->
     <el-row :gutter="20">
@@ -105,12 +106,33 @@ const pieData = computed(() => {
 // 获取训练数据（模拟 API）
 const fetchTrainingData = async () => {
   try {
-    const response = await axios.get("http://localhost:5000/api/training-records");
-    records.value = response.data;
+    // 获取训练总览数据
+    const summaryResponse = await axios.post("http://localhost:5000/stats/summary", { user_id: 1 });
+    totalDuration.value = summaryResponse.data.total_minutes;
+    totalCalories.value = summaryResponse.data.estimated_calories;
+
+    // 获取每周趋势数据
+    const weeklyTrendResponse = await axios.post("http://localhost:5000/stats/weekly-trend", { user_id: 1 });
+    const trendData = weeklyTrendResponse.data;
+
+    // 更新折线图数据
+    chartData.value = {
+      labels: Object.keys(trendData),
+      datasets: [{ label: "训练时长", data: Object.values(trendData), borderColor: "#42A5F5" }]
+    };
+
+    // 模拟训练记录数据（如果需要）
+    records.value = Object.keys(trendData).map(date => ({
+      date,
+      type: "有氧", // 示例类型
+      duration: trendData[date],
+      calories: (trendData[date] / 60) * 8 * 60 // 假设体重60kg，MET=8
+    }));
   } catch (error) {
-    console.error("获取训练数据失败:", error);
-  }
+    console.error("获取训练数据失败:", error.response ? error.response.data : error.message);
+}
 };
+
 
 // 加载数据
 onMounted(() => {

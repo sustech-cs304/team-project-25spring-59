@@ -3,6 +3,10 @@ from databases import models
 from datetime import datetime
 from sqlalchemy import func, desc
 
+def get_user_by_id(db: Session, user_id: int):
+    return db.query(models.User).filter(models.User.id == user_id).first()
+
+
 # 用户相关操作
 def get_user_by_username(db: Session, username: str):
     return db.query(models.User).filter(models.User.username == username).first()
@@ -18,6 +22,7 @@ def create_user(db: Session, username: str, email: str, password: str):
     return db_user
 
 def create_training_record(db: Session,
+        filename: str,
         user_id: int,
         start_time: datetime,
         end_time: datetime,
@@ -26,6 +31,7 @@ def create_training_record(db: Session,
 ):
     """创建新的训练记录"""
     db_record = models.TrainingRecord(
+        filename=filename,
         user_id=user_id,
         start_time=start_time,
         end_time=end_time,
@@ -81,6 +87,44 @@ def delete_training_task(db: Session, task_id: int):
         db.commit()
         return True
     return False
+
+def get_training_records_by_user(db: Session, user_id: int):
+    """获取指定用户的所有训练记录"""
+    return db.query(models.TrainingRecord).filter(
+        models.TrainingRecord.user_id == user_id
+    ).all()
+
+def delete_training_record(db: Session, filename: str):
+    """删除指定的训练记录"""
+    db_record = db.query(models.TrainingRecord).filter(models.TrainingRecord.filename == filename).first()
+    if db_record:
+        db.delete(db_record)
+        db.commit()
+        return True
+    return False
+
+def update_training_record(db: Session, filename: str, record_data: dict):
+    """更新训练记录信息"""
+    db_record = db.query(models.TrainingRecord).filter(models.TrainingRecord.filename == filename).first()
+    if db_record:
+        for key, value in record_data.items():
+            setattr(db_record, key, value)
+        db.commit()
+        db.refresh(db_record)
+        return db_record
+    return None
+
+def get_training_records_by_date_range(db: Session, user_id: int, start_date: datetime, end_date: datetime):
+    """获取用户在指定日期范围内的训练记录"""
+    return db.query(models.TrainingRecord).filter(
+        models.TrainingRecord.user_id == user_id,
+        models.TrainingRecord.start_time >= start_date,
+        models.TrainingRecord.start_time <= end_date
+    ).all()
+
+
+
+
 
 # 健身房相关操作
 def get_gyms(db: Session, skip: int = 0, limit: int = 100):
