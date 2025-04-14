@@ -10,7 +10,7 @@ usage: I used the prompt "pymysql如何连接mysql数据库，设定账号和密
 directly copy the code from its response 
 """
 SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:shiyansong123@localhost:3306/health_assistant"
-SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:123456@localhost:3306/health_assistant"
+# SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:123456@localhost:3306/health_assistant"
 
 # 创建同步引擎
 engine = create_engine(
