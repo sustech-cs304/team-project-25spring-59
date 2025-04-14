@@ -41,8 +41,10 @@ class TrainingRecord(Base):
     duration_minutes = Column(Integer, nullable=True)  # 运动时长(分钟)
     
     # # 详细训练数据
-    # average_heart_rate = Column(Integer, nullable=True)  # 平均心率
-    # max_heart_rate = Column(Integer, nullable=True)  # 最大心率
+    distance = Column(Float, nullable=True)  # 距离
+    calories = Column(Integer, nullable=True)  # 卡路里
+    average_heart_rate = Column(Integer, nullable=True)  # 平均心率
+    max_heart_rate = Column(Integer, nullable=True)  # 最大心率
     
     # # 记录管理
     # created_at = Column(DateTime, server_default=func.now())  # 记录创建时间
