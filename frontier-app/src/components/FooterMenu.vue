@@ -99,12 +99,21 @@ const navigateTo = (path) => {
   z-index: 1000;
 }
 
-/* 主要圆角灰色平行四边形背景 */
-.footer-bg {
-  /* ✅ 开启裁剪 */
-  //overflow: hidden;
 
-  /* 其余原样 */
+
+
+
+
+
+
+
+
+
+
+
+
+
+.footer-bg{
   width: 100%;
   height: 100%;
   background-color: #dde7f6;
@@ -115,6 +124,7 @@ const navigateTo = (path) => {
   align-items: center;
   padding: 0 20px;
   position: relative;
+
 }
 
 /* ✅ 覆盖在 footer 背景上的透明图片 */
