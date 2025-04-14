@@ -1,5 +1,3 @@
-
-
 from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
 from datetime import datetime, timedelta
@@ -98,6 +96,10 @@ class EditRecordRequest(BaseModel):
     user_id: int
 
 class WeeklyPlanRequest(BaseModel):
+    user_id: int
+    date_str: str  # 格式为"x月x日"
+
+class DailyPlanRequest(BaseModel):
     user_id: int
     date_str: str  # 格式为"x月x日"
 
@@ -541,7 +543,7 @@ def edit_record(data: EditRecordRequest, db: Session = Depends(get_db)):
 AI-generated-content 
 tool: ChatGPT 
 version: 4o
-usage: I used the prompt "我需要使用python实现一个功能：解析“x月y日的格式，提取x和y”", and 
+usage: I used the prompt "我需要使用python实现一个功能：解析"x月y日的格式，提取x和y"", and 
 directly copy the code from its response 
 """
 @app.post("/get-weekly-plan")
@@ -620,6 +622,7 @@ def get_weekly_plan(request: WeeklyPlanRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"获取周计划失败: {str(e)}")
 
 
+
 @app.post("/stats/summary")
 def get_training_summary(data: UserIdRequest, db: Session = Depends(get_db)):
     print(f"[summary] 收到 user_id: {data.user_id}")
@@ -673,3 +676,53 @@ def get_weekly_trend(data: UserIdRequest, db: Session = Depends(get_db)):
     print(f"[trend] 构造出的趋势数据: {trend}")
 
     return trend
+
+@app.post("/get-daily-plan")
+def get_daily_plan(request: DailyPlanRequest, db: Session = Depends(get_db)):
+    """
+    获取指定用户和日期的训练计划
+    """
+    try:
+        user_id = request.user_id
+        date_str = request.date_str
+        
+        # 1. 解析日期字符串
+        current_year = datetime.now().year
+        # 处理"x月x日"格式
+        match = re.match(r'(\d+)月(\d+)日', date_str)
+        if not match:
+            raise HTTPException(status_code=400, detail="日期格式不正确，应为'x月x日'")
+        
+        month, day = int(match.group(1)), int(match.group(2))
+        
+        # 创建日期对象
+        try:
+            given_date = datetime(current_year, month, day)
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=f"无效日期: {str(e)}")
+        
+        # 2. 查询用户在该日期的训练记录
+        records = crud.get_training_records_by_date(
+            db=db, 
+            user_id=user_id,
+            date=given_date.date()
+        )
+        
+        # 3. 格式化返回数据
+        training_items = [
+            f"{record.activity_type} {record.duration_minutes}分钟" 
+            for record in records
+        ]
+        
+        # 如果没有记录，提供一个默认值
+        if not training_items:
+            training_items = ["暂无训练"]
+        
+        return {
+            "date": date_str,
+            "full_date": given_date.strftime("%Y-%m-%d"),
+            "training_items": training_items
+        }
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取日计划失败: {str(e)}")

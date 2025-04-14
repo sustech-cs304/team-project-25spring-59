@@ -51,6 +51,7 @@ import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import axios from "axios";
 import MouseTrail from "../components/MouseTrail.vue";
+import {API_BASE_URL} from "../configs/network_config.js";
 
 const router = useRouter();
 const username = ref("");
@@ -99,6 +100,21 @@ const goToRegister = () => {
   router.push("/register");
 };
 </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 <style scoped>
 /* 📌 背景视频 */
