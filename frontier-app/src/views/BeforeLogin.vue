@@ -54,10 +54,15 @@
 </template>
 
 
+
+
+
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
+import {API_BASE_URL} from "../configs/network_config.js";
+
 const router = useRouter();
 
 const isLoading = ref(true); // 控制是否显示启动页面
@@ -90,7 +95,7 @@ const initializeApp = async () => {
 // **检查后端服务器是否可用**
 const checkServerStatus = async () => {
   try {
-    await axios.get("http://127.0.0.1:5000/");
+    await axios.get(API_BASE_URL);
     console.log("✅ 服务器正常运行");
   } catch (error) {
     console.warn("⚠ 服务器无法连接");
@@ -120,6 +125,8 @@ const goToLogin = () => {
   router.push("/login");
 };
 </script>
+
+
 
 
 
