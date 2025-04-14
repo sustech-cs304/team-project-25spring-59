@@ -122,6 +122,17 @@ def get_training_records_by_date_range(db: Session, user_id: int, start_date: da
         models.TrainingRecord.start_time <= end_date
     ).all()
 
+def get_training_records_by_date(db: Session, user_id: int, date: datetime):
+    """获取用户在指定日期的训练记录"""
+    start_datetime = datetime.combine(date, datetime.min.time())
+    end_datetime = datetime.combine(date, datetime.max.time())
+    
+    return db.query(models.TrainingRecord).filter(
+        models.TrainingRecord.user_id == user_id,
+        models.TrainingRecord.start_time >= start_datetime,
+        models.TrainingRecord.start_time <= end_datetime
+    ).all()
+
 
 
 
