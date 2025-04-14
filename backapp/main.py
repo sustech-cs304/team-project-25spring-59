@@ -22,7 +22,9 @@ from sqlalchemy.orm import Session
 
 current_user_id = None
 app = FastAPI()
-SAVE_DIR = "./TrainMission/posts"
+SAVE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../TrainMission/posts")
+SAVE_DIR = os.path.abspath(SAVE_DIR)
+print("保存路径为：", SAVE_DIR)
 # 启动时初始化数据库
 @app.on_event("startup")
 def startup_db_client():
