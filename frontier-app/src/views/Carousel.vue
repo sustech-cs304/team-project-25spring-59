@@ -298,16 +298,20 @@ const infoItems = ref([
   pointer-events: none; /* 不干扰鼠标点击 */
 }
 
-/*  添加在右上角的图片 */
+/*  添加在左下角的banner的样式 */
 .activity-banner {
   position: fixed;
   bottom: 200px;  /* 跟按钮对齐，可微调 */
   left:80px;   /* 控制它离右边有多远，贴近按钮左边 */
-  width: 400px;
+  width: 450px;
   height: auto;
   z-index: 998;
   pointer-events: none; /* 不干扰鼠标点击 */
 }
+
+
+
+
 
 
 
