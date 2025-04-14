@@ -630,24 +630,30 @@ def get_training_summary(data: UserIdRequest, db: Session = Depends(get_db)):
     records = crud.get_training_records_by_user(db, user_id=data.user_id)
     print(f"[summary] 获取到记录数: {len(records)}")
 
-    total_minutes = sum([r.duration_minutes or 0 for r in records]) # type: ignore
+    total_minutes = sum([r.duration_minutes or 0 for r in records])
+    total_calories_actual = sum([r.calories or 0 for r in records])
+    average_heart_rates = [r.average_heart_rate for r in records if r.average_heart_rate]
+    max_heart_rates = [r.max_heart_rate for r in records if r.max_heart_rate]
+
     print(f"[summary] 总训练时长: {total_minutes} 分钟")
+    print(f"[summary] 实际卡路里总和: {total_calories_actual} kcal")
 
     user = crud.get_user_by_id(db, data.user_id)
     if not user:
         print("[summary] 用户不存在")
         raise HTTPException(status_code=404, detail="用户不存在")
 
-    weight = user.weight or 60 # type: ignore
-    print(f"[summary] 用户体重: {weight} kg")
-
+    weight = user.weight or 60
     MET = 8
-    total_calories = MET * weight * (total_minutes / 60)
-    print(f"[summary] 估算卡路里: {total_calories} kcal")
+    total_calories_estimated = MET * weight * (total_minutes / 60)
+    print(f"[summary] 估算卡路里: {total_calories_estimated} kcal")
 
     return {
         "total_minutes": total_minutes,
-        "estimated_calories": round(total_calories, 2)
+        "estimated_calories": round(total_calories_estimated, 2),
+        "actual_calories": total_calories_actual,
+        "average_heart_rate": int(sum(average_heart_rates)/len(average_heart_rates)) if average_heart_rates else None,
+        "max_heart_rate": max(max_heart_rates) if max_heart_rates else None
     }
 
 
@@ -666,16 +672,32 @@ def get_weekly_trend(data: UserIdRequest, db: Session = Depends(get_db)):
     trend = {}
     for i in range(7):
         day = (start_date + timedelta(days=i)).strftime("%Y-%m-%d")
-        trend[day] = 0
+        trend[day] = {
+            "duration_minutes": 0,
+            "calories": 0,
+            "avg_heart_rate": [],
+            "max_heart_rate": []
+        }
 
     for r in records:
         date_str = r.start_time.strftime("%Y-%m-%d")
-        #注释注释
-        trend[date_str] += r.duration_minutes or 0
+        trend[date_str]["duration_minutes"] += r.duration_minutes or 0
+        trend[date_str]["calories"] += r.calories or 0
+        if r.average_heart_rate:
+            trend[date_str]["avg_heart_rate"].append(r.average_heart_rate)
+        if r.max_heart_rate:
+            trend[date_str]["max_heart_rate"].append(r.max_heart_rate)
+
+    # 平均和最大心率整理
+    for day_data in trend.values():
+        avg_list = day_data["avg_heart_rate"]
+        max_list = day_data["max_heart_rate"]
+        day_data["avg_heart_rate"] = int(sum(avg_list)/len(avg_list)) if avg_list else None
+        day_data["max_heart_rate"] = max(max_list) if max_list else None
 
     print(f"[trend] 构造出的趋势数据: {trend}")
-
     return trend
+
 
 @app.post("/get-daily-plan")
 def get_daily_plan(request: DailyPlanRequest, db: Session = Depends(get_db)):
