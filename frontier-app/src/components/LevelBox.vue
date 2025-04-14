@@ -3,7 +3,7 @@ import { ref } from 'vue'
 
 const exp = ref(50) // 经验值
 const nextExp = ref(100) // 升级所需经验值
-const name = ref("玩家名");
+const name = ref("UserId: "+localStorage.getItem("user_id"));
 </script>
 
 <template>
