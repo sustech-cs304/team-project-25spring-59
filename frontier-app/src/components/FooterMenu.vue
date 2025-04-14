@@ -17,7 +17,7 @@
         <ul>
           <li>
             <img src="../assets/Images/icon/Common/cafe.png" alt="训练任务" class="menu-icon" />
-            <span @click="navigateTo('/trainMission')">训练任务</span>
+            <span @click="handleTrainMissionClick">训练任务</span>
           </li>
           <li>
             <img src="../assets/Images/icon/Common/lesson.png" alt="健身排课" class="menu-icon" />
@@ -62,6 +62,8 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import axios from 'axios'
+import {API_BASE_URL} from "../configs/network_config.js";
 
 const router = useRouter();
 const currentTime = ref("");
@@ -82,7 +84,37 @@ onMounted(() => {
 const navigateTo = (path) => {
   router.push(path);
 };
+
+const handleTrainMissionClick = async () => {
+  try {
+    const userId = localStorage.getItem('user_id')
+    if (!userId) {
+      console.error("未找到用户 ID")
+      return
+    }
+
+    await axios.post(`${API_BASE_URL}/generate-user-records`, {
+      user_id: userId
+    })
+    console.log('${API_BASE_URL}/generate-user-records')
+    console.log("成功调用api: /generate-user-records调用对应用户的运动记录")
+
+    router.push('/trainMission') //请求成功后跳转
+  } catch (error) {
+    console.error("生成用户记录失败:", error)
+  }
+}
 </script>
+
+
+
+
+
+
+
+
+
+
 
 <style scoped>
 /* 📌 整体 Footer 位置 */
@@ -98,16 +130,6 @@ const navigateTo = (path) => {
   align-items: center;
   z-index: 1000;
 }
-
-
-
-
-
-
-
-
-
-
 
 
 
