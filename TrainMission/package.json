@@ -14,6 +14,7 @@
     "preview": "vitepress serve"
   },
   "dependencies": {
+    "axios": "^1.8.4",
     "dayjs": "^1.11.13",
     "feed": "^4.2.2",
     "gray-matter": "^4.0.3",

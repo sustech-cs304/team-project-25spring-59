@@ -26,6 +26,8 @@ import TaskPanel from './TaskPanel.vue'
 import bgImage from '../../assets/plans/weekly_plan.png'
 import { ref, computed } from 'vue'
 import dayjs from 'dayjs'
+import {onMounted} from "vue";
+import axios from "axios";
 
 const currentDate = ref(dayjs())
 
@@ -59,6 +61,8 @@ const panelPositions = [
   { top: '665px', left: '870px' }
 ]
 
+// 计算 weekDays 和日期格式化
+// 计算 weekDays 和日期格式化
 const weekDays = computed(() => {
   const start = startOfWeek.value
   const labels = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
@@ -66,13 +70,65 @@ const weekDays = computed(() => {
   return Array.from({ length: 7 }).map((_, i) => {
     const date = start.add(i, 'day')
     return {
-      dateText: date.format('YYYY年M月D日'),
+      dateText: date.format('M月D日'), // 格式化成 "4月8日"
       weekday: labels[i],
       fullTitle: `${date.format('M月D日')}（${labels[i]}）`,
       tasks: [] // placeholder，下面替换进去
     }
   })
 })
+
+// 获取用户ID
+const userId = localStorage.getItem('user_id')
+
+const updateDailyTasks = async () => {
+  if (!userId) return
+
+  // 遍历 weekDays 获取每天的任务
+  for (let i = 0; i < 7; i++) {
+    const day = weekDays.value[i]
+    const dateStr = day.dateText // 获取几月几日格式的日期
+
+    try {
+      // 发送 API 请求，获取当天的训练记录
+      const response = await axios.post('http://127.0.0.1:8000/get-daily-plan', {
+        user_id: userId,
+        date_str: dateStr
+      })
+
+      // 获取返回的训练记录
+      const trainingItems = response.data.training_items || []
+
+      // 解析训练记录并更新 tasks
+      day.tasks = trainingItems.map(item => {
+        // 可以根据返回的格式对 item 进行处理
+        return item.replace(/\*\*/g, '') // 清除 ** 标记（如果有的话）
+      })
+
+      // 控制台输出每一天的任务
+      console.log(`任务 - ${day.fullTitle}:`, day.tasks)
+
+    } catch (error) {
+      console.error("获取每日任务失败", error)
+      day.tasks = [] // 请求失败时，清空任务
+    }
+  }
+}
+
+// 在组件挂载后获取每日任务
+onMounted(() => {
+  updateDailyTasks()
+})
+
+
+// 在组件挂载后获取每日任务
+onMounted(() => {
+  updateDailyTasks()
+})
+
+
+
+
 
 const fullWeekTasks = computed(() =>
   weekDays.value.map((item, index) => ({
