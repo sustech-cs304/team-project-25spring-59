@@ -1,28 +1,51 @@
 <template>
   <footer class="footer-menu">
-    <!-- 📌 1. 灰色背景（圆角平行四边形） -->
+    <!--  1. 灰色背景（圆角平行四边形） -->
     <div class="footer-bg">
-      <!-- 📌 2. 反向白色装饰（圆角平行四边形） -->
+      <!--  2. 反向白色装饰（圆角平行四边形） -->
       <div class="footer-decoration"></div>
 
-      <!-- 📌 3. 菜单项 -->
+      <!-- 叠加的图片装饰 -->
+      <!-- ✅ 左侧装饰图片 -->
+      <img src="../assets/Images/widget/deco-lobby.png" alt="left overlay" class="footer-overlay footer-overlay-left" />
+
+      <!-- ✅ 右侧装饰图片 -->
+      <img src="../assets/Images/widget/deco-lobby.png" alt="right overlay" class="footer-overlay footer-overlay-right" />
+
+      <!--  3. 菜单项 -->
       <nav class="footer-nav">
         <ul>
           <li>
-            <img src="../assets/icons/Raid_RankIcon_01.png" alt="训练任务" class="menu-icon" />
+            <img src="../assets/Images/icon/Common/cafe.png" alt="训练任务" class="menu-icon" />
             <span @click="navigateTo('/trainMission')">训练任务</span>
           </li>
           <li>
-            <img src="../assets/icons/Raid_RankIcon_02.png" alt="健身排课" class="menu-icon" />
+            <img src="../assets/Images/icon/Common/lesson.png" alt="健身排课" class="menu-icon" />
             <span @click="navigateTo('/about')">健身排课</span>
           </li>
           <li>
-            <img src="../assets/icons/Raid_RankIcon_03.png" alt="竞技排行" class="menu-icon" />
+            <img src="../assets/Images/icon/Common/students.png" alt="竞技排行" class="menu-icon" />
             <span @click="navigateTo('/services')">竞技排行</span>
           </li>
           <li>
-            <img src="../assets/icons/Raid_RankIcon_04.png" alt="社交分享" class="menu-icon" />
+            <img src="../assets/Images/icon/Common/formation.png" alt="社交分享" class="menu-icon" />
             <span @click="navigateTo('/contact')">社交分享</span>
+          </li>
+          <li>
+            <img src="../assets/Images/icon/Common/club.png" alt="Button5" class="menu-icon" />
+            <span @click="navigateTo('/trainMission')">Button5</span>
+          </li>
+          <li>
+            <img src="../assets/Images/icon/Common/crafting.png" alt="Button6" class="menu-icon" />
+            <span @click="navigateTo('/trainMission')">Button6</span>
+          </li>
+          <li>
+            <img src="../assets/Images/icon/Common/shop.png" alt="Button7" class="menu-icon" />
+            <span @click="navigateTo('/trainMission')">Button7</span>
+          </li>
+          <li>
+            <img src="../assets/Images/icon/Common/recruit.png" alt="Button8" class="menu-icon" />
+            <span @click="navigateTo('/trainMission')">Button8</span>
           </li>
         </ul>
       </nav>
@@ -76,21 +99,45 @@ const navigateTo = (path) => {
   z-index: 1000;
 }
 
-/* 📌 主要圆角灰色平行四边形背景 */
+/* 主要圆角灰色平行四边形背景 */
 .footer-bg {
+  /* ✅ 开启裁剪 */
+  //overflow: hidden;
+
+  /* 其余原样 */
   width: 100%;
   height: 100%;
   background-color: #dde7f6;
   transform: skewX(-10deg);
   border-radius: 15px;
-  //overflow: hidden;
-  overflow: visible;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 0 20px;
   position: relative;
 }
+
+/* ✅ 覆盖在 footer 背景上的透明图片 */
+/* 公共样式：两张图片共有的 */
+.footer-overlay {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  object-fit: contain;
+  z-index: 2;
+  pointer-events: none;
+}
+/* 左侧图片 */
+.footer-overlay-left {
+  left: 0;
+}
+/* 右侧图片 */
+.footer-overlay-right {
+  right: 0;
+  transform: scaleX(-1); /* ✅ 水平翻转以镜像左边装饰图（可选） */
+}
+
+
 
 /* 📌 反向白色装饰（圆角平行四边形） */
 .footer-decoration {
@@ -113,7 +160,7 @@ const navigateTo = (path) => {
 
 .footer-nav ul {
   display: flex;
-  gap: 150px; /* 🔹 调整菜单项间距 */
+  gap: 120px; /* 🔹 调整菜单项间距 */
   list-style: none;
   padding: 0;
   margin: 0;
@@ -143,10 +190,10 @@ const navigateTo = (path) => {
 
 /* 📌 菜单项上方的图标 */
 .menu-icon {
-  width: 100px; /* 🔹 缩小图片 */
-  height: 100px;
+  width: 60px; /* 🔹 缩小图片 */
+  height: auto;
   position: absolute;
-  top: -90px; /* 🔹 让图片超出 footer */
+  top: -80px; /* 🔹 让图片超出 footer */
   left: 50%;
   transform: translateX(-50%);
 }
