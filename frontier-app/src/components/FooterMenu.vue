@@ -21,7 +21,7 @@
           </li>
           <li>
             <img src="../assets/Images/icon/Common/lesson.png" alt="健身排课" class="menu-icon" />
-            <span @click="navigateTo('/about')">健身排课</span>
+            <span @click="navigateTo('/gym')">健身排课</span>
           </li>
           <li>
             <img src="../assets/Images/icon/Common/students.png" alt="竞技排行" class="menu-icon" />
