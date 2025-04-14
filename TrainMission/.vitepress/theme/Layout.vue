@@ -12,6 +12,7 @@
       </template>
       <Tag v-else-if="path === 'tags/'" />
       <Plans v-else-if="path === 'plans/'" />
+      <Dashboard v-else-if="path === 'dashboard/'" />
       <Article v-else />
 
       <!-- 只有在路径以 .md 结尾时才显示 DeleteButton 和 AlterButton -->
@@ -34,6 +35,7 @@ import AlterButton from './components/AlterButton.vue' // 导入自定义修改�
 import { computed } from 'vue'
 import { useRoute, useData } from 'vitepress'
 import { data as posts } from '../posts.data'
+import Dashboard from "./Dashboard.vue";
 
 // 获取站点的基本路径
 const base = useData().site.value.base
