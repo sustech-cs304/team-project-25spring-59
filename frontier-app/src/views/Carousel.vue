@@ -8,7 +8,7 @@ import * as PIXI from 'pixi.js'
 import { sound } from '@pixi/sound'
 import FooterMenu from "../components/FooterMenu.vue";
 import LevelBox from "../components/LevelBox.vue";
-
+import GridPanel from "../components/GridPanel.vue";
 
 
 // 定义 L2D 资源路径
@@ -114,6 +114,7 @@ const infoItems = ref([
 
 
 
+
 <template>
   <div id="background"></div>
 
@@ -123,6 +124,9 @@ const infoItems = ref([
     <router-view />
     <!-- 底部状态栏 -->
     <FooterMenu />
+
+    <!--  左上角的四宫格组件 -->
+    <GridPanel class="grid-panel-fixed" />
 
 
     <!--  右下角按钮容器 -->
@@ -481,6 +485,16 @@ hr {
   text-align: center;
   padding-top: 10px;
 }
+
+/* 左上角四宫格ui的样式 */
+.grid-panel-fixed {
+  position: fixed;
+  top: 150px;
+  left: -50px;
+  z-index: 999;
+  width: 400px; /* 可以自定义宽度 */
+}
+
 
 
 </style>
