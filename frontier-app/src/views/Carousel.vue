@@ -8,7 +8,7 @@ import * as PIXI from 'pixi.js'
 import { sound } from '@pixi/sound'
 import FooterMenu from "../components/FooterMenu.vue";
 import LevelBox from "../components/LevelBox.vue";
-
+import GridPanel from "../components/GridPanel.vue";
 
 
 // 定义 L2D 资源路径
@@ -114,23 +114,54 @@ const infoItems = ref([
 
 
 
+
 <template>
   <div id="background"></div>
 
   <div class="main-container">
-    <LevelBox /> <!-- ✅ 左上角的等级组件 -->
+    <LevelBox /> <!--  左上角的等级组件 -->
 
     <router-view />
     <!-- 底部状态栏 -->
     <FooterMenu />
 
-     <!-- 右下角按钮图片 -->
+    <!--  左上角的四宫格组件 -->
+    <GridPanel class="grid-panel-fixed" />
+
+
+    <!--  右下角按钮容器 -->
+    <div class="switch-wrapper" @click="playTransition">
+      <img
+        src="../../public/task.png"
+        alt="切换按钮"
+        class="switch-button"
+      />
+      <div class="switch-label">训练数据</div>
+    </div>
+
+    <!--  按钮左侧图标，单独存在 -->
     <img
-      src="../../public/task.png"
-      alt="切换按钮"
-      class="switch-button"
-      @click="playTransition"
+      src="../assets/Images/icon/Common/event.png"
+      alt="左侧图标"
+      class="left-of-switch"
     />
+
+    <!--  按钮左侧图标，单独存在 -->
+    <img
+      src="../assets/Images/widget/Enter/60000_Jp.png"
+      alt="右侧图标"
+      class="under-right-component"
+    />
+
+
+    <!--  按钮左侧图标，单独存在 -->
+    <img
+      src="../assets/Images/widget/Banner/50000_Jp.png"
+      alt="左下banner"
+      class="activity-banner"
+    />
+
+
 
     <!-- 过渡动画（默认隐藏） -->
     <div v-if="isPlaying" class="transition-overlay">
@@ -222,6 +253,67 @@ const infoItems = ref([
 .switch-button:hover {
   transform: scale(1.1);
 }
+/* ✅ 整个按钮 + 文字容器 */
+.switch-wrapper {
+  position: fixed;
+  bottom: 180px;
+  right: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  z-index: 999;
+}
+
+/* ✅ 说明文字 */
+.switch-label {
+  position: absolute;
+  left: -110px;
+  font-size: 20px;
+  color: #ffffff;
+  font-weight: bold;
+  font-family: "BlueakaBeta", sans-serif;
+}
+
+
+/*  单独添加在按钮左侧的图片 */
+.left-of-switch {
+  position: fixed;
+  bottom: 180px;  /* 跟按钮对齐，可微调 */
+  right: 170px;   /* 控制它离右边有多远，贴近按钮左边 */
+  width: 150px;
+  height: auto;
+  z-index: 998;
+  pointer-events: none; /* 不干扰鼠标点击 */
+}
+
+/*  添加在右上角的图片 */
+.under-right-component {
+  position: fixed;
+  bottom: 800px;  /* 跟按钮对齐，可微调 */
+  right: 0px;   /* 控制它离右边有多远，贴近按钮左边 */
+  width: 200px;
+  height: auto;
+  z-index: 998;
+  pointer-events: none; /* 不干扰鼠标点击 */
+}
+
+/*  添加在左下角的banner的样式 */
+.activity-banner {
+  position: fixed;
+  bottom: 200px;  /* 跟按钮对齐，可微调 */
+  left:80px;   /* 控制它离右边有多远，贴近按钮左边 */
+  width: 450px;
+  height: auto;
+  z-index: 998;
+  pointer-events: none; /* 不干扰鼠标点击 */
+}
+
+
+
+
+
+
 
 /* 📌 过渡动画遮罩 */
 .transition-overlay {
@@ -397,6 +489,16 @@ hr {
   text-align: center;
   padding-top: 10px;
 }
+
+/* 左上角四宫格ui的样式 */
+.grid-panel-fixed {
+  position: fixed;
+  top: 150px;
+  left: -50px;
+  z-index: 999;
+  width: 400px; /* 可以自定义宽度 */
+}
+
 
 
 </style>
