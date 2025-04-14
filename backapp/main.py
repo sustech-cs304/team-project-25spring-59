@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import sys
 import os
 import re
-from auth.token import create_access_token
+from backapp.auth.token import create_access_token
 from fastapi.security import OAuth2PasswordRequestForm
 from backapp.auth.dependencies import get_current_user
 
