@@ -7,6 +7,7 @@ import ImageDetail from "../views/ImageDetail.vue";
 import Register from "../views/Register.vue";
 import Transition from "../components/Transition.vue";
 import BeforeLogin from "../views/BeforeLogin.vue";
+import Gym from "../views/Gym.vue";
 
 const routes = [
   { path: '/', redirect: '/beforeLogin' },
@@ -18,7 +19,7 @@ const routes = [
   // { path: '/trainMission', component: TrainMission, meta: { requiresAuth: false } },
   { path: '/transition', component: Transition }, // 新增过渡页面路由
   { path: '/image/:id', component: ImageDetail, meta: { requiresAuth: false } },
-
+  { path: '/gym', component: Gym, meta: { requiresAuth: false } },
 ];
 
 const router = createRouter({
