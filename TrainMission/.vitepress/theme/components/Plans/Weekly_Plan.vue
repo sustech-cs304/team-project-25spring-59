@@ -16,17 +16,14 @@
     :tasks="day.tasks"
     :panelStyle="panelPositions[index]"
   />
-
-
-
 </template>
 
 <script setup lang="ts">
 import TaskPanel from './TaskPanel.vue'
 import bgImage from '../../assets/plans/weekly_plan.png'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import dayjs from 'dayjs'
-import {onMounted} from "vue";
+import { onMounted } from "vue";
 import axios from "axios";
 
 const currentDate = ref(dayjs())
@@ -37,19 +34,6 @@ const dateRange = computed(() =>
   `${startOfWeek.value.format('YYYY年M月D日')} - ${endOfWeek.value.format('M月D日')}`
 )
 
-const prevWeek = () => currentDate.value = currentDate.value.subtract(1, 'week')
-const nextWeek = () => currentDate.value = currentDate.value.add(1, 'week')
-
-// 每天的任务
-// const weekTasks = [
-//   { title: '周一', tasks: ['✔️ 写周报', '🧘 冥想', '✔️ 写周报', '🧘 冥想', '✔️ 写周报', '🧘 冥想', '✔️ 写周报', '🧘 冥想'] },
-//   { title: '周二', tasks: ['📖 阅读 20 页', '✅ 英语练习'] },
-//   { title: '周三', tasks: ['🏃 跑步 3 公里'] },
-//   { title: '周四', tasks: ['💻 写代码', '☕ 放松一下'] },
-//   { title: '周五', tasks: ['✅ 总结', '🍿 电影时间'] },
-//   { title: '周六', tasks: ['🧹 打扫', '🎮 玩游戏'] },
-//   { title: '周日', tasks: ['📝 反思', '📅 下周计划'] }
-// ]
 
 // 将 weekTasks 定义为 ref 数组
 const weekTasks = ref([
@@ -72,7 +56,6 @@ const panelPositions = [
   { top: '665px', left: '870px' }
 ]
 
-// 计算 weekDays 和日期格式化
 // 计算 weekDays 和日期格式化
 const weekDays = computed(() => {
   const start = startOfWeek.value
@@ -113,7 +96,6 @@ const updateDailyTasks = async () => {
 
       // 解析训练记录并更新 tasks
       day.tasks = trainingItems.map(item => {
-        // 可以根据返回的格式对 item 进行处理
         return item.replace(/\*\*/g, '') // 清除 ** 标记（如果有的话）
       })
 
@@ -135,14 +117,23 @@ onMounted(() => {
   updateDailyTasks()
 })
 
+// 更新 weekDays 数据，计算每一周的日期
+const updateWeekDays = () => {
+  // 更新 currentDate，触发 weekDays 的重新计算
+  currentDate.value = dayjs(currentDate.value) // 强制触发响应式更新
+}
 
-// 在组件挂载后获取每日任务
-onMounted(() => {
-  updateDailyTasks()
-})
+const prevWeek = () => {
+  currentDate.value = currentDate.value.subtract(1, 'week')
+  updateWeekDays() // 更新 weekDays
+  updateDailyTasks() // 刷新任务
+}
 
-
-
+const nextWeek = () => {
+  currentDate.value = currentDate.value.add(1, 'week')
+  updateWeekDays() // 更新 weekDays
+  updateDailyTasks() // 刷新任务
+}
 
 
 const fullWeekTasks = computed(() =>
@@ -152,8 +143,8 @@ const fullWeekTasks = computed(() =>
   }))
 )
 
-
 </script>
+
 <style lang="scss" scoped>
 .weekly-plan {
   width: 100%;
@@ -173,41 +164,40 @@ const fullWeekTasks = computed(() =>
   background-position: center;
 
   .header {
-  position: absolute;
-  top: 20px;
-  left: 430px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 6px;
-  background: rgba(255, 255, 255, 0.5);
-  border-radius: 6px;
-  font-size: 20px;
-  transform: scale(0.6);
-  transform-origin: top right;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-
-  .date-range {
-    font-size: 20px;
-    padding: 2px 4px;
-    white-space: nowrap;
-  }
-
-  .controls {
+    position: absolute;
+    top: 20px;
+    left: 430px;
     display: flex;
-    gap: 4px;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 6px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 6px;
+    font-size: 20px;
+    transform: scale(0.6);
+    transform-origin: top right;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 
-    .el-button {
-      font-size: 11px;
-      padding: 2px 5px;
-      height: auto;
-      line-height: 1;
-      background-color: rgba(255, 255, 255, 0.4);
-      border: none;
-      color: #333;
+    .date-range {
+      font-size: 20px;
+      padding: 2px 4px;
+      white-space: nowrap;
+    }
+
+    .controls {
+      display: flex;
+      gap: 4px;
+
+      .el-button {
+        font-size: 11px;
+        padding: 2px 5px;
+        height: auto;
+        line-height: 1;
+        background-color: rgba(255, 255, 255, 0.4);
+        border: none;
+        color: #333;
+      }
     }
   }
-}
-
 }
 </style>
