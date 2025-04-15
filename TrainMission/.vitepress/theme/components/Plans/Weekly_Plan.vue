@@ -41,15 +41,26 @@ const prevWeek = () => currentDate.value = currentDate.value.subtract(1, 'week')
 const nextWeek = () => currentDate.value = currentDate.value.add(1, 'week')
 
 // 每天的任务
-const weekTasks = [
-  { title: '周一', tasks: ['✔️ 写周报', '🧘 冥想', '✔️ 写周报', '🧘 冥想', '✔️ 写周报', '🧘 冥想', '✔️ 写周报', '🧘 冥想'] },
-  { title: '周二', tasks: ['📖 阅读 20 页', '✅ 英语练习'] },
-  { title: '周三', tasks: ['🏃 跑步 3 公里'] },
-  { title: '周四', tasks: ['💻 写代码', '☕ 放松一下'] },
-  { title: '周五', tasks: ['✅ 总结', '🍿 电影时间'] },
-  { title: '周六', tasks: ['🧹 打扫', '🎮 玩游戏'] },
-  { title: '周日', tasks: ['📝 反思', '📅 下周计划'] }
-]
+// const weekTasks = [
+//   { title: '周一', tasks: ['✔️ 写周报', '🧘 冥想', '✔️ 写周报', '🧘 冥想', '✔️ 写周报', '🧘 冥想', '✔️ 写周报', '🧘 冥想'] },
+//   { title: '周二', tasks: ['📖 阅读 20 页', '✅ 英语练习'] },
+//   { title: '周三', tasks: ['🏃 跑步 3 公里'] },
+//   { title: '周四', tasks: ['💻 写代码', '☕ 放松一下'] },
+//   { title: '周五', tasks: ['✅ 总结', '🍿 电影时间'] },
+//   { title: '周六', tasks: ['🧹 打扫', '🎮 玩游戏'] },
+//   { title: '周日', tasks: ['📝 反思', '📅 下周计划'] }
+// ]
+
+// 将 weekTasks 定义为 ref 数组
+const weekTasks = ref([
+  { title: '周一', tasks: [] },
+  { title: '周二', tasks: [] },
+  { title: '周三', tasks: [] },
+  { title: '周四', tasks: [] },
+  { title: '周五', tasks: [] },
+  { title: '周六', tasks: [] },
+  { title: '周日', tasks: [] }
+])
 
 const panelPositions = [
   { top: '410px', left: '470px' },
@@ -90,6 +101,7 @@ const updateDailyTasks = async () => {
     const dateStr = day.dateText // 获取几月几日格式的日期
 
     try {
+      console.log("当前调用的命令："+userId+" "+ dateStr)
       // 发送 API 请求，获取当天的训练记录
       const response = await axios.post('http://127.0.0.1:8000/get-daily-plan', {
         user_id: userId,
@@ -107,6 +119,9 @@ const updateDailyTasks = async () => {
 
       // 控制台输出每一天的任务
       console.log(`任务 - ${day.fullTitle}:`, day.tasks)
+
+      // 更新 weekTasks 中对应的任务内容
+      weekTasks.value[i].tasks = day.tasks
 
     } catch (error) {
       console.error("获取每日任务失败", error)
@@ -132,8 +147,8 @@ onMounted(() => {
 
 const fullWeekTasks = computed(() =>
   weekDays.value.map((item, index) => ({
-    title: item.fullTitle,     // ✅ M月D日（周X）
-    tasks: weekTasks[index]?.tasks || []
+    title: item.fullTitle,     // M月D日（周X）
+    tasks: weekTasks.value[index]?.tasks || [] // 使用动态的 weekTasks
   }))
 )
 
