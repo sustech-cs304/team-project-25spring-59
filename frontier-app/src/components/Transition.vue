@@ -51,14 +51,15 @@ onMounted(() => {
 
   // 获取跳转路径
   const redirectPath = route.query.redirect || '/';
+  router.push(redirectPath);
 
-  if (redirectPath === '/trainMission') {
-    // 目标是 /trainMission，跳转到 3000 端口
-    window.location.href = 'http://localhost:3000/';
-  } else {
-    // 其他路径正常跳转
-    router.push(redirectPath);
-  }
+  // if (redirectPath === '/trainMission') {
+  //   // 目标是 /trainMission，跳转到 3000 端口
+  //   window.location.href = 'http://localhost:3000/';
+  // } else {
+  //   // 其他路径正常跳转
+  //   router.push(redirectPath);
+  // }
   }, 2500);
 
 });

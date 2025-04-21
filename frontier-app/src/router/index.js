@@ -7,6 +7,7 @@ import ImageDetail from "../views/ImageDetail.vue";
 import Register from "../views/Register.vue";
 import Transition from "../components/Transition.vue";
 import BeforeLogin from "../views/BeforeLogin.vue";
+import TrainMission from "../views/TrainMission.vue";
 import Gym from "../views/Gym.vue";
 
 const routes = [
@@ -16,7 +17,7 @@ const routes = [
   { path: '/beforeLogin', component: BeforeLogin },
   { path: '/dashboard', component: Dashboard, meta: { requiresAuth: false } },
   { path: '/carousel', component: Carousel, meta: { requiresAuth: false } }, // 主页面
-  // { path: '/trainMission', component: TrainMission, meta: { requiresAuth: false } },
+  { path: '/trainMission', component: TrainMission, meta: { requiresAuth: false } },
   { path: '/transition', component: Transition }, // 新增过渡页面路由
   { path: '/image/:id', component: ImageDetail, meta: { requiresAuth: false } },
   { path: '/gym', component: Gym, meta: { requiresAuth: false } },

@@ -98,7 +98,6 @@ const handleTrainMissionClick = async () => {
     })
     console.log('${API_BASE_URL}/generate-user-records')
     console.log("成功调用api: /generate-user-records调用对应用户的运动记录")
-
     router.push('/trainMission') //请求成功后跳转
   } catch (error) {
     console.error("生成用户记录失败:", error)
