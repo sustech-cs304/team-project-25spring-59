@@ -17,14 +17,11 @@
       />
     </main>
 
-    <PlanList />
   </div>
 </template>
 
 <script setup lang="ts">
-import Banner from '../components/TrainMission/Banner.vue' // 你根据实际路径调整
-import Header from '../components/TrainMission/Header.vue'
-import PlanList from '../components/TrainMission/MissionListVisualize/Planlist.vue'
+import Header from '../../components/TrainMission/Header.vue'
 import {ref, onMounted} from "vue";
 const routeBase = ref('/')
 onMounted(() => {

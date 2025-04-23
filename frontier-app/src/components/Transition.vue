@@ -60,7 +60,7 @@ onMounted(() => {
   //   // 其他路径正常跳转
   //   router.push(redirectPath);
   // }
-  }, 2500);
+  }, 250); // 在这里transition时间被缩短了10倍，正常是2500，记得改回来
 
 });
 
