@@ -11,6 +11,7 @@ directly copy the code from its response
 """
 SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:shiyansong123@localhost:3306/health_assistant"
 # SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:123456@localhost:3306/health_assistant"
+# SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:708611@localhost:3306/health_assistant"
 
 # 创建同步引擎
 engine = create_engine(

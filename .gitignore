@@ -5,5 +5,8 @@
 /TrainMission/node_modules/dayjs
 /node_modules
 /backapp/auth/__pycache__
-package-lock.json
-package.json
+
+.idea
+requirement.txt
+/backapp/cmd
+/backapp/test_data.sql
