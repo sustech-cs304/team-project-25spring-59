@@ -629,58 +629,71 @@ def get_weekly_plan(request: WeeklyPlanRequest, db: Session = Depends(get_db)):
 def get_training_summary(data: UserIdRequest, db: Session = Depends(get_db)):
     print(f"[summary] 收到 user_id: {data.user_id}")
 
+    # 获取训练记录
     records = crud.get_training_records_by_user(db, user_id=data.user_id)
     print(f"[summary] 获取到记录数: {len(records)}")
 
+    # 计算总训练时长和实际卡路里
     total_minutes = sum([r.duration_minutes or 0 for r in records])
     total_calories_actual = sum([r.calories or 0 for r in records])
     average_heart_rates = [r.average_heart_rate for r in records if r.average_heart_rate]
     max_heart_rates = [r.max_heart_rate for r in records if r.max_heart_rate]
 
+    # 输出调试信息
     print(f"[summary] 总训练时长: {total_minutes} 分钟")
     print(f"[summary] 实际卡路里总和: {total_calories_actual} kcal")
 
+    # 获取用户数据
     user = crud.get_user_by_id(db, data.user_id)
     if not user:
         print("[summary] 用户不存在")
         raise HTTPException(status_code=404, detail="用户不存在")
 
-    weight = user.weight or 60
-    MET = 8
+    weight = user.weight or 60  # 默认体重60kg
+    MET = 8  # MET值，这里假设为8
     total_calories_estimated = MET * weight * (total_minutes / 60)
+
+    # 输出估算卡路里
     print(f"[summary] 估算卡路里: {total_calories_estimated} kcal")
 
+    # 返回统计信息
     return {
         "total_minutes": total_minutes,
         "estimated_calories": round(total_calories_estimated, 2),
         "actual_calories": total_calories_actual,
-        "average_heart_rate": int(sum(average_heart_rates)/len(average_heart_rates)) if average_heart_rates else None,
+        "average_heart_rate": int(sum(average_heart_rates) / len(average_heart_rates)) if average_heart_rates else None,
         "max_heart_rate": max(max_heart_rates) if max_heart_rates else None
     }
 
 
 @app.post("/stats/weekly-trend")
-def get_weekly_trend(data: UserIdRequest, db: Session = Depends(get_db)):
+def get_weekly_trend(data: UserIdRequest, start_date: str, end_date: str, db: Session = Depends(get_db)):
     print(f"[trend] 收到 user_id: {data.user_id}")
 
-    end_date = datetime.now()
-    start_date = end_date - timedelta(days=6)
+    try:
+        # 将传入的字符串日期转换为 datetime 对象
+        start_date = datetime.strptime(start_date, "%Y-%m-%d")
+        end_date = datetime.strptime(end_date, "%Y-%m-%d")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="日期格式错误，应为 YYYY-MM-DD")
+
     print(f"[trend] 查询时间范围: {start_date.date()} 到 {end_date.date()}")
 
+    # 获取指定日期范围的训练记录
     records = crud.get_training_records_by_date_range(
-        db, user_id=data.user_id, start_date=start_date, end_date=end_date)
+        db, user_id=data.user_id, start_date=start_date, end_date=end_date
+    )
     print(f"[trend] 获取到记录数: {len(records)}")
 
-    trend = {}
-    for i in range(7):
-        day = (start_date + timedelta(days=i)).strftime("%Y-%m-%d")
-        trend[day] = {
+    # 初始化趋势数据
+    trend = { (start_date + timedelta(days=i)).strftime("%Y-%m-%d"): {
             "duration_minutes": 0,
             "calories": 0,
             "avg_heart_rate": [],
             "max_heart_rate": []
-        }
+        } for i in range((end_date - start_date).days + 1)}
 
+    # 处理记录并填充趋势数据
     for r in records:
         date_str = r.start_time.strftime("%Y-%m-%d")
         trend[date_str]["duration_minutes"] += r.duration_minutes or 0
@@ -690,16 +703,15 @@ def get_weekly_trend(data: UserIdRequest, db: Session = Depends(get_db)):
         if r.max_heart_rate:
             trend[date_str]["max_heart_rate"].append(r.max_heart_rate)
 
-    # 平均和最大心率整理
+    # 计算平均心率和最大心率
     for day_data in trend.values():
         avg_list = day_data["avg_heart_rate"]
         max_list = day_data["max_heart_rate"]
-        day_data["avg_heart_rate"] = int(sum(avg_list)/len(avg_list)) if avg_list else None
+        day_data["avg_heart_rate"] = int(sum(avg_list) / len(avg_list)) if avg_list else None
         day_data["max_heart_rate"] = max(max_list) if max_list else None
 
     print(f"[trend] 构造出的趋势数据: {trend}")
     return trend
-
 
 @app.post("/get-daily-plan")
 def get_daily_plan(request: DailyPlanRequest, db: Session = Depends(get_db)):
