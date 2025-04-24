@@ -3,3 +3,7 @@
 /TrainMission/.vitepress/cache/deps
 /TrainMission/.vitepress/cache/deps
 /TrainMission/node_modules/dayjs
+.idea
+requirement.txt
+/backapp/cmd
+/backapp/test_data.sql
