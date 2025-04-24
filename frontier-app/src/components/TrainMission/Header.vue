@@ -34,10 +34,10 @@ interface MenuItem {
 }
 
 const menuList: MenuItem[] = [
-  { name: '首页', url: '' },
-  { name: '运动标签', url: 'tags/' },
-  { name: '任务列表', url: 'plans/' },
-  { name: '训练数据', url: 'dashboard/' }
+  { name: '首页', url: 'TrainMission' },
+  { name: '运动界面', url: 'TrainMission/Specification' },
+  { name: '任务列表', url: 'TrainMission/Plans' },
+  { name: '训练数据', url: 'TrainMission/Dashboard' }
 ]
 </script>
 

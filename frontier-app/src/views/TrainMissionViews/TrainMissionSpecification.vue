@@ -2,33 +2,29 @@
   <div class="layout-wrapper">
     <div class="background-color-layer" />
     <div class="background-image-layer" />
+    <!-- 顶部 Header 固定 -->
     <Header :base="routeBase" />
 
-    <main>
-      <Banner
-        cover="/assets/banner/banner.webp"
-        hello="Hello, Vue"
-        highText="Sensei’ TrainMission"
-        motto="何気ない日常で、ほんの少しの奇跡を見つける物語。"
-        :social="[
-          { icon: 'fa-github', url: 'https://github.com' },
-          { icon: 'fa-twitter', url: 'https://twitter.com' }
-        ]"
-      />
+    <!-- 主体内容 -->
+    <main class="train-mission-main">
+      <LevelBox />
+      <Specification />
     </main>
 
-    <PlanList />
   </div>
 </template>
 
 <script setup lang="ts">
-import Banner from '../components/TrainMission/Banner.vue' // 你根据实际路径调整
-import Header from '../components/TrainMission/Header.vue'
-import PlanList from '../components/TrainMission/MissionListVisualize/Planlist.vue'
+import Header from '../../components/TrainMission/Header.vue'
+import LevelBox from '../../components/TrainMission/MissionListVisualize/LevelBoxTrainMission.vue'
 import {ref, onMounted} from "vue";
+import Specification from "../../components/TrainMission/MissionListVisualize/Specification.vue";
 const routeBase = ref('/')
+const userid = ref('')
+
 onMounted(() => {
-  routeBase.value = window.location.origin + '/'  // 自动拼接 /
+  routeBase.value = window.location.origin + '/'
+  userid.value = localStorage.getItem('user_id') || '未知用户'
 })
 
 
@@ -63,10 +59,11 @@ onMounted(() => {
   }
 }
 
-main {
+.train-mission-main {
   position: relative;
   z-index: 1;
-  padding: 0; // 去掉默认 padding
+  padding: 0;
+  margin-top: 120px;
 }
 
 </style>

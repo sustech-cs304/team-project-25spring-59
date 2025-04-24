@@ -4,6 +4,7 @@ import ElementPlus from 'element-plus';
 import 'element-plus/dist/index.css';
 import ArcoDesign from '@arco-design/web-vue'
 import '@arco-design/web-vue/dist/arco.css'
+import 'animate.css' // 引入animate动画库
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 
 

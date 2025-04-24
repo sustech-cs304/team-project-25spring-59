@@ -4,28 +4,18 @@
     <div class="background-image-layer" />
     <Header :base="routeBase" />
 
-    <main>
-      <Banner
-        cover="/assets/banner/banner.webp"
-        hello="Hello, Vue"
-        highText="Sensei’ TrainMission"
-        motto="何気ない日常で、ほんの少しの奇跡を見つける物語。"
-        :social="[
-          { icon: 'fa-github', url: 'https://github.com' },
-          { icon: 'fa-twitter', url: 'https://twitter.com' }
-        ]"
-      />
-    </main>
+    <CalorieChart/>
+    <TimeBar/>
 
-    <PlanList />
   </div>
 </template>
 
 <script setup lang="ts">
-import Banner from '../components/TrainMission/Banner.vue' // 你根据实际路径调整
-import Header from '../components/TrainMission/Header.vue'
-import PlanList from '../components/TrainMission/MissionListVisualize/Planlist.vue'
+import Header from '../../components/TrainMission/Header.vue'
+import CalorieChart from "../../components/TrainMission/Charts/CalorieChart.vue";
+import TimeBar from "../../components/TrainMission/Charts/TimeBar.vue";
 import {ref, onMounted} from "vue";
+import Weekly_Plan from "../../components/TrainMission/Plans/Weekly_Plan.vue";
 const routeBase = ref('/')
 onMounted(() => {
   routeBase.value = window.location.origin + '/'  // 自动拼接 /

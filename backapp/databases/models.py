@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Float, Boolean, JSON
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Float, Boolean, JSON, Table
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
 import enum
@@ -7,11 +7,18 @@ from sqlalchemy.orm import relationship
 
 Base = declarative_base()
 
+# 用户-好友关联表（多对多）
+friendship = Table(
+    'friendships',
+    Base.metadata,
+    Column('user_id', Integer, ForeignKey('users.id'), primary_key=True),
+    Column('friend_id', Integer, ForeignKey('users.id'), primary_key=True)
+)
+
 class User(Base):
     __tablename__ = "users"
     
     id = Column(Integer, primary_key=True, index=True)
-    # 为String类型指定长度，MySQL要求String必须有长度限制
     username = Column(String(50), unique=True, index=True)
     email = Column(String(100), unique=True, index=True)
     password = Column(String(100))  
@@ -22,9 +29,23 @@ class User(Base):
     weight = Column(Float, nullable=True) 
     is_active = Column(Boolean, default=True)
 
-    # training_records = relationship("TrainingRecord", back_populates="user", cascade="all, delete-orphan",passive_deletes=True)
-    # def __repr__(self):
-    #     return f"<User(id={self.id}, username={self.username})>"
+    # 统计信息
+    total_workouts = Column(Integer, default=0)  # 总训练次数
+    total_minutes = Column(Integer, default=0)  # 总训练时长(分钟)
+    total_calories = Column(Integer, default=0)  # 总消耗卡路里
+    
+    # 社交关系
+    friends = relationship(
+        "User", 
+        secondary=friendship,
+        primaryjoin=id==friendship.c.user_id,
+        secondaryjoin=id==friendship.c.friend_id,
+        backref="friend_of"
+    )
+    
+    # 关系定义
+    posts = relationship("Post", back_populates="user", cascade="all, delete-orphan")
+    challenge_participations = relationship("UserChallenge", back_populates="user", cascade="all, delete-orphan")
 
 class TrainingRecord(Base):
     __tablename__ = "training_records"
@@ -40,7 +61,14 @@ class TrainingRecord(Base):
     activity_type = Column(String(20), nullable=True)
     duration_minutes = Column(Integer, nullable=True)  # 运动时长(分钟)
     
-    # # 详细训练数据
+    # 新增字段
+    is_completed = Column(Boolean, default=False)  # 是否完成
+    record_type = Column(String(10), default="record")  # "record"表示记录, "plan"表示计划
+    
+    # 提醒设置
+    reminder_time = Column(DateTime, nullable=True)  # 提醒时间
+    
+    # 详细训练数据
     distance = Column(Float, nullable=True)  # 距离
     calories = Column(Integer, nullable=True)  # 卡路里
     average_heart_rate = Column(Integer, nullable=True)  # 平均心率
@@ -48,40 +76,10 @@ class TrainingRecord(Base):
     # 每分钟心率数据，使用JSON格式存储
     # 格式: {"1": 120, "2": 125, "3": 130, ...} 表示第1分钟心率120，第2分钟心率125...
     minute_heart_rates = Column(JSON, nullable=True)
-    
-    # # 记录管理
-    # created_at = Column(DateTime, server_default=func.now())  # 记录创建时间
-    # updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())  # 记录更新时间
-    
-    # 关系定义 - 建立与用户表的关联
-    # user = relationship("User", back_populates="training_records")
-    
-    # def __repr__(self):
-    #     return f"<TrainingRecord(id={self.id}, user_id={self.user_id}, activity={self.activity_type}, duration={self.duration_minutes})>"
-    
 
-class TrainingTask(Base):
-    __tablename__ = "training_tasks"
-    
-    id = Column(Integer, primary_key=True, index=True)
+    # 关联用户
+    user = relationship("User", backref="training_records")
 
-
-    # 外键关联用户表
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    
-    # 任务基本信息
-    task_name = Column(String(100), nullable=False)
-    start_time = Column(DateTime, nullable=False)
-    end_time = Column(DateTime, nullable=False)
-    
-    # 关系定义 - 与用户表建立关联
-    user = relationship("User", backref="training_tasks")
-    
-    # 记录管理
-    # created_at = Column(DateTime, server_default=func.now())
-    # updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
-    # def __repr__(self):
-    #     return f"<TrainingTask(id={self.id}, user_id={self.user_id}, task_name={self.task_name})>"
 
 class Gym(Base):
     """健身房表"""
@@ -154,3 +152,98 @@ class GymReservation(Base):
     
     def __repr__(self):
         return f"<GymReservation(id={self.id}, user_id={self.user_id}, gym_id={self.gym_id})>"
+
+class Challenge(Base):
+    """挑战表"""
+    __tablename__ = "challenges"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(100), nullable=False)
+    description = Column(String(500), nullable=True)
+    start_date = Column(DateTime, nullable=False)
+    end_date = Column(DateTime, nullable=False)
+    challenge_type = Column(String(20), nullable=False)  # distance, calories, workouts, etc.
+    target_value = Column(Float, nullable=False)  # 目标值
+    created_by = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+    is_public = Column(Boolean, default=True)  # 是否公开
+    
+    # 关系定义
+    creator = relationship("User", backref="created_challenges")
+    participants = relationship("UserChallenge", back_populates="challenge", cascade="all, delete-orphan")
+
+class UserChallenge(Base):
+    """用户参与挑战表"""
+    __tablename__ = "user_challenges"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    challenge_id = Column(Integer, ForeignKey("challenges.id", ondelete="CASCADE"), nullable=False)
+    join_date = Column(DateTime, server_default=func.now())
+    current_value = Column(Float, default=0)  # 当前完成值
+    completed = Column(Boolean, default=False)
+    
+    # 关系定义
+    user = relationship("User", back_populates="challenge_participations")
+    challenge = relationship("Challenge", back_populates="participants")
+
+class Post(Base):
+    """社交帖子表"""
+    __tablename__ = "posts"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    content = Column(String(500), nullable=False)
+    image_url = Column(String(255), nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
+    likes_count = Column(Integer, default=0)
+    comments_count = Column(Integer, default=0)
+    
+    # 可以关联到训练记录
+    training_record_filename = Column(String(255), ForeignKey("training_records.filename"), nullable=True)
+    
+    # 关系定义
+    user = relationship("User", back_populates="posts")
+    likes = relationship("Like", back_populates="post", cascade="all, delete-orphan")
+    comments = relationship("Comment", back_populates="post", cascade="all, delete-orphan")
+    training_record = relationship("TrainingRecord", backref="posts")
+
+class Like(Base):
+    """点赞表"""
+    __tablename__ = "likes"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    post_id = Column(Integer, ForeignKey("posts.id", ondelete="CASCADE"), nullable=False)
+    created_at = Column(DateTime, server_default=func.now())
+    
+    # 关系定义
+    user = relationship("User", backref="likes")
+    post = relationship("Post", back_populates="likes")
+
+class Comment(Base):
+    """评论表"""
+    __tablename__ = "comments"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    post_id = Column(Integer, ForeignKey("posts.id", ondelete="CASCADE"), nullable=False)
+    content = Column(String(300), nullable=False)
+    created_at = Column(DateTime, server_default=func.now())
+    
+    # 关系定义
+    user = relationship("User", backref="comments")
+    post = relationship("Post", back_populates="comments")
+
+class UserBodyLog(Base):
+    """用户身体数据日志表"""
+    __tablename__ = "user_body_logs"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    log_date = Column(DateTime, nullable=False)
+    weight = Column(Float, nullable=True)  # 体重(kg)
+    body_fat = Column(Float, nullable=True)  # 体脂率(%)
+    muscle_mass = Column(Float, nullable=True)  # 肌肉量(kg)
+    
+    # 关系定义
+    user = relationship("User", backref="body_logs")
