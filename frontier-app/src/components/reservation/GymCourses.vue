@@ -13,7 +13,7 @@ const dateList = [
     new Date("2003-02-03 07:30:00"),
     new Date("2003-02-07 08:30:00"),
     new Date("2003-03-01 09:00:00"),
-].sort((a,b)=>a-b)
+].sort((a,b)=>a-b)  // sorted from small to large
 const index = ref(0)
 const dateListShow = (start, end) => dateList.slice(start, end)  // export date slice
 
