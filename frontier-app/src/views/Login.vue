@@ -85,8 +85,6 @@ const login = async () => {
     
     router.push("/carousel"); // 登录成功后跳转到 Carousel 页面
 
-    const blogUrl = `http://localhost:3000/vitepress-theme-sakura/?user_id=${userId}`;
-    window.open(blogUrl, '_blank');
 
   } catch (error) {
     ElMessage.error(error.response?.data?.detail || "登录失败");

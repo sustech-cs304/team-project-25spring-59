@@ -47,7 +47,7 @@ def insert_mock_data():
         end_time = start_time + timedelta(minutes=duration_minutes)
 
         record = TrainingRecord(
-            filename=filename,
+            # filename=filename,
             user_id=1,
             start_time=start_time,
             end_time=end_time,

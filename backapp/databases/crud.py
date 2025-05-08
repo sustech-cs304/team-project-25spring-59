@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from backapp.databases import models
 from datetime import datetime
 from sqlalchemy import func, desc
-
+from typing import Optional 
 def get_user_by_id(db: Session, user_id: int):
     return db.query(models.User).filter(models.User.id == user_id).first()
 
@@ -22,71 +22,40 @@ def create_user(db: Session, username: str, email: str, password: str):
     return db_user
 
 def create_training_record(db: Session,
-        filename: str,
         user_id: int,
         start_time: datetime,
         end_time: datetime,
         activity_type: str,
         duration_minutes: int,
+        calories: Optional[int] = None ,
+        average_heart_rate: Optional[int] = None,
+        is_completed: bool = False
 ):
     """创建新的训练记录"""
+    # 修复时区比较问题
+    now = datetime.now()
+    
+    # 确保两个datetime对象都是naive的(不带时区)
+    if start_time.tzinfo is not None:
+        start_time = start_time.replace(tzinfo=None)
+    
+    record_type = "record" if start_time < now else "plan"
+    
     db_record = models.TrainingRecord(
-        filename=filename,
         user_id=user_id,
         start_time=start_time,
         end_time=end_time,
         activity_type=activity_type,
-        duration_minutes=duration_minutes
+        duration_minutes=duration_minutes,
+        calories=calories,
+        average_heart_rate=average_heart_rate,
+        is_completed=is_completed,
+        record_type=record_type
     )
     db.add(db_record)
     db.commit()
     db.refresh(db_record)
     return db_record
-
-def create_training_task(db: Session, 
-                         user_id: int, 
-                         task_name: str,
-                         start_time: datetime,
-                         end_time: datetime):
-    """创建新的训练任务"""
-    db_task = models.TrainingTask(
-        user_id=user_id,
-        task_name=task_name,
-        start_time=start_time,
-        end_time=end_time
-    )
-    db.add(db_task)
-    db.commit()
-    db.refresh(db_task)
-    return db_task
-
-def get_training_tasks(db: Session, user_id: int, skip: int = 0, limit: int = 100):
-    """获取该用户的所有训练任务"""
-    return db.query(models.TrainingTask).filter(
-        models.TrainingTask.user_id == user_id
-    ).offset(skip).limit(limit).all()
-
-def get_training_task(db: Session, task_id: int):
-    """获取指定的训练任务"""
-    return db.query(models.TrainingTask).filter(models.TrainingTask.id == task_id).first()
-
-def update_training_task(db: Session, task_id: int, task_data: dict):
-    """更新训练任务信息"""
-    db_task = db.query(models.TrainingTask).filter(models.TrainingTask.id == task_id).first()
-    if db_task:
-        for key, value in task_data.items():
-            setattr(db_task, key, value)
-        db.commit()
-        db.refresh(db_task)
-    return db_task
-def delete_training_task(db: Session, task_id: int):
-    """删除指定的训练任务"""
-    db_task = db.query(models.TrainingTask).filter(models.TrainingTask.id == task_id).first()
-    if db_task:
-        db.delete(db_task)
-        db.commit()
-        return True
-    return False
 
 def get_training_records_by_user(db: Session, user_id: int):
     """获取指定用户的所有训练记录"""
@@ -94,21 +63,31 @@ def get_training_records_by_user(db: Session, user_id: int):
         models.TrainingRecord.user_id == user_id
     ).all()
 
-def delete_training_record(db: Session, filename: str):
-    """删除指定的训练记录"""
-    db_record = db.query(models.TrainingRecord).filter(models.TrainingRecord.filename == filename).first()
+def delete_training_record(db: Session, record_id: int):
+    """删除指定ID的训练记录"""
+    db_record = db.query(models.TrainingRecord).filter(models.TrainingRecord.id == record_id).first()
     if db_record:
         db.delete(db_record)
         db.commit()
         return True
     return False
 
-def update_training_record(db: Session, filename: str, record_data: dict):
-    """更新训练记录信息"""
-    db_record = db.query(models.TrainingRecord).filter(models.TrainingRecord.filename == filename).first()
+def update_training_record(db: Session, record_id: int, record_data: dict):
+    """更新指定ID的训练记录信息"""
+    db_record = db.query(models.TrainingRecord).filter(models.TrainingRecord.id == record_id).first()
     if db_record:
+        # 当更新start_time时，需要更新record_type
+        if 'start_time' in record_data:
+            start_time = record_data['start_time']
+            if start_time.tzinfo is not None:
+                start_time = start_time.replace(tzinfo=None)
+            now = datetime.now()
+            record_data['record_type'] = "record" if start_time < now else "plan"
+        
+        # 更新记录字段
         for key, value in record_data.items():
             setattr(db_record, key, value)
+        
         db.commit()
         db.refresh(db_record)
         return db_record

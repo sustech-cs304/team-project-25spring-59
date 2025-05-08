@@ -165,7 +165,6 @@ class Challenge(Base):
     challenge_type = Column(String(20), nullable=False)  # distance, calories, workouts, etc.
     target_value = Column(Float, nullable=False)  # 目标值
     created_by = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
-    is_public = Column(Boolean, default=True)  # 是否公开
     
     # 关系定义
     creator = relationship("User", backref="created_challenges")
@@ -199,7 +198,7 @@ class Post(Base):
     comments_count = Column(Integer, default=0)
     
     # 可以关联到训练记录
-    training_record_filename = Column(String(255), ForeignKey("training_records.filename"), nullable=True)
+    training_record_filename = Column(Integer, ForeignKey("training_records.id"), nullable=True)
     
     # 关系定义
     user = relationship("User", back_populates="posts")
@@ -233,17 +232,3 @@ class Comment(Base):
     # 关系定义
     user = relationship("User", backref="comments")
     post = relationship("Post", back_populates="comments")
-
-class UserBodyLog(Base):
-    """用户身体数据日志表"""
-    __tablename__ = "user_body_logs"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    log_date = Column(DateTime, nullable=False)
-    weight = Column(Float, nullable=True)  # 体重(kg)
-    body_fat = Column(Float, nullable=True)  # 体脂率(%)
-    muscle_mass = Column(Float, nullable=True)  # 肌肉量(kg)
-    
-    # 关系定义
-    user = relationship("User", backref="body_logs")

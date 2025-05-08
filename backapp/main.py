@@ -8,7 +8,7 @@ import re
 from backapp.auth.token import create_access_token
 from fastapi.security import OAuth2PasswordRequestForm
 from backapp.auth.dependencies import get_current_user
-
+from typing import Optional 
 
 
 # 添加当前目录到路径
@@ -59,7 +59,7 @@ class LoginRequest(BaseModel):
 AI-generated-content 
 tool: ChatGPT 
 version: 4o
-usage: I used the prompt "使用python写一个BaseModel，内容是username, email, password”", and 
+usage: I used the prompt "使用python写一个BaseModel，内容是username, email, password"", and 
 directly copy the code from its response 
 """
 class RegisterRequest(BaseModel):
@@ -68,9 +68,14 @@ class RegisterRequest(BaseModel):
     password: str
 
 class SaveMissionRequest(BaseModel):
-    fileName: str
-    content: str
     user_id: int
+    start_time: datetime
+    end_time: datetime
+    activity_type: str
+    duration_minutes: int
+    calories: Optional[int] = None 
+    average_heart_rate: Optional[int] = None
+    is_completed: bool = False
 
 class TrainingTaskCreate(BaseModel):
     task_name: str
@@ -90,12 +95,18 @@ class UserIdRequest(BaseModel):
     user_id: int
 
 class DeleteRecordRequest(BaseModel):
-    filename: str
+    record_id: int
 
 class EditRecordRequest(BaseModel):
-    filename: str
-    content: str
+    record_id: int
     user_id: int
+    start_time: datetime | None = None
+    end_time: datetime | None = None
+    activity_type: str | None = None
+    duration_minutes: int | None = None
+    calories: int | None = None
+    average_heart_rate: int | None = None
+    is_completed: bool | None = None
 
 class WeeklyPlanRequest(BaseModel):
     user_id: int
@@ -164,54 +175,30 @@ def register(user: RegisterRequest, db: Session = Depends(get_db)):
 @app.post("/saveMission")
 def save_mission(data: SaveMissionRequest, db: Session = Depends(get_db)):
     try:
-        file_path = os.path.join(SAVE_DIR, data.fileName)
-        file_directory = os.path.dirname(file_path)
-
         user_id = data.user_id
         print(f"保存记录使用的用户ID: {user_id}")
-        # user = db.query(models.User).filter(models.User.id == 1).first()
-        # if not user:
-        #     print("用户不存在")
-        # else:
-        #     print("用户存在")   
-        # 确保目标目录存在
-        os.makedirs(file_directory, exist_ok=True)
-        with open(file_path, "w", encoding="utf-8") as file:
-            file.write(data.content)
-
-        # 提取开始时间
-        start_time_match = re.search(r"开始时间\*\*:\s*([^\n]+)", data.content)
-        start_time = datetime.fromisoformat(start_time_match.group(1)) if start_time_match else None
-
-        # 提取结束时间
-        end_time_match = re.search(r"结束时间\*\*:\s*([^\n]+)", data.content)
-        end_time = datetime.fromisoformat(end_time_match.group(1)) if end_time_match else None
-
-        # 提取运动类型
-        activity_type_match = re.search(r"运动类型\*\*:\s*([^\n]+)", data.content)
-        activity_type = activity_type_match.group(1) if activity_type_match else None
-
-        # 提取时长（分钟）
-        duration_match = re.search(r"时长\*\*:\s*(\d+)", data.content)
-        duration_minutes = int(duration_match.group(1)) if duration_match else None
-        print(duration_minutes)
-
-        # user_id = 1
-        # user_id = current_user.id
-        # print(f"使用当前登录用户ID: {user_id}")
-        # print(f"正则提取结果: 开始时间={start_time}, 结束时间={end_time}, 活动类型={activity_type}, 时长={duration_minutes}")
+        
+        # 直接创建数据库记录，不再需要文件操作
         db_record = crud.create_training_record(
             db=db,
-            filename=data.fileName,
             user_id=user_id,
-            start_time=start_time if start_time else datetime.now(),
-            end_time=end_time if end_time else datetime.now(),
-            activity_type=activity_type if activity_type else "未知",
-            duration_minutes=duration_minutes if duration_minutes else 0
+            start_time=data.start_time,
+            end_time=data.end_time,
+            activity_type=data.activity_type,
+            duration_minutes=data.duration_minutes,
+            calories=data.calories,
+            average_heart_rate=data.average_heart_rate,
+            is_completed=data.is_completed
         )
-        return {"message": "文件保存成功", "filePath": file_path, "status": "success"}   
+        
+        return {
+            "message": "训练记录保存成功", 
+            "record_id": db_record.id,
+            "record_type": db_record.record_type,
+            "status": "success"
+        }
     except Exception as e:
-        raise HTTPException(status_code=500, detail={"message": "文件保存失败", "error": str(e), "status": "failure"})
+        raise HTTPException(status_code=500, detail={"message": "保存失败", "error": str(e), "status": "failure"})
     
 
 @app.post("/training-tasks", response_model=TrainingTaskResponse)
@@ -405,83 +392,16 @@ if __name__ == '__main__':
     import uvicorn
     uvicorn.run("main:app", host="localhost", port=8000, reload=True)
 
-@app.post("/generate-user-records")
-def generate_user_records(request: UserIdRequest, db: Session = Depends(get_db)):
-    """
-    根据用户ID生成所有训练记录的MD文件
-    """
-    try:
-        user_id = request.user_id
-        # 获取该用户的所有训练记录
-        records = crud.get_training_records_by_user(db, user_id)
-        print(f"获取到的训练记录: {records}")
-        
-        if not records:
-            return {"message": "未找到该用户的训练记录", "count": 0}
-        
-        # 确保目录存在
-        os.makedirs(SAVE_DIR, exist_ok=True)
-        
-        generated_files = []
-        
-        # 为每条记录生成MD文件
-        for record in records:
-            # 使用数据库中存储的文件名，确保转换为字符串
-            filename = str(record.filename)
-            
-            # 构建MD内容
-            md_content = f"""---
-title: "{record.activity_type} 运动记录"
-date: "{datetime.now().isoformat()}"
----
-## 运动详情
-- **开始时间**: {record.start_time.isoformat()}
-- **结束时间**: {record.end_time.isoformat()}
-- **运动类型**: {record.activity_type}
-- **时长**: {record.duration_minutes} 分钟
-"""
-            
-            # 保存文件
-            file_path = os.path.join(SAVE_DIR, filename)
-            with open(file_path, "w", encoding="utf-8") as file:
-                file.write(md_content)
-            
-            generated_files.append(filename)
-        
-        return {
-            "message": "成功生成训练记录文件",
-            "count": len(generated_files),
-            "files": generated_files
-        }
-    
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"生成训练记录失败: {str(e)}")
 
 @app.post("/delete-record")
 def delete_record(request: DeleteRecordRequest, db: Session = Depends(get_db)):
-    """
-    删除指定文件名的训练记录及其文件
-    """
+    """删除指定ID的训练记录"""
     try:
-        filename = request.filename
-        
-        # 1. 先删除文件系统中的文件
-        file_path = os.path.join(SAVE_DIR, filename)
-        if os.path.exists(file_path):
-            os.remove(file_path)
-            print(f"已删除文件: {file_path}")
-        else:
-            print(f"文件不存在: {file_path}")
-        
-        # 2. 再删除数据库中的记录
-        success = crud.delete_training_record(db=db, filename=filename)
+        success = crud.delete_training_record(db=db, record_id=request.record_id)
         
         if success:
-            return {"message": "训练记录已成功删除", "filename": filename}
+            return {"message": "训练记录已成功删除", "record_id": request.record_id}
         else:
-            # 如果数据库记录不存在但文件已删除，仍返回成功
-            if not os.path.exists(file_path):
-                return {"message": "文件已删除，但数据库记录不存在", "filename": filename}
             raise HTTPException(status_code=404, detail="未找到该训练记录")
     
     except Exception as e:
@@ -489,58 +409,27 @@ def delete_record(request: DeleteRecordRequest, db: Session = Depends(get_db)):
 
 @app.post("/edit-record")
 def edit_record(data: EditRecordRequest, db: Session = Depends(get_db)):
-    """
-    编辑指定文件名的训练记录及其文件
-    """
+    """编辑指定ID的训练记录"""
     try:
-        # 1. 更新文件内容
-        file_path = os.path.join(SAVE_DIR, data.filename)
-        if not os.path.exists(file_path):
-            raise HTTPException(status_code=404, detail=f"文件不存在: {data.filename}")
-        
-        # 保存新内容到文件
-        with open(file_path, "w", encoding="utf-8") as file:
-            file.write(data.content)
-            
-        # 2. 提取数据并更新数据库记录
-        # 提取开始时间
-        start_time_match = re.search(r"开始时间\*\*:\s*([^\n]+)", data.content)
-        start_time = datetime.fromisoformat(start_time_match.group(1)) if start_time_match else None
-
-        # 提取结束时间
-        end_time_match = re.search(r"结束时间\*\*:\s*([^\n]+)", data.content)
-        end_time = datetime.fromisoformat(end_time_match.group(1)) if end_time_match else None
-
-        # 提取运动类型
-        activity_type_match = re.search(r"运动类型\*\*:\s*([^\n]+)", data.content)
-        activity_type = activity_type_match.group(1) if activity_type_match else None
-
-        # 提取时长（分钟）
-        duration_match = re.search(r"时长\*\*:\s*(\d+)", data.content)
-        duration_minutes = int(duration_match.group(1)) if duration_match else None
+        # 构建要更新的数据
+        record_data = {k: v for k, v in data.dict().items() if v is not None and k != 'record_id'}
         
         # 更新数据库记录
-        record_data = {
-            "user_id": data.user_id,
-            "start_time": start_time if start_time else datetime.now(),
-            "end_time": end_time if end_time else datetime.now(),
-            "activity_type": activity_type if activity_type else "未知",
-            "duration_minutes": duration_minutes if duration_minutes else 0
-        }
-        
-        updated_record = crud.update_training_record(db=db, filename=data.filename, record_data=record_data)
+        updated_record = crud.update_training_record(db=db, record_id=data.record_id, record_data=record_data)
         
         if updated_record:
             return {
                 "message": "训练记录已成功更新", 
-                "filename": data.filename,
+                "record_id": data.record_id,
+                "record_type": updated_record.record_type,
                 "status": "success"
             }
         else:
-            raise HTTPException(status_code=404, detail="未找到数据库中的训练记录")
+            raise HTTPException(status_code=404, detail="未找到该训练记录")
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"更新训练记录失败: {str(e)}")
+
 """
 AI-generated-content 
 tool: ChatGPT 
