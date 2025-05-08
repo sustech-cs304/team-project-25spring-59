@@ -290,3 +290,148 @@ def create_gym_reservation(db: Session, user_id: int, gym_id: int, reservation_d
     return db_reservation
 
 
+# --------------------------------------
+# 动态 / 分享（Post）相关 CRUD
+# --------------------------------------
+
+# Post
+def create_post(db: Session, user_id: int, content: str, images: list[str] | None = None):
+    """创建动态"""
+    db_post = models.Post(user_id=user_id, content=content, images=images)
+    db.add(db_post)
+    db.commit()
+    db.refresh(db_post)
+    return db_post
+
+
+def get_post(db: Session, post_id: int):
+    """获取指定动态"""
+    return db.query(models.Post).filter(models.Post.id == post_id).first()
+
+
+def get_posts(db: Session, skip: int = 0, limit: int = 20):
+    """按时间倒序获取动态列表"""
+    return (
+        db.query(models.Post)
+        .order_by(models.Post.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+
+
+def get_posts_by_user(db: Session, user_id: int, skip: int = 0, limit: int = 20):
+    """获取某个用户发布的动态"""
+    return (
+        db.query(models.Post)
+        .filter(models.Post.user_id == user_id)
+        .order_by(models.Post.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+
+
+def update_post(db: Session, post_id: int, update_data: dict):
+    """更新动态"""
+    db_post = db.query(models.Post).filter(models.Post.id == post_id).first()
+    if db_post:
+        for k, v in update_data.items():
+            setattr(db_post, k, v)
+        db.commit()
+        db.refresh(db_post)
+    return db_post
+
+
+def delete_post(db: Session, post_id: int):
+    """删除动态"""
+    db_post = db.query(models.Post).filter(models.Post.id == post_id).first()
+    if db_post:
+        db.delete(db_post)
+        db.commit()
+        return True
+    return False
+
+
+# Like
+def like_post(db: Session, user_id: int, post_id: int):
+    """点赞（若已点则返回现有记录）"""
+    existing = (
+        db.query(models.PostLike)
+        .filter(
+            models.PostLike.user_id == user_id,
+            models.PostLike.post_id == post_id,
+        )
+        .first()
+    )
+    if existing:
+        return existing
+
+    db_like = models.PostLike(user_id=user_id, post_id=post_id)
+    db.add(db_like)
+    db.commit()
+    db.refresh(db_like)
+    return db_like
+
+
+def unlike_post(db: Session, user_id: int, post_id: int):
+    """取消点赞"""
+    like = (
+        db.query(models.PostLike)
+        .filter(
+            models.PostLike.user_id == user_id,
+            models.PostLike.post_id == post_id,
+        )
+        .first()
+    )
+    if like:
+        db.delete(like)
+        db.commit()
+        return True
+    return False
+
+
+def count_post_likes(db: Session, post_id: int) -> int:
+    """统计点赞数"""
+    return db.query(models.PostLike).filter(models.PostLike.post_id == post_id).count()
+
+
+# Comment
+def add_comment(db: Session, user_id: int, post_id: int, content: str):
+    """添加评论"""
+    db_comment = models.PostComment(
+        user_id=user_id,
+        post_id=post_id,
+        content=content,
+    )
+    db.add(db_comment)
+    db.commit()
+    db.refresh(db_comment)
+    return db_comment
+
+
+def get_comments(db: Session, post_id: int, skip: int = 0, limit: int = 50):
+    """获取评论列表（倒序）"""
+    return (
+        db.query(models.PostComment)
+        .filter(models.PostComment.post_id == post_id)
+        .order_by(models.PostComment.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+
+
+def delete_comment(db: Session, comment_id: int):
+    """删除评论"""
+    db_comment = db.query(models.PostComment).filter(models.PostComment.id == comment_id).first()
+    if db_comment:
+        db.delete(db_comment)
+        db.commit()
+        return True
+    return False
+
+
+def count_post_comments(db: Session, post_id: int) -> int:
+    """统计评论数"""
+    return db.query(models.PostComment).filter(models.PostComment.post_id == post_id).count()
