@@ -164,6 +164,9 @@ class ChallengeDetail(BaseModel):
 class UserChallengeDetail(BaseModel):
     user_id: int
 
+class EndChallengeRequest(BaseModel):
+    challenge_id: int
+
 @app.get("/")
 def read_root():
     return {"message": "FastAPI 服务器运行成功！"}
@@ -970,3 +973,96 @@ def my_challenges(request: UserChallengeDetail, db: Session = Depends(get_db)):
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取我的挑战失败: {str(e)}")
+
+@app.post("/challenges/end")
+def end_challenge(request: EndChallengeRequest, db: Session = Depends(get_db)):
+    """结束挑战并计算每个参与者的得分，更新到用户表中"""
+    try:
+        # 获取挑战信息
+        challenge = db.query(models.Challenge).filter(models.Challenge.id == request.challenge_id).first()
+        if not challenge:
+            raise HTTPException(status_code=404, detail="挑战不存在")
+        
+        # 设置挑战结束时间为当前时间（如果提前结束）
+        if challenge.end_date > datetime.now():
+            challenge.end_date = datetime.now()
+            db.commit()
+        
+        # 获取所有参与者，按完成值排序
+        participants = db.query(
+            models.UserChallenge,
+            models.User
+        ).join(
+            models.User, models.UserChallenge.user_id == models.User.id
+        ).filter(
+            models.UserChallenge.challenge_id == request.challenge_id
+        ).order_by(
+            models.UserChallenge.current_value.desc()
+        ).all()
+        
+        results = []
+        
+        # 计算每个参与者的得分
+        for rank, p in enumerate(participants):
+            user_challenge = p.UserChallenge
+            user = p.User
+            completion_ratio = min(1.0, user_challenge.current_value / challenge.target_value) if challenge.target_value > 0 else 0
+            
+            # 基础分数：完成度 * 70分
+            base_score = completion_ratio * 70
+            
+            # 排名加分
+            rank_score = 0
+            if rank == 0:  # 第一名
+                rank_score = 30
+            elif rank == 1:  # 第二名
+                rank_score = 20
+            elif rank == 2:  # 第三名
+                rank_score = 10
+            else:  # 其他名次
+                rank_score = max(0, 5 - (rank - 3))  # 第4名5分，第5名4分...递减
+            
+            # 完成挑战额外奖励
+            completion_bonus = 15 if user_challenge.completed else 0
+            
+            # 总分
+            total_score = round(base_score + rank_score + completion_bonus)
+            
+            # 更新用户挑战记录
+            user_challenge.score = total_score
+            
+            # 更新用户总积分
+            if hasattr(user, 'score'):
+                user.score = (user.score or 0) + total_score
+            elif hasattr(user, 'points'):
+                user.points = (user.points or 0) + total_score
+            
+            db.commit()
+            
+            # 添加到结果列表
+            results.append({
+                "user_id": user_challenge.user_id,
+                "username": user.username,
+                "rank": rank + 1,
+                "completion_ratio": round(completion_ratio * 100, 1),
+                "current_value": user_challenge.current_value,
+                "completed": user_challenge.completed,
+                "base_score": round(base_score),
+                "rank_score": rank_score,
+                "completion_bonus": completion_bonus,
+                "total_score": total_score,
+                "updated_user_score": user.score if hasattr(user, 'score') else user.points if hasattr(user, 'points') else None
+            })
+        
+        return {
+            "challenge_id": challenge.id,
+            "challenge_title": challenge.title,
+            "status": "已结束",
+            "participants_count": len(participants),
+            "results": results
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"结束挑战失败: {str(e)}")
