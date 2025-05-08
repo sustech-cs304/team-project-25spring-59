@@ -161,6 +161,9 @@ class UpdateChallengeProgressRequest(BaseModel):
 class ChallengeDetail(BaseModel):
     challenge_id: int
 
+class UserChallengeDetail(BaseModel):
+    user_id: int
+
 @app.get("/")
 def read_root():
     return {"message": "FastAPI 服务器运行成功！"}
@@ -945,3 +948,25 @@ def get_challenge_detail(request: ChallengeDetail, db: Session = Depends(get_db)
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取挑战详情失败: {str(e)}")
+    
+
+@app.post("/challenges/my", response_model=list[ChallengeResponse])
+def my_challenges(request: UserChallengeDetail, db: Session = Depends(get_db)):
+    """获取指定用户参与的挑战"""
+    try:
+        # 查询用户参与的所有挑战ID
+        user_challenges = db.query(models.UserChallenge).filter(
+            models.UserChallenge.user_id == request.user_id
+        ).all()
+        
+        challenge_ids = [uc.challenge_id for uc in user_challenges]
+        
+        # 获取这些挑战的详细信息
+        challenges = db.query(models.Challenge).filter(
+            models.Challenge.id.in_(challenge_ids)
+        ).all()
+        
+        return challenges
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取我的挑战失败: {str(e)}")
