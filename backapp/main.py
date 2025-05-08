@@ -116,6 +116,43 @@ class DailyPlanRequest(BaseModel):
     user_id: int
     date_str: str  # 格式为"x月x日"
 
+class ChallengeCreate(BaseModel):
+    title: str
+    description: Optional[str] = None
+    start_date: datetime
+    end_date: datetime
+    challenge_type: str  # 'distance', 'calories', 'workouts', 'duration'
+    target_value: float
+    created_by: int
+
+class ChallengeResponse(BaseModel):
+    id: int
+    title: str
+    description: Optional[str] = None
+    start_date: datetime
+    end_date: datetime
+    challenge_type: str
+    target_value: float
+    created_by: int
+    
+    class Config:
+        from_attributes = True
+
+class JoinChallengeRequest(BaseModel):
+    challenge_id: int
+    user_id: int 
+
+class UserChallengeResponse(BaseModel):
+    id: int
+    user_id: int
+    challenge_id: int
+    join_date: datetime
+    current_value: float
+    completed: bool
+    
+    class Config:
+        from_attributes = True
+
 @app.get("/")
 def read_root():
     return {"message": "FastAPI 服务器运行成功！"}
@@ -651,3 +688,62 @@ def get_daily_plan(request: DailyPlanRequest, db: Session = Depends(get_db)):
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取日计划失败: {str(e)}")
+
+@app.post("/challenges", response_model=ChallengeResponse)
+def create_challenge(challenge: ChallengeCreate, db: Session = Depends(get_db)):
+    """创建新挑战"""
+    try:
+        # 验证日期
+        if challenge.start_date >= challenge.end_date:
+            raise HTTPException(status_code=400, detail="结束日期必须晚于开始日期")
+        
+        # 验证挑战类型
+        valid_types = ['distance', 'calories', 'workouts', 'duration']
+        if challenge.challenge_type not in valid_types:
+            raise HTTPException(status_code=400, detail=f"挑战类型必须是以下之一: {', '.join(valid_types)}")
+        
+        # 创建挑战
+        
+        description = challenge.description if challenge.description is not None else ""
+        db_challenge = crud.create_challenge(
+            db=db,
+            title=challenge.title,
+            description=description,
+            start_date=challenge.start_date,
+            end_date=challenge.end_date,
+            challenge_type=challenge.challenge_type,
+            target_value=challenge.target_value,
+            created_by=challenge.created_by,
+        )
+        return db_challenge
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"创建挑战失败: {str(e)}")
+
+@app.post("/challenges/join", response_model=UserChallengeResponse)
+def join_challenge(request: JoinChallengeRequest, db: Session = Depends(get_db)):
+    """用户加入挑战"""
+    try:
+        # 检查挑战是否存在
+        challenge = db.query(models.Challenge).filter(models.Challenge.id == request.challenge_id).first()
+        if not challenge:
+            raise HTTPException(status_code=404, detail="挑战不存在")
+        
+        
+        # 检查挑战是否已结束
+        if challenge.end_date < datetime.now():
+            raise HTTPException(status_code=400, detail="此挑战已结束，无法加入")
+        
+        # 加入挑战
+        user_challenge = crud.join_challenge(
+            db=db,
+            user_id=request.user_id,
+            challenge_id=request.challenge_id
+        )
+        
+        return user_challenge
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"加入挑战失败: {str(e)}")

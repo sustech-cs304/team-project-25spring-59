@@ -112,8 +112,52 @@ def get_training_records_by_date(db: Session, user_id: int, date: datetime):
         models.TrainingRecord.start_time <= end_datetime
     ).all()
 
+def create_challenge(db: Session,
+                    title: str,
+                    description: str,
+                    start_date: datetime,
+                    end_date: datetime,
+                    challenge_type: str,
+                    target_value: float,
+                    created_by: int):
+    """创建新的挑战"""
+    db_challenge = models.Challenge(
+        title=title,
+        description=description,
+        start_date=start_date,
+        end_date=end_date,
+        challenge_type=challenge_type,
+        target_value=target_value,
+        created_by=created_by,
+    )
+    db.add(db_challenge)
+    db.commit()
+    db.refresh(db_challenge)
+    
+    return db_challenge
 
-
+def join_challenge(db: Session, user_id: int, challenge_id: int):
+    """用户加入挑战"""
+    # 检查是否已加入
+    existing = db.query(models.UserChallenge).filter(
+        models.UserChallenge.user_id == user_id,
+        models.UserChallenge.challenge_id == challenge_id
+    ).first()
+    
+    if existing:
+        return existing
+    
+    # 创建新的参与记录
+    user_challenge = models.UserChallenge(
+        user_id=user_id,
+        challenge_id=challenge_id,
+        current_value=0,
+        completed=False
+    )
+    db.add(user_challenge)
+    db.commit()
+    db.refresh(user_challenge)
+    return user_challenge
 
 
 # 健身房相关操作

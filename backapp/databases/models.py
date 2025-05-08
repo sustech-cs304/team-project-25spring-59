@@ -165,7 +165,6 @@ class Challenge(Base):
     challenge_type = Column(String(20), nullable=False)  # distance, calories, workouts, etc.
     target_value = Column(Float, nullable=False)  # 目标值
     created_by = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
-    
     # 关系定义
     creator = relationship("User", backref="created_challenges")
     participants = relationship("UserChallenge", back_populates="challenge", cascade="all, delete-orphan")
