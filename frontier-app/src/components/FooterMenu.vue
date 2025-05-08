@@ -92,13 +92,6 @@ const handleTrainMissionClick = async () => {
       console.error("未找到用户 ID")
       return
     }
-
-    await axios.post(`${API_BASE_URL}/generate-user-records`, {
-      user_id: userId
-    })
-    console.log('${API_BASE_URL}/generate-user-records')
-    console.log("成功调用api: /generate-user-records调用对应用户的运动记录")
-
     router.push('/trainMission') //请求成功后跳转
   } catch (error) {
     console.error("生成用户记录失败:", error)

@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from backapp.databases import models
 from datetime import datetime
 from sqlalchemy import func, desc
-
+from typing import Optional 
 def get_user_by_id(db: Session, user_id: int):
     return db.query(models.User).filter(models.User.id == user_id).first()
 
@@ -22,71 +22,40 @@ def create_user(db: Session, username: str, email: str, password: str):
     return db_user
 
 def create_training_record(db: Session,
-        filename: str,
         user_id: int,
         start_time: datetime,
         end_time: datetime,
         activity_type: str,
         duration_minutes: int,
+        calories: Optional[int] = None ,
+        average_heart_rate: Optional[int] = None,
+        is_completed: bool = False
 ):
     """创建新的训练记录"""
+    # 修复时区比较问题
+    now = datetime.now()
+    
+    # 确保两个datetime对象都是naive的(不带时区)
+    if start_time.tzinfo is not None:
+        start_time = start_time.replace(tzinfo=None)
+    
+    record_type = "record" if start_time < now else "plan"
+    
     db_record = models.TrainingRecord(
-        filename=filename,
         user_id=user_id,
         start_time=start_time,
         end_time=end_time,
         activity_type=activity_type,
-        duration_minutes=duration_minutes
+        duration_minutes=duration_minutes,
+        calories=calories,
+        average_heart_rate=average_heart_rate,
+        is_completed=is_completed,
+        record_type=record_type
     )
     db.add(db_record)
     db.commit()
     db.refresh(db_record)
     return db_record
-
-def create_training_task(db: Session, 
-                         user_id: int, 
-                         task_name: str,
-                         start_time: datetime,
-                         end_time: datetime):
-    """创建新的训练任务"""
-    db_task = models.TrainingTask(
-        user_id=user_id,
-        task_name=task_name,
-        start_time=start_time,
-        end_time=end_time
-    )
-    db.add(db_task)
-    db.commit()
-    db.refresh(db_task)
-    return db_task
-
-def get_training_tasks(db: Session, user_id: int, skip: int = 0, limit: int = 100):
-    """获取该用户的所有训练任务"""
-    return db.query(models.TrainingTask).filter(
-        models.TrainingTask.user_id == user_id
-    ).offset(skip).limit(limit).all()
-
-def get_training_task(db: Session, task_id: int):
-    """获取指定的训练任务"""
-    return db.query(models.TrainingTask).filter(models.TrainingTask.id == task_id).first()
-
-def update_training_task(db: Session, task_id: int, task_data: dict):
-    """更新训练任务信息"""
-    db_task = db.query(models.TrainingTask).filter(models.TrainingTask.id == task_id).first()
-    if db_task:
-        for key, value in task_data.items():
-            setattr(db_task, key, value)
-        db.commit()
-        db.refresh(db_task)
-    return db_task
-def delete_training_task(db: Session, task_id: int):
-    """删除指定的训练任务"""
-    db_task = db.query(models.TrainingTask).filter(models.TrainingTask.id == task_id).first()
-    if db_task:
-        db.delete(db_task)
-        db.commit()
-        return True
-    return False
 
 def get_training_records_by_user(db: Session, user_id: int):
     """获取指定用户的所有训练记录"""
@@ -94,21 +63,31 @@ def get_training_records_by_user(db: Session, user_id: int):
         models.TrainingRecord.user_id == user_id
     ).all()
 
-def delete_training_record(db: Session, filename: str):
-    """删除指定的训练记录"""
-    db_record = db.query(models.TrainingRecord).filter(models.TrainingRecord.filename == filename).first()
+def delete_training_record(db: Session, record_id: int):
+    """删除指定ID的训练记录"""
+    db_record = db.query(models.TrainingRecord).filter(models.TrainingRecord.id == record_id).first()
     if db_record:
         db.delete(db_record)
         db.commit()
         return True
     return False
 
-def update_training_record(db: Session, filename: str, record_data: dict):
-    """更新训练记录信息"""
-    db_record = db.query(models.TrainingRecord).filter(models.TrainingRecord.filename == filename).first()
+def update_training_record(db: Session, record_id: int, record_data: dict):
+    """更新指定ID的训练记录信息"""
+    db_record = db.query(models.TrainingRecord).filter(models.TrainingRecord.id == record_id).first()
     if db_record:
+        # 当更新start_time时，需要更新record_type
+        if 'start_time' in record_data:
+            start_time = record_data['start_time']
+            if start_time.tzinfo is not None:
+                start_time = start_time.replace(tzinfo=None)
+            now = datetime.now()
+            record_data['record_type'] = "record" if start_time < now else "plan"
+        
+        # 更新记录字段
         for key, value in record_data.items():
             setattr(db_record, key, value)
+        
         db.commit()
         db.refresh(db_record)
         return db_record
@@ -133,8 +112,52 @@ def get_training_records_by_date(db: Session, user_id: int, date: datetime):
         models.TrainingRecord.start_time <= end_datetime
     ).all()
 
+def create_challenge(db: Session,
+                    title: str,
+                    description: str,
+                    start_date: datetime,
+                    end_date: datetime,
+                    challenge_type: str,
+                    target_value: float,
+                    created_by: int):
+    """创建新的挑战"""
+    db_challenge = models.Challenge(
+        title=title,
+        description=description,
+        start_date=start_date,
+        end_date=end_date,
+        challenge_type=challenge_type,
+        target_value=target_value,
+        created_by=created_by,
+    )
+    db.add(db_challenge)
+    db.commit()
+    db.refresh(db_challenge)
+    
+    return db_challenge
 
-
+def join_challenge(db: Session, user_id: int, challenge_id: int):
+    """用户加入挑战"""
+    # 检查是否已加入
+    existing = db.query(models.UserChallenge).filter(
+        models.UserChallenge.user_id == user_id,
+        models.UserChallenge.challenge_id == challenge_id
+    ).first()
+    
+    if existing:
+        return existing
+    
+    # 创建新的参与记录
+    user_challenge = models.UserChallenge(
+        user_id=user_id,
+        challenge_id=challenge_id,
+        current_value=0,
+        completed=False
+    )
+    db.add(user_challenge)
+    db.commit()
+    db.refresh(user_challenge)
+    return user_challenge
 
 
 # 健身房相关操作

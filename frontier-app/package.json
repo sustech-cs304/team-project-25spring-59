@@ -10,12 +10,15 @@
   },
   "dependencies": {
     "@arco-design/web-vue": "^2.57.0",
+    "@element-plus/icons-vue": "^2.3.1",
     "@pixi/sound": "^5.2.3",
     "@tsparticles/vue3": "^3.0.1",
+    "animate.css": "^4.1.1",
     "ant-design-vue": "^4.2.6",
     "axios": "^1.8.2",
     "chart": "^0.1.2",
     "chart.js": "^4.4.8",
+    "echarts": "^5.6.0",
     "element-plus": "^2.9.6",
     "live2d-widget": "^3.1.4",
     "markdown-it-custom-attrs": "^1.0.2",
@@ -27,9 +30,12 @@
     "vite": "^6.2.6",
     "vitepress": "^1.6.3",
     "vue": "^3.5.13",
-    "vue-router": "^4.5.0"
+    "vue-loading-button": "^0.2.0",
+    "vue-router": "^4.5.0",
+    "vue3-loading-overlay": "^0.0.0"
   },
   "devDependencies": {
-    "less": "^4.2.2"
+    "less": "^4.2.2",
+    "sass-embedded": "^1.86.3"
   }
 }

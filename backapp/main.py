@@ -11,6 +11,7 @@ from backapp.auth.dependencies import get_current_user
 
 from typing import List, Optional
 from sqlalchemy.orm import joinedload
+from typing import Optional 
 
 
 # 添加当前目录到路径
@@ -61,7 +62,7 @@ class LoginRequest(BaseModel):
 AI-generated-content 
 tool: ChatGPT 
 version: 4o
-usage: I used the prompt "使用python写一个BaseModel，内容是username, email, password”", and 
+usage: I used the prompt "使用python写一个BaseModel，内容是username, email, password"", and 
 directly copy the code from its response 
 """
 class RegisterRequest(BaseModel):
@@ -70,9 +71,14 @@ class RegisterRequest(BaseModel):
     password: str
 
 class SaveMissionRequest(BaseModel):
-    fileName: str
-    content: str
     user_id: int
+    start_time: datetime
+    end_time: datetime
+    activity_type: str
+    duration_minutes: int
+    calories: Optional[int] = None 
+    average_heart_rate: Optional[int] = None
+    is_completed: bool = False
 
 class TrainingTaskCreate(BaseModel):
     task_name: str
@@ -92,12 +98,18 @@ class UserIdRequest(BaseModel):
     user_id: int
 
 class DeleteRecordRequest(BaseModel):
-    filename: str
+    record_id: int
 
 class EditRecordRequest(BaseModel):
-    filename: str
-    content: str
+    record_id: int
     user_id: int
+    start_time: datetime | None = None
+    end_time: datetime | None = None
+    activity_type: str | None = None
+    duration_minutes: int | None = None
+    calories: int | None = None
+    average_heart_rate: int | None = None
+    is_completed: bool | None = None
 
 class WeeklyPlanRequest(BaseModel):
     user_id: int
@@ -106,6 +118,57 @@ class WeeklyPlanRequest(BaseModel):
 class DailyPlanRequest(BaseModel):
     user_id: int
     date_str: str  # 格式为"x月x日"
+
+class ChallengeCreate(BaseModel):
+    title: str
+    description: Optional[str] = None
+    start_date: datetime
+    end_date: datetime
+    challenge_type: str  # 'distance', 'calories', 'workouts', 'duration'
+    target_value: float
+    created_by: int
+
+class ChallengeResponse(BaseModel):
+    id: int
+    title: str
+    description: Optional[str] = None
+    start_date: datetime
+    end_date: datetime
+    challenge_type: str
+    target_value: float
+    created_by: int
+    
+    class Config:
+        from_attributes = True
+
+class JoinChallengeRequest(BaseModel):
+    challenge_id: int
+    user_id: int 
+
+class UserChallengeResponse(BaseModel):
+    id: int
+    user_id: int
+    challenge_id: int
+    join_date: datetime
+    current_value: float
+    completed: bool
+    
+    class Config:
+        from_attributes = True
+
+class UpdateChallengeProgressRequest(BaseModel):
+    challenge_id: int
+    user_id: int
+    current_value: float
+
+class ChallengeDetail(BaseModel):
+    challenge_id: int
+
+class UserChallengeDetail(BaseModel):
+    user_id: int
+
+class EndChallengeRequest(BaseModel):
+    challenge_id: int
 
 @app.get("/")
 def read_root():
@@ -166,54 +229,30 @@ def register(user: RegisterRequest, db: Session = Depends(get_db)):
 @app.post("/saveMission")
 def save_mission(data: SaveMissionRequest, db: Session = Depends(get_db)):
     try:
-        file_path = os.path.join(SAVE_DIR, data.fileName)
-        file_directory = os.path.dirname(file_path)
-
         user_id = data.user_id
         print(f"保存记录使用的用户ID: {user_id}")
-        # user = db.query(models.User).filter(models.User.id == 1).first()
-        # if not user:
-        #     print("用户不存在")
-        # else:
-        #     print("用户存在")   
-        # 确保目标目录存在
-        os.makedirs(file_directory, exist_ok=True)
-        with open(file_path, "w", encoding="utf-8") as file:
-            file.write(data.content)
-
-        # 提取开始时间
-        start_time_match = re.search(r"开始时间\*\*:\s*([^\n]+)", data.content)
-        start_time = datetime.fromisoformat(start_time_match.group(1)) if start_time_match else None
-
-        # 提取结束时间
-        end_time_match = re.search(r"结束时间\*\*:\s*([^\n]+)", data.content)
-        end_time = datetime.fromisoformat(end_time_match.group(1)) if end_time_match else None
-
-        # 提取运动类型
-        activity_type_match = re.search(r"运动类型\*\*:\s*([^\n]+)", data.content)
-        activity_type = activity_type_match.group(1) if activity_type_match else None
-
-        # 提取时长（分钟）
-        duration_match = re.search(r"时长\*\*:\s*(\d+)", data.content)
-        duration_minutes = int(duration_match.group(1)) if duration_match else None
-        print(duration_minutes)
-
-        # user_id = 1
-        # user_id = current_user.id
-        # print(f"使用当前登录用户ID: {user_id}")
-        # print(f"正则提取结果: 开始时间={start_time}, 结束时间={end_time}, 活动类型={activity_type}, 时长={duration_minutes}")
+        
+        # 直接创建数据库记录，不再需要文件操作
         db_record = crud.create_training_record(
             db=db,
-            filename=data.fileName,
             user_id=user_id,
-            start_time=start_time if start_time else datetime.now(),
-            end_time=end_time if end_time else datetime.now(),
-            activity_type=activity_type if activity_type else "未知",
-            duration_minutes=duration_minutes if duration_minutes else 0
+            start_time=data.start_time,
+            end_time=data.end_time,
+            activity_type=data.activity_type,
+            duration_minutes=data.duration_minutes,
+            calories=data.calories,
+            average_heart_rate=data.average_heart_rate,
+            is_completed=data.is_completed
         )
-        return {"message": "文件保存成功", "filePath": file_path, "status": "success"}   
+        
+        return {
+            "message": "训练记录保存成功", 
+            "record_id": db_record.id,
+            "record_type": db_record.record_type,
+            "status": "success"
+        }
     except Exception as e:
-        raise HTTPException(status_code=500, detail={"message": "文件保存失败", "error": str(e), "status": "failure"})
+        raise HTTPException(status_code=500, detail={"message": "保存失败", "error": str(e), "status": "failure"})
     
 
 @app.post("/training-tasks", response_model=TrainingTaskResponse)
@@ -433,83 +472,16 @@ if __name__ == '__main__':
     import uvicorn
     uvicorn.run("main:app", host="localhost", port=8000, reload=True)
 
-@app.post("/generate-user-records")
-def generate_user_records(request: UserIdRequest, db: Session = Depends(get_db)):
-    """
-    根据用户ID生成所有训练记录的MD文件
-    """
-    try:
-        user_id = request.user_id
-        # 获取该用户的所有训练记录
-        records = crud.get_training_records_by_user(db, user_id)
-        print(f"获取到的训练记录: {records}")
-        
-        if not records:
-            return {"message": "未找到该用户的训练记录", "count": 0}
-        
-        # 确保目录存在
-        os.makedirs(SAVE_DIR, exist_ok=True)
-        
-        generated_files = []
-        
-        # 为每条记录生成MD文件
-        for record in records:
-            # 使用数据库中存储的文件名，确保转换为字符串
-            filename = str(record.filename)
-            
-            # 构建MD内容
-            md_content = f"""---
-title: "{record.activity_type} 运动记录"
-date: "{datetime.now().isoformat()}"
----
-## 运动详情
-- **开始时间**: {record.start_time.isoformat()}
-- **结束时间**: {record.end_time.isoformat()}
-- **运动类型**: {record.activity_type}
-- **时长**: {record.duration_minutes} 分钟
-"""
-            
-            # 保存文件
-            file_path = os.path.join(SAVE_DIR, filename)
-            with open(file_path, "w", encoding="utf-8") as file:
-                file.write(md_content)
-            
-            generated_files.append(filename)
-        
-        return {
-            "message": "成功生成训练记录文件",
-            "count": len(generated_files),
-            "files": generated_files
-        }
-    
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"生成训练记录失败: {str(e)}")
 
 @app.post("/delete-record")
 def delete_record(request: DeleteRecordRequest, db: Session = Depends(get_db)):
-    """
-    删除指定文件名的训练记录及其文件
-    """
+    """删除指定ID的训练记录"""
     try:
-        filename = request.filename
-        
-        # 1. 先删除文件系统中的文件
-        file_path = os.path.join(SAVE_DIR, filename)
-        if os.path.exists(file_path):
-            os.remove(file_path)
-            print(f"已删除文件: {file_path}")
-        else:
-            print(f"文件不存在: {file_path}")
-        
-        # 2. 再删除数据库中的记录
-        success = crud.delete_training_record(db=db, filename=filename)
+        success = crud.delete_training_record(db=db, record_id=request.record_id)
         
         if success:
-            return {"message": "训练记录已成功删除", "filename": filename}
+            return {"message": "训练记录已成功删除", "record_id": request.record_id}
         else:
-            # 如果数据库记录不存在但文件已删除，仍返回成功
-            if not os.path.exists(file_path):
-                return {"message": "文件已删除，但数据库记录不存在", "filename": filename}
             raise HTTPException(status_code=404, detail="未找到该训练记录")
     
     except Exception as e:
@@ -517,58 +489,27 @@ def delete_record(request: DeleteRecordRequest, db: Session = Depends(get_db)):
 
 @app.post("/edit-record")
 def edit_record(data: EditRecordRequest, db: Session = Depends(get_db)):
-    """
-    编辑指定文件名的训练记录及其文件
-    """
+    """编辑指定ID的训练记录"""
     try:
-        # 1. 更新文件内容
-        file_path = os.path.join(SAVE_DIR, data.filename)
-        if not os.path.exists(file_path):
-            raise HTTPException(status_code=404, detail=f"文件不存在: {data.filename}")
-        
-        # 保存新内容到文件
-        with open(file_path, "w", encoding="utf-8") as file:
-            file.write(data.content)
-            
-        # 2. 提取数据并更新数据库记录
-        # 提取开始时间
-        start_time_match = re.search(r"开始时间\*\*:\s*([^\n]+)", data.content)
-        start_time = datetime.fromisoformat(start_time_match.group(1)) if start_time_match else None
-
-        # 提取结束时间
-        end_time_match = re.search(r"结束时间\*\*:\s*([^\n]+)", data.content)
-        end_time = datetime.fromisoformat(end_time_match.group(1)) if end_time_match else None
-
-        # 提取运动类型
-        activity_type_match = re.search(r"运动类型\*\*:\s*([^\n]+)", data.content)
-        activity_type = activity_type_match.group(1) if activity_type_match else None
-
-        # 提取时长（分钟）
-        duration_match = re.search(r"时长\*\*:\s*(\d+)", data.content)
-        duration_minutes = int(duration_match.group(1)) if duration_match else None
+        # 构建要更新的数据
+        record_data = {k: v for k, v in data.dict().items() if v is not None and k != 'record_id'}
         
         # 更新数据库记录
-        record_data = {
-            "user_id": data.user_id,
-            "start_time": start_time if start_time else datetime.now(),
-            "end_time": end_time if end_time else datetime.now(),
-            "activity_type": activity_type if activity_type else "未知",
-            "duration_minutes": duration_minutes if duration_minutes else 0
-        }
-        
-        updated_record = crud.update_training_record(db=db, filename=data.filename, record_data=record_data)
+        updated_record = crud.update_training_record(db=db, record_id=data.record_id, record_data=record_data)
         
         if updated_record:
             return {
                 "message": "训练记录已成功更新", 
-                "filename": data.filename,
+                "record_id": data.record_id,
+                "record_type": updated_record.record_type,
                 "status": "success"
             }
         else:
-            raise HTTPException(status_code=404, detail="未找到数据库中的训练记录")
+            raise HTTPException(status_code=404, detail="未找到该训练记录")
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"更新训练记录失败: {str(e)}")
+
 """
 AI-generated-content 
 tool: ChatGPT 
@@ -657,58 +598,71 @@ def get_weekly_plan(request: WeeklyPlanRequest, db: Session = Depends(get_db)):
 def get_training_summary(data: UserIdRequest, db: Session = Depends(get_db)):
     print(f"[summary] 收到 user_id: {data.user_id}")
 
+    # 获取训练记录
     records = crud.get_training_records_by_user(db, user_id=data.user_id)
     print(f"[summary] 获取到记录数: {len(records)}")
 
+    # 计算总训练时长和实际卡路里
     total_minutes = sum([r.duration_minutes or 0 for r in records])
     total_calories_actual = sum([r.calories or 0 for r in records])
     average_heart_rates = [r.average_heart_rate for r in records if r.average_heart_rate]
     max_heart_rates = [r.max_heart_rate for r in records if r.max_heart_rate]
 
+    # 输出调试信息
     print(f"[summary] 总训练时长: {total_minutes} 分钟")
     print(f"[summary] 实际卡路里总和: {total_calories_actual} kcal")
 
+    # 获取用户数据
     user = crud.get_user_by_id(db, data.user_id)
     if not user:
         print("[summary] 用户不存在")
         raise HTTPException(status_code=404, detail="用户不存在")
 
-    weight = user.weight or 60
-    MET = 8
+    weight = user.weight or 60  # 默认体重60kg
+    MET = 8  # MET值，这里假设为8
     total_calories_estimated = MET * weight * (total_minutes / 60)
+
+    # 输出估算卡路里
     print(f"[summary] 估算卡路里: {total_calories_estimated} kcal")
 
+    # 返回统计信息
     return {
         "total_minutes": total_minutes,
         "estimated_calories": round(total_calories_estimated, 2),
         "actual_calories": total_calories_actual,
-        "average_heart_rate": int(sum(average_heart_rates)/len(average_heart_rates)) if average_heart_rates else None,
+        "average_heart_rate": int(sum(average_heart_rates) / len(average_heart_rates)) if average_heart_rates else None,
         "max_heart_rate": max(max_heart_rates) if max_heart_rates else None
     }
 
 
 @app.post("/stats/weekly-trend")
-def get_weekly_trend(data: UserIdRequest, db: Session = Depends(get_db)):
+def get_weekly_trend(data: UserIdRequest, start_date: str, end_date: str, db: Session = Depends(get_db)):
     print(f"[trend] 收到 user_id: {data.user_id}")
 
-    end_date = datetime.now()
-    start_date = end_date - timedelta(days=6)
+    try:
+        # 将传入的字符串日期转换为 datetime 对象
+        start_date = datetime.strptime(start_date, "%Y-%m-%d")
+        end_date = datetime.strptime(end_date, "%Y-%m-%d")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="日期格式错误，应为 YYYY-MM-DD")
+
     print(f"[trend] 查询时间范围: {start_date.date()} 到 {end_date.date()}")
 
+    # 获取指定日期范围的训练记录
     records = crud.get_training_records_by_date_range(
-        db, user_id=data.user_id, start_date=start_date, end_date=end_date)
+        db, user_id=data.user_id, start_date=start_date, end_date=end_date
+    )
     print(f"[trend] 获取到记录数: {len(records)}")
 
-    trend = {}
-    for i in range(7):
-        day = (start_date + timedelta(days=i)).strftime("%Y-%m-%d")
-        trend[day] = {
+    # 初始化趋势数据
+    trend = { (start_date + timedelta(days=i)).strftime("%Y-%m-%d"): {
             "duration_minutes": 0,
             "calories": 0,
             "avg_heart_rate": [],
             "max_heart_rate": []
-        }
+        } for i in range((end_date - start_date).days + 1)}
 
+    # 处理记录并填充趋势数据
     for r in records:
         date_str = r.start_time.strftime("%Y-%m-%d")
         trend[date_str]["duration_minutes"] += r.duration_minutes or 0
@@ -718,16 +672,15 @@ def get_weekly_trend(data: UserIdRequest, db: Session = Depends(get_db)):
         if r.max_heart_rate:
             trend[date_str]["max_heart_rate"].append(r.max_heart_rate)
 
-    # 平均和最大心率整理
+    # 计算平均心率和最大心率
     for day_data in trend.values():
         avg_list = day_data["avg_heart_rate"]
         max_list = day_data["max_heart_rate"]
-        day_data["avg_heart_rate"] = int(sum(avg_list)/len(avg_list)) if avg_list else None
+        day_data["avg_heart_rate"] = int(sum(avg_list) / len(avg_list)) if avg_list else None
         day_data["max_heart_rate"] = max(max_list) if max_list else None
 
     print(f"[trend] 构造出的趋势数据: {trend}")
     return trend
-
 
 @app.post("/get-daily-plan")
 def get_daily_plan(request: DailyPlanRequest, db: Session = Depends(get_db)):
@@ -886,3 +839,366 @@ def list_comments_api(
     post = _get_post_with_relations(db, post_id)
     comments = sorted(post.comments, key=lambda x: x.created_at, reverse=True)[skip : skip + limit]
     return [_serialize_comment(c) for c in comments]
+@app.post("/challenges", response_model=ChallengeResponse)
+def create_challenge(challenge: ChallengeCreate, db: Session = Depends(get_db)):
+    """创建新挑战"""
+    try:
+        # 验证日期
+        if challenge.start_date >= challenge.end_date:
+            raise HTTPException(status_code=400, detail="结束日期必须晚于开始日期")
+        
+        # 验证挑战类型
+        valid_types = ['distance', 'calories', 'workouts', 'duration']
+        if challenge.challenge_type not in valid_types:
+            raise HTTPException(status_code=400, detail=f"挑战类型必须是以下之一: {', '.join(valid_types)}")
+        
+        # 创建挑战
+        
+        description = challenge.description if challenge.description is not None else ""
+        db_challenge = crud.create_challenge(
+            db=db,
+            title=challenge.title,
+            description=description,
+            start_date=challenge.start_date,
+            end_date=challenge.end_date,
+            challenge_type=challenge.challenge_type,
+            target_value=challenge.target_value,
+            created_by=challenge.created_by,
+        )
+        return db_challenge
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"创建挑战失败: {str(e)}")
+
+@app.post("/challenges/join", response_model=UserChallengeResponse)
+def join_challenge(request: JoinChallengeRequest, db: Session = Depends(get_db)):
+    """用户加入挑战"""
+    try:
+        # 检查挑战是否存在
+        challenge = db.query(models.Challenge).filter(models.Challenge.id == request.challenge_id).first()
+        if not challenge:
+            raise HTTPException(status_code=404, detail="挑战不存在")
+        
+        
+        # 检查挑战是否已结束
+        if challenge.end_date < datetime.now():
+            raise HTTPException(status_code=400, detail="此挑战已结束，无法加入")
+        
+        # 加入挑战
+        user_challenge = crud.join_challenge(
+            db=db,
+            user_id=request.user_id,
+            challenge_id=request.challenge_id
+        )
+        
+        return user_challenge
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"加入挑战失败: {str(e)}")
+    
+@app.get("/challenges/all")
+def get_all_challenges(db: Session = Depends(get_db)):
+    """获取所有挑战的详细记录"""
+    try:
+        # 查询所有挑战
+        challenges = db.query(models.Challenge).all()
+        
+        result = []
+        
+        # 为每个挑战获取详细信息
+        for challenge in challenges:
+            # 获取参与者数量
+            participants_count = db.query(models.UserChallenge).filter(
+                models.UserChallenge.challenge_id == challenge.id
+            ).count()
+            
+            # 获取创建者信息
+            creator = db.query(models.User).filter(models.User.id == challenge.created_by).first()
+            creator_name = creator.username if creator else "未知用户"
+            
+            # 获取挑战完成率
+            completed_count = db.query(models.UserChallenge).filter(
+                models.UserChallenge.challenge_id == challenge.id,
+                models.UserChallenge.completed == True
+            ).count()
+            
+            completion_rate = (completed_count / participants_count) * 100 if participants_count > 0 else 0
+            
+            # 获取排行榜前3名
+            leaderboard_query = db.query(
+                models.UserChallenge,
+                models.User.username
+            ).join(
+                models.User, models.UserChallenge.user_id == models.User.id
+            ).filter(
+                models.UserChallenge.challenge_id == challenge.id
+            ).order_by(
+                models.UserChallenge.current_value.desc()
+            ).limit(3).all()
+            
+            top_performers = [
+                {
+                    "user_id": entry.UserChallenge.user_id,
+                    "username": entry.username,
+                    "current_value": entry.UserChallenge.current_value,
+                    "completed": entry.UserChallenge.completed
+                }
+                for entry in leaderboard_query
+            ]
+            
+            # 计算挑战状态
+            now = datetime.now()
+            if now < challenge.start_date:
+                status = "即将开始"
+            elif now > challenge.end_date:
+                status = "已结束"
+            else:
+                status = "进行中"
+            
+            # 构建挑战详情
+            challenge_detail = {
+                "id": challenge.id,
+                "title": challenge.title,
+                "description": challenge.description,
+                "start_date": challenge.start_date,
+                "end_date": challenge.end_date,
+                "challenge_type": challenge.challenge_type,
+                "target_value": challenge.target_value,
+                "created_by": challenge.created_by,
+                "creator_name": creator_name,
+                "status": status,
+                "participants_count": participants_count,
+                "completion_rate": completion_rate,
+                "top_performers": top_performers,
+                "days_remaining": (challenge.end_date - now).days if now < challenge.end_date else 0
+            }
+            
+            result.append(challenge_detail)
+        
+        return {"challenges": result, "total_count": len(result)}
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取挑战列表失败: {str(e)}")
+    
+@app.post("/challenges/update-progress")
+def update_challenge_progress(request: UpdateChallengeProgressRequest, db: Session = Depends(get_db)):
+    """更新用户在挑战中的进度"""
+    try:
+        # 检查挑战是否存在
+        challenge = db.query(models.Challenge).filter(models.Challenge.id == request.challenge_id).first()
+        if not challenge:
+            raise HTTPException(status_code=404, detail="挑战不存在")
+        
+        # 检查用户是否参与该挑战
+        user_challenge = db.query(models.UserChallenge).filter(
+            models.UserChallenge.user_id == request.user_id,
+            models.UserChallenge.challenge_id == request.challenge_id
+        ).first()
+        
+        if not user_challenge:
+            raise HTTPException(status_code=404, detail="用户未参与此挑战")
+        
+        # 更新进度
+        user_challenge.current_value = request.current_value
+        
+        # 检查是否完成挑战
+        if request.current_value >= challenge.target_value:
+            user_challenge.completed = True
+        
+        db.commit()
+        db.refresh(user_challenge)
+        
+        # 计算进度百分比
+        progress = min(100, (user_challenge.current_value / challenge.target_value) * 100) if challenge.target_value > 0 else 0
+        
+        return {
+            "message": "进度已更新",
+            "current_value": user_challenge.current_value,
+            "completed": user_challenge.completed,
+            "progress": progress
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"更新挑战进度失败: {str(e)}")
+
+
+@app.post("/challenges/detail")
+def get_challenge_detail(request: ChallengeDetail, db: Session = Depends(get_db)):
+    """获取挑战详情，包括参与者数量和完整排行榜"""
+    try:
+        # 获取挑战信息
+        challenge = db.query(models.Challenge).filter(models.Challenge.id == request.challenge_id).first()
+        if not challenge:
+            raise HTTPException(status_code=404, detail="挑战不存在")
+        
+        # 获取参与者数量
+        participants_count = db.query(models.UserChallenge).filter(
+            models.UserChallenge.challenge_id == request.challenge_id
+        ).count()
+        
+        # 初始化响应
+        response = {
+            "challenge": {
+                "id": challenge.id,
+                "title": challenge.title,
+                "description": challenge.description,
+                "start_date": challenge.start_date,
+                "end_date": challenge.end_date,
+                "challenge_type": challenge.challenge_type,
+                "target_value": challenge.target_value,
+                "created_by": challenge.created_by,
+            },
+            "participants_count": participants_count,
+            "leaderboard": []
+        }
+        
+        
+        # 获取完整排行榜（所有参与者）
+        leaderboard_query = db.query(
+            models.UserChallenge,
+            models.User.username
+        ).join(
+            models.User, models.UserChallenge.user_id == models.User.id
+        ).filter(
+            models.UserChallenge.challenge_id == request.challenge_id
+        ).order_by(
+            models.UserChallenge.current_value.desc()
+        ).all()
+        
+        # 格式化排行榜
+        response["leaderboard"] = [
+            {
+                "user_id": entry.UserChallenge.user_id,
+                "username": entry.username,
+                "current_value": entry.UserChallenge.current_value,
+                "completed": entry.UserChallenge.completed,
+                "progress": min(100, (entry.UserChallenge.current_value / challenge.target_value) * 100) if challenge.target_value > 0 else 0
+            }
+            for entry in leaderboard_query
+        ]
+        
+        return response
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取挑战详情失败: {str(e)}")
+    
+
+@app.post("/challenges/my", response_model=list[ChallengeResponse])
+def my_challenges(request: UserChallengeDetail, db: Session = Depends(get_db)):
+    """获取指定用户参与的挑战"""
+    try:
+        # 查询用户参与的所有挑战ID
+        user_challenges = db.query(models.UserChallenge).filter(
+            models.UserChallenge.user_id == request.user_id
+        ).all()
+        
+        challenge_ids = [uc.challenge_id for uc in user_challenges]
+        
+        # 获取这些挑战的详细信息
+        challenges = db.query(models.Challenge).filter(
+            models.Challenge.id.in_(challenge_ids)
+        ).all()
+        
+        return challenges
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取我的挑战失败: {str(e)}")
+
+@app.post("/challenges/end")
+def end_challenge(request: EndChallengeRequest, db: Session = Depends(get_db)):
+    """结束挑战并计算每个参与者的得分，更新到用户表中"""
+    try:
+        # 获取挑战信息
+        challenge = db.query(models.Challenge).filter(models.Challenge.id == request.challenge_id).first()
+        if not challenge:
+            raise HTTPException(status_code=404, detail="挑战不存在")
+        
+        # 设置挑战结束时间为当前时间（如果提前结束）
+        if challenge.end_date > datetime.now():
+            challenge.end_date = datetime.now()
+            db.commit()
+        
+        # 获取所有参与者，按完成值排序
+        participants = db.query(
+            models.UserChallenge,
+            models.User
+        ).join(
+            models.User, models.UserChallenge.user_id == models.User.id
+        ).filter(
+            models.UserChallenge.challenge_id == request.challenge_id
+        ).order_by(
+            models.UserChallenge.current_value.desc()
+        ).all()
+        
+        results = []
+        
+        # 计算每个参与者的得分
+        for rank, p in enumerate(participants):
+            user_challenge = p.UserChallenge
+            user = p.User
+            completion_ratio = min(1.0, user_challenge.current_value / challenge.target_value) if challenge.target_value > 0 else 0
+            
+            # 基础分数：完成度 * 70分
+            base_score = completion_ratio * 70
+            
+            # 排名加分
+            rank_score = 0
+            if rank == 0:  # 第一名
+                rank_score = 30
+            elif rank == 1:  # 第二名
+                rank_score = 20
+            elif rank == 2:  # 第三名
+                rank_score = 10
+            else:  # 其他名次
+                rank_score = max(0, 5 - (rank - 3))  # 第4名5分，第5名4分...递减
+            
+            # 完成挑战额外奖励
+            completion_bonus = 15 if user_challenge.completed else 0
+            
+            # 总分
+            total_score = round(base_score + rank_score + completion_bonus)
+            
+            # 更新用户挑战记录
+            user_challenge.score = total_score
+            
+            # 更新用户总积分
+            if hasattr(user, 'score'):
+                user.score = (user.score or 0) + total_score
+            elif hasattr(user, 'points'):
+                user.points = (user.points or 0) + total_score
+            
+            db.commit()
+            
+            # 添加到结果列表
+            results.append({
+                "user_id": user_challenge.user_id,
+                "username": user.username,
+                "rank": rank + 1,
+                "completion_ratio": round(completion_ratio * 100, 1),
+                "current_value": user_challenge.current_value,
+                "completed": user_challenge.completed,
+                "base_score": round(base_score),
+                "rank_score": rank_score,
+                "completion_bonus": completion_bonus,
+                "total_score": total_score,
+                "updated_user_score": user.score if hasattr(user, 'score') else user.points if hasattr(user, 'points') else None
+            })
+        
+        return {
+            "challenge_id": challenge.id,
+            "challenge_title": challenge.title,
+            "status": "已结束",
+            "participants_count": len(participants),
+            "results": results
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"结束挑战失败: {str(e)}")

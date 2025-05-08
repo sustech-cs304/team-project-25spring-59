@@ -7,7 +7,12 @@ import ImageDetail from "../views/ImageDetail.vue";
 import Register from "../views/Register.vue";
 import Transition from "../components/Transition.vue";
 import BeforeLogin from "../views/BeforeLogin.vue";
+import TrainMission from "../views/TrainMission.vue";
 import Gym from "../views/Gym.vue";
+import Share from "../views/Share.vue"
+import TrainMissionSpecification from "../views/TrainMissionViews/TrainMissionSpecification.vue";
+import TrainMissionPlan from "../views/TrainMissionViews/TrainMissionPlan.vue";
+import TrainMissionDashboard from "../views/TrainMissionViews/TrainMissionDashboard.vue";
 
 const routes = [
   { path: '/', redirect: '/beforeLogin' },
@@ -16,10 +21,15 @@ const routes = [
   { path: '/beforeLogin', component: BeforeLogin },
   { path: '/dashboard', component: Dashboard, meta: { requiresAuth: false } },
   { path: '/carousel', component: Carousel, meta: { requiresAuth: false } }, // 主页面
-  // { path: '/trainMission', component: TrainMission, meta: { requiresAuth: false } },
   { path: '/transition', component: Transition }, // 新增过渡页面路由
   { path: '/image/:id', component: ImageDetail, meta: { requiresAuth: false } },
   { path: '/gym', component: Gym, meta: { requiresAuth: false } },
+  { path: '/share', component: Share, meta: { requiresAuth: false } },
+
+  { path: '/TrainMission', component: TrainMission, meta: { requiresAuth: false } },//训练记录主界面，记录所有的运动数据
+  { path: '/TrainMission/Specification', component: TrainMissionSpecification, meta: { requiresAuth: false } },//具体的运动界面
+  { path: '/TrainMission/Plans', component: TrainMissionPlan, meta: { requiresAuth: false } },//具体的运动界面
+  { path: '/TrainMission/Dashboard', component: TrainMissionDashboard, meta: { requiresAuth: false } },//具体的运动界面
 ];
 
 const router = createRouter({
