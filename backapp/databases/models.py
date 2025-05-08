@@ -231,3 +231,4 @@ class Comment(Base):
     # 关系定义
     user = relationship("User", backref="comments")
     post = relationship("Post", back_populates="comments")
+

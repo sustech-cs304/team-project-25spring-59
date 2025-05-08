@@ -153,6 +153,11 @@ class UserChallengeResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class UpdateChallengeProgressRequest(BaseModel):
+    challenge_id: int
+    user_id: int
+    current_value: float
+
 @app.get("/")
 def read_root():
     return {"message": "FastAPI 服务器运行成功！"}
@@ -747,3 +752,130 @@ def join_challenge(request: JoinChallengeRequest, db: Session = Depends(get_db))
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"加入挑战失败: {str(e)}")
+    
+@app.get("/challenges/all")
+def get_all_challenges(db: Session = Depends(get_db)):
+    """获取所有挑战的详细记录"""
+    try:
+        # 查询所有挑战
+        challenges = db.query(models.Challenge).all()
+        
+        result = []
+        
+        # 为每个挑战获取详细信息
+        for challenge in challenges:
+            # 获取参与者数量
+            participants_count = db.query(models.UserChallenge).filter(
+                models.UserChallenge.challenge_id == challenge.id
+            ).count()
+            
+            # 获取创建者信息
+            creator = db.query(models.User).filter(models.User.id == challenge.created_by).first()
+            creator_name = creator.username if creator else "未知用户"
+            
+            # 获取挑战完成率
+            completed_count = db.query(models.UserChallenge).filter(
+                models.UserChallenge.challenge_id == challenge.id,
+                models.UserChallenge.completed == True
+            ).count()
+            
+            completion_rate = (completed_count / participants_count) * 100 if participants_count > 0 else 0
+            
+            # 获取排行榜前3名
+            leaderboard_query = db.query(
+                models.UserChallenge,
+                models.User.username
+            ).join(
+                models.User, models.UserChallenge.user_id == models.User.id
+            ).filter(
+                models.UserChallenge.challenge_id == challenge.id
+            ).order_by(
+                models.UserChallenge.current_value.desc()
+            ).limit(3).all()
+            
+            top_performers = [
+                {
+                    "user_id": entry.UserChallenge.user_id,
+                    "username": entry.username,
+                    "current_value": entry.UserChallenge.current_value,
+                    "completed": entry.UserChallenge.completed
+                }
+                for entry in leaderboard_query
+            ]
+            
+            # 计算挑战状态
+            now = datetime.now()
+            if now < challenge.start_date:
+                status = "即将开始"
+            elif now > challenge.end_date:
+                status = "已结束"
+            else:
+                status = "进行中"
+            
+            # 构建挑战详情
+            challenge_detail = {
+                "id": challenge.id,
+                "title": challenge.title,
+                "description": challenge.description,
+                "start_date": challenge.start_date,
+                "end_date": challenge.end_date,
+                "challenge_type": challenge.challenge_type,
+                "target_value": challenge.target_value,
+                "created_by": challenge.created_by,
+                "creator_name": creator_name,
+                "status": status,
+                "participants_count": participants_count,
+                "completion_rate": completion_rate,
+                "top_performers": top_performers,
+                "days_remaining": (challenge.end_date - now).days if now < challenge.end_date else 0
+            }
+            
+            result.append(challenge_detail)
+        
+        return {"challenges": result, "total_count": len(result)}
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取挑战列表失败: {str(e)}")
+    
+@app.post("/challenges/update-progress")
+def update_challenge_progress(request: UpdateChallengeProgressRequest, db: Session = Depends(get_db)):
+    """更新用户在挑战中的进度"""
+    try:
+        # 检查挑战是否存在
+        challenge = db.query(models.Challenge).filter(models.Challenge.id == request.challenge_id).first()
+        if not challenge:
+            raise HTTPException(status_code=404, detail="挑战不存在")
+        
+        # 检查用户是否参与该挑战
+        user_challenge = db.query(models.UserChallenge).filter(
+            models.UserChallenge.user_id == request.user_id,
+            models.UserChallenge.challenge_id == request.challenge_id
+        ).first()
+        
+        if not user_challenge:
+            raise HTTPException(status_code=404, detail="用户未参与此挑战")
+        
+        # 更新进度
+        user_challenge.current_value = request.current_value
+        
+        # 检查是否完成挑战
+        if request.current_value >= challenge.target_value:
+            user_challenge.completed = True
+        
+        db.commit()
+        db.refresh(user_challenge)
+        
+        # 计算进度百分比
+        progress = min(100, (user_challenge.current_value / challenge.target_value) * 100) if challenge.target_value > 0 else 0
+        
+        return {
+            "message": "进度已更新",
+            "current_value": user_challenge.current_value,
+            "completed": user_challenge.completed,
+            "progress": progress
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"更新挑战进度失败: {str(e)}")
