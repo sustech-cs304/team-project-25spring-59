@@ -158,6 +158,9 @@ class UpdateChallengeProgressRequest(BaseModel):
     user_id: int
     current_value: float
 
+class ChallengeDetail(BaseModel):
+    challenge_id: int
+
 @app.get("/")
 def read_root():
     return {"message": "FastAPI 服务器运行成功！"}
@@ -879,3 +882,66 @@ def update_challenge_progress(request: UpdateChallengeProgressRequest, db: Sessi
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"更新挑战进度失败: {str(e)}")
+
+
+@app.post("/challenges/detail")
+def get_challenge_detail(request: ChallengeDetail, db: Session = Depends(get_db)):
+    """获取挑战详情，包括参与者数量和完整排行榜"""
+    try:
+        # 获取挑战信息
+        challenge = db.query(models.Challenge).filter(models.Challenge.id == request.challenge_id).first()
+        if not challenge:
+            raise HTTPException(status_code=404, detail="挑战不存在")
+        
+        # 获取参与者数量
+        participants_count = db.query(models.UserChallenge).filter(
+            models.UserChallenge.challenge_id == request.challenge_id
+        ).count()
+        
+        # 初始化响应
+        response = {
+            "challenge": {
+                "id": challenge.id,
+                "title": challenge.title,
+                "description": challenge.description,
+                "start_date": challenge.start_date,
+                "end_date": challenge.end_date,
+                "challenge_type": challenge.challenge_type,
+                "target_value": challenge.target_value,
+                "created_by": challenge.created_by,
+            },
+            "participants_count": participants_count,
+            "leaderboard": []
+        }
+        
+        
+        # 获取完整排行榜（所有参与者）
+        leaderboard_query = db.query(
+            models.UserChallenge,
+            models.User.username
+        ).join(
+            models.User, models.UserChallenge.user_id == models.User.id
+        ).filter(
+            models.UserChallenge.challenge_id == request.challenge_id
+        ).order_by(
+            models.UserChallenge.current_value.desc()
+        ).all()
+        
+        # 格式化排行榜
+        response["leaderboard"] = [
+            {
+                "user_id": entry.UserChallenge.user_id,
+                "username": entry.username,
+                "current_value": entry.UserChallenge.current_value,
+                "completed": entry.UserChallenge.completed,
+                "progress": min(100, (entry.UserChallenge.current_value / challenge.target_value) * 100) if challenge.target_value > 0 else 0
+            }
+            for entry in leaderboard_query
+        ]
+        
+        return response
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取挑战详情失败: {str(e)}")
