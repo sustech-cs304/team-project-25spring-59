@@ -33,6 +33,7 @@ class User(Base):
     total_workouts = Column(Integer, default=0)  # 总训练次数
     total_minutes = Column(Integer, default=0)  # 总训练时长(分钟)
     total_calories = Column(Integer, default=0)  # 总消耗卡路里
+    score = Column(Integer, default=0)
     
     # 社交关系
     friends = relationship(
@@ -50,8 +51,7 @@ class User(Base):
 class TrainingRecord(Base):
     __tablename__ = "training_records"
     
-    # filename作为主键
-    filename = Column(String(255), primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True)
     # # 外键关联用户表
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
     
