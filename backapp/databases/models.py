@@ -155,59 +155,6 @@ class GymReservation(Base):
         return f"<GymReservation(id={self.id}, user_id={self.user_id}, gym_id={self.gym_id})>"
     
 
-class Post(Base):
-    """动态 / 分享."""
-    __tablename__ = "posts"
-
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-
-    # 纯文本内容（Markdown / 普通文本）
-    content = Column(String(1000), nullable=False)
-
-    # 可选：图片列表，JSON 存储 URL 数组
-    images = Column(JSON, nullable=True)
-
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-
-    # 关系
-    author = relationship("User")
-    comments = relationship("PostComment", back_populates="post", cascade="all, delete-orphan")
-    likes = relationship("PostLike", back_populates="post", cascade="all, delete-orphan")
-
-    def __repr__(self):
-        return f"<Post(id={self.id}, user_id={self.user_id})>"
-
-
-class PostLike(Base):
-    """点赞表——(user_id, post_id) 唯一."""
-    __tablename__ = "post_likes"
-    __table_args__ = (UniqueConstraint('user_id', 'post_id', name='_user_post_uc'),)
-
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    post_id = Column(Integer, ForeignKey("posts.id", ondelete="CASCADE"), nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-
-    user = relationship("User")
-    post = relationship("Post", back_populates="likes")
-
-
-class PostComment(Base):
-    """评论表."""
-    __tablename__ = "post_comments"
-
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    post_id = Column(Integer, ForeignKey("posts.id", ondelete="CASCADE"), nullable=False)
-
-    content = Column(String(500), nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-
-    user = relationship("User")
-    post = relationship("Post", back_populates="comments")
-
 class Challenge(Base):
     """挑战表"""
     __tablename__ = "challenges"

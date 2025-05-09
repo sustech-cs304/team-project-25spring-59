@@ -360,31 +360,6 @@ class GymResponse(DTO):
     open_time: str  # 格式如: "09:00:00-21:00:00"
     address: str
 
-class CommentResponse(DTO):
-    user_id: int
-    user_name: str
-    comment: str
-    time: datetime
-
-
-class PostResponse(DTO):
-    user_id: int
-    user_name: str
-    content: str
-    time: datetime
-    img_list: Optional[List[dict]] = None
-    comments: List[CommentResponse] = []
-
-
-class PostCreateRequest(DTO):
-    content: str
-    # 形如 [{"img": "http://..."}, {"img": "..."}]
-    img_list: Optional[List[dict]] = None
-
-
-class CommentCreateRequest(DTO):
-    post_id: int
-    comment: str
 
 
 
@@ -733,8 +708,32 @@ def get_daily_plan(request: DailyPlanRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"获取日计划失败: {str(e)}")
 
 
-# 动态分享序列化工具
-def _serialize_comment(c: models.PostComment) -> CommentResponse:
+class CommentResponse(DTO):
+    user_id: int
+    user_name: str
+    comment: str
+    time: datetime
+
+
+class PostResponse(DTO):
+    user_id: int
+    user_name: str
+    content: str
+    time: datetime
+    img_list: Optional[List[dict]] = None
+    comments: List[CommentResponse] = []
+
+
+class PostCreateRequest(DTO):
+    content: str
+    img_list: Optional[List[dict]] = None  # [{"img":"url"}]
+
+
+class CommentCreateRequest(DTO):
+    comment: str
+
+
+def _serialize_comment(c: models.Comment) -> CommentResponse:
     return CommentResponse(
         user_id=c.user_id,
         user_name=c.user.username,
@@ -743,65 +742,54 @@ def _serialize_comment(c: models.PostComment) -> CommentResponse:
     )
 
 
-def _serialize_post(post: models.Post) -> PostResponse:
-    img_list = [{"img": url} for url in (post.images or [])]
-    # 评论按时间倒序
-    comments_sorted = sorted(post.comments, key=lambda x: x.created_at, reverse=True)
+def _serialize_post(p: models.Post) -> PostResponse:
+    img_list = [{"img": p.image_url}] if p.image_url else None  # >>> 修改点
     return PostResponse(
-        user_id=post.user_id,
-        user_name=post.author.username,
-        content=post.content,
-        time=post.created_at,
-        img_list=img_list or None,
-        comments=[_serialize_comment(c) for c in comments_sorted],
+        user_id=p.user_id,
+        user_name=p.user.username,  # >>> 修改点
+        content=p.content,
+        time=p.created_at,
+        img_list=img_list,
+        comments=[_serialize_comment(c) for c in sorted(p.comments, key=lambda x: x.created_at, reverse=True)],
     )
 
 
-def _get_post_with_relations(db: Session, post_id: int) -> models.Post:
+def _get_post_full(db: Session, post_id: int) -> models.Post:
     post = (
         db.query(models.Post)
         .options(
-            joinedload(models.Post.comments).joinedload(models.PostComment.user),
-            joinedload(models.Post.author),
+            joinedload(models.Post.comments).joinedload(models.Comment.user),  # >>> 修改点
+            joinedload(models.Post.user),  # >>> 修改点
         )
         .filter(models.Post.id == post_id)
         .first()
     )
     if not post:
-        raise HTTPException(status_code=404, detail="Post not found")
+        raise HTTPException(404, "Post not found")
     return post
 
 
-# 动态分享 相关接口
-
-@app.post("/posts", summary="发布动态", response_model=PostResponse)
+# -------------------------------------------------
+# 动态分享接口
+# -------------------------------------------------
+@app.post("/posts", response_model=PostResponse)
 def create_post_api(
     body: PostCreateRequest,
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    images = [d["img"] for d in body.img_list] if body.img_list else None
-    db_post = crud.create_post(
-        db=db,
-        user_id=current_user.id,
-        content=body.content,
-        images=images,
-    )
-    post_full = _get_post_with_relations(db, db_post.id)
-    return _serialize_post(post_full)
+    img_url = body.img_list[0]["img"] if body.img_list else None  # >>> 修改点
+    db_post = crud.create_post(db, user_id=current_user.id, content=body.content, image_url=img_url)  # >>> 修改点
+    return _serialize_post(_get_post_full(db, db_post.id))
 
 
-@app.get("/posts", summary="获取动态列表", response_model=list[PostResponse])
-def list_posts_api(
-    skip: int = 0,
-    limit: int = 20,
-    db: Session = Depends(get_db),
-):
+@app.get("/posts", response_model=list[PostResponse])
+def list_posts_api(skip: int = 0, limit: int = 20, db: Session = Depends(get_db)):
     posts = (
         db.query(models.Post)
         .options(
-            joinedload(models.Post.comments).joinedload(models.PostComment.user),
-            joinedload(models.Post.author),
+            joinedload(models.Post.comments).joinedload(models.Comment.user),
+            joinedload(models.Post.user),
         )
         .order_by(models.Post.created_at.desc())
         .offset(skip)
@@ -811,34 +799,25 @@ def list_posts_api(
     return [_serialize_post(p) for p in posts]
 
 
-@app.post("/posts/{post_id}/comments", summary="发表评论", response_model=CommentResponse)
+@app.post("/posts/{post_id}/comments", response_model=CommentResponse)
 def add_comment_api(
     post_id: int,
     body: CommentCreateRequest,
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    # 确保动态存在
-    _get_post_with_relations(db, post_id)
-    db_comment = crud.add_comment(
-        db=db,
-        user_id=current_user.id,
-        post_id=post_id,
-        content=body.comment,
-    )
-    return _serialize_comment(db_comment)
+    _get_post_full(db, post_id)
+    cmt = crud.add_comment(db, user_id=current_user.id, post_id=post_id, content=body.comment)
+    return _serialize_comment(cmt)
 
 
-@app.get("/posts/{post_id}/comments", summary="获取评论列表", response_model=list[CommentResponse])
-def list_comments_api(
-    post_id: int,
-    skip: int = 0,
-    limit: int = 50,
-    db: Session = Depends(get_db),
-):
-    post = _get_post_with_relations(db, post_id)
-    comments = sorted(post.comments, key=lambda x: x.created_at, reverse=True)[skip : skip + limit]
-    return [_serialize_comment(c) for c in comments]
+@app.get("/posts/{post_id}/comments", response_model=list[CommentResponse])
+def list_comments_api(post_id: int, skip: int = 0, limit: int = 50, db: Session = Depends(get_db)):
+    post = _get_post_full(db, post_id)
+    cmts = sorted(post.comments, key=lambda x: x.created_at, reverse=True)[skip : skip + limit]
+    return [_serialize_comment(c) for c in cmts]
+
+
 @app.post("/challenges", response_model=ChallengeResponse)
 def create_challenge(challenge: ChallengeCreate, db: Session = Depends(get_db)):
     """创建新挑战"""
