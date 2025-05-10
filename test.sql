@@ -625,37 +625,57 @@ VALUES
 (1, 3, DATE_ADD(NOW(), INTERVAL -1 DAY), DATE_ADD(NOW(), INTERVAL -1 DAY) + INTERVAL 1 HOUR, DATE_ADD(NOW(), INTERVAL -1 DAY) + INTERVAL 2 HOUR, 'cancelled'),
 (2, 4, DATE_ADD(NOW(), INTERVAL -2 DAY), DATE_ADD(NOW(), INTERVAL -2 DAY) + INTERVAL 2 HOUR, DATE_ADD(NOW(), INTERVAL -2 DAY) + INTERVAL 3 HOUR, 'cancelled');
 #
-# INSERT INTO posts
-# (id, user_id, content, images, created_at, updated_at)
-# VALUES
-# (1, 1, '早晨 5 公里跑步，感觉棒极了！',               JSON_ARRAY('https://cdn.example.com/run01.jpg'),  NOW(), NULL),
-# (2, 2, '第一次尝试 HIIT 课程，超累但超爽🔥',          NULL,                                                 NOW(), NULL),
-# (3, 3, '瑜伽练习分享，放松又开心🧘',                JSON_ARRAY('https://cdn.example.com/yoga01.jpg',
-#                                                              'https://cdn.example.com/yoga02.jpg'),          NOW(), NULL),
-# (4, 4, '力量训练日！增加了一组卧推💪',               NULL,                                                 NOW(), NULL),
-# (5, 5, '动感单车 45 分钟，汗水飞起🚴',               JSON_ARRAY('https://cdn.example.com/spin01.jpg'),   NOW(), NULL);
-#
-# -- Comment（评论）
-# INSERT INTO post_comments
-# (id, user_id, post_id, content, created_at)
-# VALUES
-# (1,  2, 1, '太厉害了，坚持！',               NOW()),
-# (2,  3, 1, '向你学习～',                     NOW()),
-# (3,  1, 2, 'HIIT 燃起来！加油！',            NOW()),
-# (4,  4, 3, '瑜伽看起来很舒服👍',             NOW()),
-# (5,  5, 4, '卧推重量多少呀？',               NOW()),
-# (6,  6, 5, '动感单车好有趣，下次一起！',      NOW());
-#
-# -- Like（点赞）
-# INSERT INTO post_likes
-# (id, user_id, post_id, created_at)
-# VALUES
-# (1, 2, 1, NOW()),
-# (2, 3, 1, NOW()),
-# (3, 4, 1, NOW()),
-# (4, 1, 2, NOW()),
-# (5, 3, 2, NOW()),
-# (6, 5, 3, NOW()),
-# (7, 1, 3, NOW()),
-# (8, 2, 4, NOW()),
-# (9, 6, 5, NOW());
+/* -----------------------------------------------------------
+   Posts  帖子
+   ----------------------------------------------------------- */
+INSERT INTO posts
+(id, user_id, content, image_url, created_at, likes_count, comments_count)
+VALUES
+(1, 1, '早晨 5 公里跑步，感觉棒极了！',
+        'https://cdn.example.com/run01.jpg',
+        NOW(), 3, 2),
+
+(2, 2, '第一次尝试 HIIT 课程，超累但超爽🔥',
+        NULL,
+        NOW(), 2, 1),
+
+(3, 3, '瑜伽练习分享，放松又开心🧘',
+        'https://cdn.example.com/yoga01.jpg',
+        NOW(), 2, 1),
+
+(4, 4, '力量训练日！增加了一组卧推💪',
+        NULL,
+        NOW(), 1, 1),
+
+(5, 5, '动感单车 45 分钟，汗水飞起🚴',
+        'https://cdn.example.com/spin01.jpg',
+        NOW(), 1, 1);
+
+/* -----------------------------------------------------------
+   Comments  评论
+   ----------------------------------------------------------- */
+INSERT INTO comments
+(id, user_id, post_id, content, created_at)
+VALUES
+(1,  2, 1, '太厉害了，坚持！',           NOW()),
+(2,  3, 1, '向你学习～',               NOW()),
+(3,  1, 2, 'HIIT 燃起来！加油！',      NOW()),
+(4,  4, 3, '瑜伽看起来很舒服👍',       NOW()),
+(5,  5, 4, '卧推重量多少呀？',         NOW()),
+(6,  6, 5, '动感单车好有趣，下次一起！',NOW());
+
+/* -----------------------------------------------------------
+   Likes  点赞
+   ----------------------------------------------------------- */
+INSERT INTO likes
+(id, user_id, post_id, created_at)
+VALUES
+(1, 2, 1, NOW()),
+(2, 3, 1, NOW()),
+(3, 4, 1, NOW()),
+(4, 1, 2, NOW()),
+(5, 3, 2, NOW()),
+(6, 5, 3, NOW()),
+(7, 1, 3, NOW()),
+(8, 2, 4, NOW()),
+(9, 6, 5, NOW());
