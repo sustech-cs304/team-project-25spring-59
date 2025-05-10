@@ -32,7 +32,27 @@ print("保存路径为：", SAVE_DIR)
 @app.on_event("startup")
 def startup_db_client():
     init_db()
-    insert_mock_data()  # 👈 启动时自动插入数据
+    # insert_mock_data()  # 👈 启动时自动插入数据
+    # 执行 test.sql 文件
+    from sqlalchemy import text
+    from databases.database import SessionLocal
+    
+    try:
+        db = SessionLocal()
+        with open('test.sql', 'r', encoding='utf-8') as f:
+            sql_script = f.read()
+        
+        # 按分号分割执行多条SQL语句
+        statements = [stmt.strip() for stmt in sql_script.split(';') if stmt.strip()]
+        for stmt in statements:
+            db.execute(text(stmt))
+        
+        db.commit()
+        print("成功执行 test.sql 文件")
+    except Exception as e:
+        print(f"执行 SQL 脚本出错: {e}")
+    finally:
+        db.close()
 
 # 允许跨域请求，方便前端访问
 app.add_middleware(
