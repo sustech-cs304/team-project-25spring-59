@@ -2,8 +2,9 @@
 
 import {onMounted, reactive} from "vue";
 import request from "../../utils/request.js";
+import {Plus} from "@element-plus/icons-vue";
 
-defineEmits(['clickChallenge']);
+defineEmits(['clickChallenge', 'createChallenge']);
 
 const challenges = reactive({})
 
@@ -21,7 +22,7 @@ onMounted(()=>{
 </script>
 
 <template>
-  <el-row>
+  <el-row class="challenge-container">
     <el-col :span="12" :offset="6">
       <el-card shadow="hover" v-for="challenge in challenges.data" @click="$emit('clickChallenge', challenge.id)">
         <template #header>
@@ -43,11 +44,21 @@ onMounted(()=>{
             <el-tag type="primary">{{ challenge.status }}</el-tag>
             <el-text>目标：{{ challenge.target_value }}</el-text>
           </el-row>
-
         </template>
       </el-card>
     </el-col>
   </el-row>
+
+  <!--fixed navigating bar at the bottom-->
+  <el-affix target=".challenge-container" position="bottom" :offset="20">
+    <el-row>
+      <el-col :span="10" :offset="7">
+        <div style="display: flex; justify-content: center">
+          <el-button :icon="Plus" type="primary" size="large" circle @click="$emit('createChallenge', 1)"></el-button>
+        </div>
+      </el-col>
+    </el-row>
+  </el-affix>
 </template>
 
 <style scoped>
