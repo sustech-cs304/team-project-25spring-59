@@ -246,6 +246,37 @@ def register(user: RegisterRequest, db: Session = Depends(get_db)):
     
     return {"message": "注册成功", "username": new_user.username}
 
+@app.post("/generate-user-records")
+def generate_user_records(request: UserIdRequest, db: Session = Depends(get_db)):
+    """获取指定用户的所有训练记录"""
+    try:
+        records = crud.get_training_records_by_user(db, user_id=request.user_id)
+        
+        result = []
+        for record in records:
+            record_dict = {
+                "id": record.id,
+                "user_id": record.user_id,
+                "start_time": record.start_time,
+                "end_time": record.end_time,
+                "activity_type": record.activity_type,
+                "duration_minutes": record.duration_minutes,
+                "is_completed": record.is_completed,
+                "record_type": record.record_type,
+                "reminder_time": record.reminder_time,
+                "distance": record.distance,
+                "calories": record.calories,
+                "average_heart_rate": record.average_heart_rate,
+                "max_heart_rate": record.max_heart_rate,
+                "minute_heart_rates": record.minute_heart_rates if record.minute_heart_rates else {}
+            }
+            result.append(record_dict)
+        
+        return {"records": result, "count": len(result)}
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取训练记录失败: {str(e)}")
+    
 @app.post("/saveMission")
 def save_mission(data: SaveMissionRequest, db: Session = Depends(get_db)):
     try:
@@ -1201,3 +1232,5 @@ def end_challenge(request: EndChallengeRequest, db: Session = Depends(get_db)):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"结束挑战失败: {str(e)}")
+
+
