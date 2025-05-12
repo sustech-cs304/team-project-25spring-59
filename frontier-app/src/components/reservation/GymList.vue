@@ -24,7 +24,7 @@ onMounted(()=>{
   <el-row>
     <el-col :span="12" :offset="6">
       <el-card shadow="hover" v-for="gym in gyms.data">
-        <div @click="$emit('clickGym', gym.gymId)">
+        <div @click="$emit('clickGym', gym.id)">
           <span>{{ gym.name }}</span>
           <div class="bottom">
             <span>开放时间：{{ gym.openTime }}</span><br/>

@@ -18,7 +18,7 @@ const index = ref(0)
 const dateListShow = (start, end) => dateList.slice(start, end)  // export date slice
 
 onMounted(()=>{
-  request.get(`/course/getCourses/${props.gymId}`)
+  request.get(`/gym/getCourses/${props.gymId}`)
       .then((response) => {
         console.log(response);
         courseList.data = response.data;
