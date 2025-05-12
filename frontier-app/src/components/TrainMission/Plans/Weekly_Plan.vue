@@ -51,13 +51,13 @@ const weekTasks = ref([
 ])
 
 const panelPositions = [
-  { top: '320px', left: '100px' },
-  { top: '320px', left: '620px' },
-  { top: '320px', left: '1140px' },
-  { top: '320px', left: '1660px' },
-  { top: '980px', left: '100px' },
-  { top: '980px', left: '620px' },
-  { top: '980px', left: '1140px' }
+  { top: '280px', left: '60px' },
+  { top: '280px', left: '550px' },
+  { top: '280px', left: '1040px' },
+  { top: '280px', left: '1530px' },
+  { top: '900px', left: '60px' },
+  { top: '900px', left: '550px' },
+  { top: '900px', left: '1040px' }
 ]
 
 // 计算 weekDays 和日期格式化

@@ -1,7 +1,7 @@
 import requests
 
 # 请求的 URL
-url = "http://localhost:8000/generate-user-records"
+url = "http://localhost:8000/get-daily-plan"
 
 # 请求体参数
 payload = {
