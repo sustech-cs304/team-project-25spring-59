@@ -6,18 +6,20 @@
     <div v-if="plans.length === 0" class="empty">暂无计划</div>
     <table v-else class="plan-table">
       <thead>
-        <tr>
-          <th>开始时间</th>
-          <th>结束时间</th>
-          <th>运动类型</th>
-          <th>运动时长</th>
-          <th>消耗卡路里</th>
-          <th>平均心率</th>
-          <th>是否完成</th>
-        </tr>
+      <tr>
+        <th><input type="checkbox" @change="toggleAll" :checked="isAllChecked" /></th> <!-- 全选框 -->
+        <th>开始时间</th>
+        <th>结束时间</th>
+        <th>运动类型</th>
+        <th>运动时长</th>
+        <th>消耗卡路里</th>
+        <th>平均心率</th>
+        <th>是否完成</th>
+      </tr>
       </thead>
       <tbody>
         <tr v-for="plan in plans" :key="plan.id">
+          <td><input type="checkbox" v-model="selectedIds" :value="plan.id" /></td>
           <td>{{ plan.startDate }}</td>
           <td>{{ plan.endDate }}</td>
           <td>{{ plan.type }}</td>
@@ -27,6 +29,7 @@
           <td>{{ plan.completed }}</td>
         </tr>
       </tbody>
+
     </table>
 
 
@@ -95,10 +98,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted} from 'vue'
 import axios from 'axios'
 import Loading from 'vue3-loading-overlay'
 import 'vue3-loading-overlay/dist/vue3-loading-overlay.css'
+import {computed} from "vue";
 
 // 定义响应数据结构
 interface RecordItem {
@@ -128,6 +132,19 @@ const newPlan = ref({
   is_completed: true
 })
 
+const selectedIds = ref<number[]>([]) // 存放勾选的 ID
+// 是否全选
+const isAllChecked = computed(() => selectedIds.value.length === plans.value.length && plans.value.length > 0);
+
+
+// 切换全选
+const toggleAll = () => {
+  if (isAllChecked.value) {
+    selectedIds.value = []
+  } else {
+    selectedIds.value = plans.value.map(p => p.id)
+  }
+}
 
 
 onMounted(() => {
@@ -141,13 +158,30 @@ const handleAdd = () => {
   showAddModal.value = true
 }
 
-const handleDelete = () => {
+const handleDelete = async () => {
+  if (selectedIds.value.length === 0) {
+    alert('请先选择要删除的训练记录')
+    return
+  }
+
   isLoading.value = true
-  setTimeout(() => {
-    isLoading.value = false
+  try {
+    for (const id of selectedIds.value) {
+      await axios.post('http://localhost:8000/delete-record', {
+        record_id: id
+      })
+    }
     alert('删除成功')
-  }, 1500)
+    selectedIds.value = [] // 清空已选
+    await fetchPlans() // 刷新表格
+  } catch (err) {
+    console.error('删除失败:', err)
+    alert('删除失败，请稍后重试')
+  } finally {
+    isLoading.value = false
+  }
 }
+
 
 
 //注册一个新的用户训练记录
