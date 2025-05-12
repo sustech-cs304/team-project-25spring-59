@@ -1,10 +1,21 @@
 <template>
   <div class="wrap-container ra-container">
     <div class="ra-content">
-      <div class="ra-title">卡路消耗曲线</div>
+      <div class="ra-title">运动时间曲线</div>
       <div class="ra-body">
         <div class="wrap-container">
           <div class="chartsdom" id="chart-rollArc"></div>
+        </div>
+
+        <!-- 月份选择器 -->
+        <div class="month-picker">
+          <el-date-picker
+            v-model="selectedMonth"
+            type="month"
+            format="YYYY-MM"
+            placeholder="选择月份"
+            @change="handleMonthChange"
+          />
         </div>
       </div>
     </div>
@@ -12,70 +23,86 @@
 </template>
 
 <script>
-import * as echarts from 'echarts' // 在组件中导入 echarts
+import * as echarts from 'echarts'
+import dayjs from 'dayjs'
 
 export default {
   name: 'roll-arcline',
   data() {
-  // 生成从3月1日到3月30日的日期
-  const startDate = new Date('2025-03-01');  // 设定3月1日为起始日期
-  const endDate = new Date('2025-03-30');    // 设定3月30日为结束日期
-  const xData = [];  // 存储日期
-  const yData = [];  // 存储卡路里消耗值
-
-  // 循环生成日期和卡路里数据
-  let currentDate = startDate;
-  while (currentDate <= endDate) {
-    xData.push(`${currentDate.getMonth() + 1}月${currentDate.getDate()}日`);  // 将日期格式化为 "3月1日"
-
-    // 随机生成卡路里消耗值，假设值在200到600之间
-    yData.push(Math.floor(Math.random() * (600 - 200 + 1)) + 200);
-
-    // 日期递增
-    currentDate.setDate(currentDate.getDate() + 1);
-  }
-
-  return {
-    option: null,
-    xIndex: 0,
-    timer: null,
-    xData: xData,  // 日期数据
-    yData: yData   // 随机卡路里消耗值
-  };
-}
-,
+    const now = dayjs()
+    return {
+      option: null,
+      xIndex: 0,
+      timer: null,
+      xData: [],
+      yData: [],
+      selectedMonth: now.format('YYYY-MM')
+    }
+  },
 
   mounted() {
+    this.generateChartDataForMonth(this.selectedMonth)
     this.getEchart()
   },
 
   methods: {
+    async generateChartDataForMonth(monthStr) {
+      const startDate = dayjs(`${monthStr}-01`)
+      const endDate = startDate.endOf('month')
+      const startStr = startDate.format('YYYY-MM-DD')
+      const endStr = endDate.format('YYYY-MM-DD')
+
+      const userId = localStorage.getItem('user_id')
+      if (!userId) return
+
+      try {
+        const response = await fetch(`http://localhost:8000/stats/weekly-trend?start_date=${startStr}&end_date=${endStr}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: parseInt(userId) })
+        })
+        const data = await response.json()
+
+        this.xData = []
+        this.yData = []
+
+        // 遍历日期范围
+        for (let i = 0; i < endDate.date(); i++) {
+          const current = startDate.add(i, 'day')
+          const key = current.format('YYYY-MM-DD')
+          this.xData.push(current.format('M月D日'))
+
+          this.yData.push(data[key]?.duration_minutes || 0)
+        }
+
+        this.getEchart()
+      } catch (err) {
+        console.error('获取趋势数据失败:', err)
+      }
+    },
+
+
+    handleMonthChange(val) {
+      const formatted = dayjs(val).format('YYYY-MM')
+      this.selectedMonth = formatted
+      this.generateChartDataForMonth(formatted)
+      this.getEchart()
+    },
+
     getEchart() {
-      // 获取图标渲染体
       const chartRollArc = document.getElementById('chart-rollArc')
-      // 初始化图表
+      if (!chartRollArc) return
       let myChart = echarts.init(chartRollArc)
+
       this.option = {
         tooltip: {
           trigger: 'axis',
           showContent: true,
-          axiosPointer: {
-            type: 'shadow',
-            shadowStyle: {
-              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                { offset: 1, color: '#5d83ff' },
-                { offset: 0, color: 'rgba(255,255,255,0)' }
-              ])
-            }
-          },
-          // 重新构造图标信息显示（不写会有默认的格式）
           formatter: (params) => {
             params = params[0]
-            if (params.seriesIndex === 0) {
-              this.xIndex = parseInt(params.name) - 1
-            }
+            this.xIndex = params.dataIndex
             return (
-              params.name + '</br>' + params.seriesName + '：' + params.value + ' 大卡'
+              params.name + '</br>' + params.seriesName + '：' + params.value + ' min'
             )
           }
         },
@@ -86,7 +113,7 @@ export default {
           left: 30,
           right: 20,
           bottom: 20,
-          containerLabel: true
+          containLabel: true
         },
         xAxis: {
           type: 'category',
@@ -115,7 +142,7 @@ export default {
         },
         series: [
           {
-            name: '卡路里',
+            name: '运动时长',
             type: 'line',
             data: this.yData,
             symbolSize: 10,
@@ -136,45 +163,36 @@ export default {
               }
             },
             areaStyle: {
-              normal: {
-                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                  { offset: 0, color: '#5d83ff' },
-                  { offset: 1, color: 'rgba(0, 0, 0, 0)' }
-                ])
-              }
+              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                { offset: 0, color: '#5d83ff' },
+                { offset: 1, color: 'rgba(0, 0, 0, 0)' }
+              ])
             },
             smooth: true
           }
         ]
       }
 
-      // 绘制图表
       myChart.setOption(this.option, true)
 
-      // 监听窗口变化
       window.addEventListener('resize', () => {
         myChart.resize()
       })
 
-      // 开启自动显示信息
       this.startChartAutoShowTip(myChart)
 
-      // 鼠标进入停止自动显示信息
       chartRollArc.onmouseover = () => {
         this.stopChartAutoShowTip()
       }
-      // 退出 chartRollArc 继续自动显示信息
       chartRollArc.onmouseout = () => {
         this.startChartAutoShowTip(myChart)
       }
     },
 
-    // 自动显示图标信息函数
     startChartAutoShowTip(myChart) {
       this.stopChartAutoShowTip()
 
       this.timer = setInterval(() => {
-        // 显示图标信息
         myChart.dispatchAction({
           type: 'showTip',
           seriesIndex: 0,
@@ -182,15 +200,14 @@ export default {
         })
 
         this.xIndex++
-        if (this.xIndex > this.yData.length) {
+        if (this.xIndex >= this.yData.length) {
           this.xIndex = 0
         }
       }, 1000)
     },
 
-    // 停止自动显示图标信息函数
     stopChartAutoShowTip() {
-      if (this.timer != null) {
+      if (this.timer) {
         clearInterval(this.timer)
         this.timer = null
       }
@@ -198,20 +215,17 @@ export default {
   },
 
   beforeDestroy() {
-    // 销毁自动显示信息
     this.stopChartAutoShowTip()
   }
 }
 </script>
 
 <style lang="scss" scoped>
-/* 标题居中 */
 .ra-title {
   text-align: center;
   color: white;
 }
 
-/* 内容宽高 */
 .wrap-container {
   width: 895px;
   height: 400px;
@@ -220,5 +234,10 @@ export default {
     width: 100%;
     height: 90%;
   }
+}
+
+.month-picker {
+  margin-top: 16px;
+  text-align: center;
 }
 </style>

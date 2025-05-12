@@ -20,7 +20,7 @@
 
     <!-- 图表部分 -->
     <div class="chart-container">
-      <CalorieChart />
+      <TrainTimeChart />
       <TimeBar />
     </div>
 
@@ -29,7 +29,7 @@
 
 <script setup lang="ts">
 import Header from '../../components/TrainMission/Header.vue'
-import CalorieChart from "../../components/TrainMission/Charts/CalorieChart.vue";
+import TrainTimeChart from "../../components/TrainMission/Charts/TrainTimeChart.vue";
 import TimeBar from "../../components/TrainMission/Charts/TimeBar.vue";
 import {ref, onMounted} from "vue";
 import Weekly_Plan from "../../components/TrainMission/Plans/Weekly_Plan.vue";
