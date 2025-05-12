@@ -39,58 +39,177 @@
     <!-- ✅ 加载动画 -->
     <Loading v-model:active="isLoading" :can-cancel="false" :is-full-page="false" />
   </div>
+
+
+    <!-- 弹窗组件：添加训练记录 -->
+  <div v-if="showAddModal" class="modal-overlay">
+    <div class="modal-content">
+      <h3>新建训练记录</h3>
+      <form @submit.prevent="submitNewPlan">
+        <label>
+          开始时间：
+          <input type="datetime-local" v-model="newPlan.start_time" required />
+        </label>
+
+        <label>
+          结束时间：
+          <input type="datetime-local" v-model="newPlan.end_time" required />
+        </label>
+
+        <label>
+          运动类型：
+          <input type="text" v-model="newPlan.activity_type" placeholder="如 跑步、游泳等" required />
+        </label>
+
+        <label>
+          运动时长（分钟）：
+          <input type="number" v-model="newPlan.duration_minutes" required />
+        </label>
+
+        <label>
+          消耗卡路里（kcal）：
+          <input type="number" v-model="newPlan.calories" />
+        </label>
+
+        <label>
+          平均心率（bpm）：
+          <input type="number" v-model="newPlan.average_heart_rate" />
+        </label>
+
+        <label>
+          是否完成：
+          <select v-model="newPlan.is_completed">
+            <option :value="true">完成</option>
+            <option :value="false">未完成</option>
+          </select>
+        </label>
+
+        <div class="modal-buttons">
+          <button type="submit" class="btn-add">提交</button>
+          <button type="button" class="btn-delete" @click="showAddModal = false">取消</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import axios from 'axios'
 import Loading from 'vue3-loading-overlay'
 import 'vue3-loading-overlay/dist/vue3-loading-overlay.css'
 
-const plans = ref([
-  {
-    id: 1,
-    type: '有氧训练',
-    duration: '45分钟',
-    calories: '350 kcal',
-    heartRate: '125 bpm',
-    startDate: '2025-04-01',
-    endDate: '2025-04-07',
-    completed : true,
-  },
-  {
-    id: 2,
-    type: '力量训练',
-    duration: '60分钟',
-    calories: '500 kcal',
-    heartRate: '140 bpm',
-    startDate: '2025-04-08',
-    endDate: '2025-04-14',
-    completed : false,
-  }
-])
+// 定义响应数据结构
+interface RecordItem {
+  id: number
+  type: string
+  duration: string
+  calories: string
+  heartRate: string
+  startDate: string
+  endDate: string
+  completed: boolean
+}
 
+const plans = ref<RecordItem[]>([]) // 最终要渲染的训练计划数据
 const userId = ref<string | null>(null)
 const isLoading = ref(false)
+const showAddModal = ref(false)
+
+// 定义注册新记录的结构
+const newPlan = ref({
+  start_time: '',
+  end_time: '',
+  activity_type: '',
+  duration_minutes: 0,
+  calories: 0,
+  average_heart_rate: 0,
+  is_completed: true
+})
+
+
 
 onMounted(() => {
   userId.value = localStorage.getItem('user_id')
+  fetchPlans()
 })
 
+
+
 const handleAdd = () => {
-  isLoading.value = true
-  setTimeout(() => {
-    isLoading.value = false
-    // alert('添加成功')
-  }, 1500)
+  showAddModal.value = true
 }
 
 const handleDelete = () => {
   isLoading.value = true
   setTimeout(() => {
     isLoading.value = false
-    // alert('删除成功')
+    alert('删除成功')
   }, 1500)
 }
+
+
+//注册一个新的用户训练记录
+const submitNewPlan = async () => {
+  if (!userId.value) return
+
+  isLoading.value = true
+  try {
+    await axios.post('http://localhost:8000/saveMission', {
+      user_id: Number(userId.value),
+      ...newPlan.value
+    })
+
+    // 关闭弹窗并清空表单
+    showAddModal.value = false
+    Object.assign(newPlan.value, {
+      start_time: '',
+      end_time: '',
+      activity_type: '',
+      duration_minutes: 0,
+      calories: 0,
+      average_heart_rate: 0,
+      is_completed: true
+    })
+
+    // 刷新数据
+    await fetchPlans()
+  } catch (err) {
+    console.error('添加失败:', err)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const fetchPlans = async () => {
+  if (!userId.value) return
+
+  isLoading.value = true
+  try {
+    const response = await axios.post('http://localhost:8000/generate-user-records', {
+      user_id: Number(userId.value)
+    })
+
+    const records = response.data.records || []
+
+    plans.value = records.map((record: any) => ({
+      id: record.id,
+      type: record.activity_type || '未知',
+      duration: `${record.duration_minutes}分钟`,
+      calories: `${record.calories ?? 0} kcal`,
+      heartRate: `${record.average_heart_rate ?? '-'} bpm`,
+      startDate: new Date(record.start_time).toLocaleString(),
+      endDate: new Date(record.end_time).toLocaleString(),
+      completed: record.is_completed ? '是' : '否',
+    }))
+  } catch (error) {
+    console.error('获取用户训练记录失败:', error)
+  } finally {
+    isLoading.value = false
+  }
+}
+
 </script>
 
 <style scoped>
@@ -175,4 +294,47 @@ const handleDelete = () => {
 .btn-delete {
   background-color: #e53935;
 }
+
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 500px;
+  max-width: 90%;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+}
+
+.modal-content form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.modal-content input,
+.modal-content select {
+  padding: 0.6rem;
+  font-size: 1rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: space-between;
+}
+
 </style>
