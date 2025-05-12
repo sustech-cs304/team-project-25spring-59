@@ -29,11 +29,11 @@
           </li>
           <li>
             <img src="../assets/Images/icon/Common/formation.png" alt="社交分享" class="menu-icon" />
-            <span @click="navigateTo('/contact')">社交分享</span>
+            <span @click="navigateTo('/share')">社交分享</span>
           </li>
           <li>
-            <img src="../assets/Images/icon/Common/club.png" alt="Button5" class="menu-icon" />
-            <span @click="navigateTo('/trainMission')">Button5</span>
+            <img src="../assets/Images/icon/Common/club.png" alt="在线挑战" class="menu-icon" />
+            <span @click="navigateTo('/challenge')">在线挑战</span>
           </li>
           <li>
             <img src="../assets/Images/icon/Common/crafting.png" alt="Button6" class="menu-icon" />

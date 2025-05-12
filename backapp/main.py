@@ -414,7 +414,7 @@ class GymResponse(DTO):
 
 
 
-@app.get("/gym/getCourses", summary="获取健身房课程列表", response_model=list[GymCourseResponse])
+@app.get("/gym/getCourses/{gym_id}", summary="获取健身房课程列表", response_model=list[GymCourseResponse])
 async def get_gym_courses(
     gym_id: int,
     skip: int = 0,
