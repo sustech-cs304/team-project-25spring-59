@@ -137,7 +137,7 @@ class WeeklyPlanRequest(BaseModel):
 
 class DailyPlanRequest(BaseModel):
     user_id: int
-    date_str: str  # 格式为"x月x日"
+    date_str: str  # 格式为"x年x月x日"
 
 class ChallengeCreate(BaseModel):
     title: str
@@ -718,17 +718,16 @@ def get_daily_plan(request: DailyPlanRequest, db: Session = Depends(get_db)):
         date_str = request.date_str
         
         # 1. 解析日期字符串
-        current_year = datetime.now().year
-        # 处理"x月x日"格式
-        match = re.match(r'(\d+)月(\d+)日', date_str)
+        # 处理"x年x月x日"格式
+        match = re.match(r'(\d+)年(\d+)月(\d+)日', date_str)
         if not match:
-            raise HTTPException(status_code=400, detail="日期格式不正确，应为'x月x日'")
+            raise HTTPException(status_code=400, detail="日期格式不正确，应为'x年x月x日'")
         
-        month, day = int(match.group(1)), int(match.group(2))
+        year, month, day = int(match.group(1)), int(match.group(2)), int(match.group(3))
         
         # 创建日期对象
         try:
-            given_date = datetime(current_year, month, day)
+            given_date = datetime(year, month, day)
         except ValueError as e:
             raise HTTPException(status_code=400, detail=f"无效日期: {str(e)}")
         
