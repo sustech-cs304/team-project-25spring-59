@@ -68,7 +68,7 @@ const weekDays = computed(() => {
   return Array.from({ length: 7 }).map((_, i) => {
     const date = start.add(i, 'day')
     return {
-      dateText: date.format('M月D日'), // 格式化成 "4月8日"
+      dateText: date.format('YYYY年M月D日'), // 格式化成 "4月8日"
       weekday: labels[i],
       fullTitle: `${date.format('M月D日')}（${labels[i]}）`,
       tasks: [] // placeholder，下面替换进去
@@ -91,7 +91,7 @@ const updateDailyTasks = async () => {
       console.log("当前调用的命令："+userId+" "+ dateStr)
       // 发送 API 请求，获取当天的训练记录
       const response = await axios.post('http://127.0.0.1:8000/get-daily-plan', {
-        user_id: userId,
+        user_id: String(userId),
         date_str: dateStr
       })
 
