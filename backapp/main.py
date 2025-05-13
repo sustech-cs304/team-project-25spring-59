@@ -220,6 +220,9 @@ class UserChallengeDetail(BaseModel):
 class EndChallengeRequest(BaseModel):
     challenge_id: int
 
+class RecordIdRequest(BaseModel):
+    record_id: int
+
 @app.get("/")
 def read_root():
     return {"message": "FastAPI 服务器运行成功！"}
@@ -1386,5 +1389,115 @@ def end_challenge(request: EndChallengeRequest, db: Session = Depends(get_db)):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"结束挑战失败: {str(e)}")
+
+@app.post("/toggle-record-status")
+def toggle_record_status(request: RecordIdRequest, db: Session = Depends(get_db)):
+    """
+    切换训练记录的状态
+    如果类型是plan且is_completed是false，则将is_completed改为true，将type改为record
+    如果类型是record且is_completed是true，则将is_completed改为false，将type改为plan
+    """
+    try:
+        # 根据ID获取记录
+        record = db.query(models.TrainingRecord).filter(models.TrainingRecord.id == request.record_id).first()
+        
+        if not record:
+            raise HTTPException(status_code=404, detail="训练记录不存在")
+        
+        # 切换状态
+        if record.record_type == "plan" and record.is_completed == False:
+            # 计划 -> 记录
+            record.is_completed = True
+            record.record_type = "record"
+            status_message = "将计划标记为已完成记录"
+        elif record.record_type == "record" and record.is_completed == True:
+            # 记录 -> 计划
+            record.is_completed = False
+            record.record_type = "plan"
+            status_message = "将记录转换为未完成计划"
+        else:
+            status_message = "记录状态未变更"
+        
+        # 保存更改
+        db.commit()
+        db.refresh(record)
+        
+        return {
+            "message": "状态切换成功",
+            "status": status_message,
+            "record": {
+                "id": record.id,
+                "user_id": record.user_id,
+                "record_type": record.record_type,
+                "is_completed": record.is_completed,
+                "activity_type": record.activity_type,
+                "start_time": record.start_time,
+                "end_time": record.end_time
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"切换记录状态失败: {str(e)}")
+
+@app.post("/get-user-details")
+def get_user_details(request: UserIdRequest, db: Session = Depends(get_db)):
+    """获取指定用户的详细信息"""
+    try:
+        # 获取用户信息
+        user = crud.get_user_by_id(db, user_id=request.user_id)
+        
+        if not user:
+            raise HTTPException(status_code=404, detail="用户不存在")
+        
+        # 构建用户信息返回
+        user_details = {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "created_at": user.created_at,
+            "gender": user.gender,
+            "age": user.age,
+            "height": user.height,
+            "weight": user.weight,
+            "is_active": user.is_active,
+            "score": user.score,
+            "total_workouts": user.total_workouts,
+            "total_calories": user.total_calories,
+            "total_minutes": user.total_minutes,
+        }
+        
+        # 获取用户的训练记录
+        records = crud.get_training_records_by_user(db, user_id=request.user_id)
+        
+        # 获取当前时间和一天前的时间用于比较
+        now = datetime.now()
+        one_day_ago = now - timedelta(days=1)
+        
+        # 计算不同类型记录的数量
+        completed_records = len([r for r in records if r.record_type == "record"])
+        
+        # 计算未过期的待完成计划(pending_plans): record_type是plan且is_completed是假的且end_time不早于当前时间一天以上
+        pending_plans = len([r for r in records if r.record_type == "plan" and r.is_completed == False and r.end_time >= one_day_ago])
+        
+        # 计算已过期未完成的计划(expired_uncompleted_plans): record_type是plan且is_completed是假的且end_time早于当前时间一天以上
+        expired_uncompleted_plans = len([r for r in records if r.record_type == "plan" and r.is_completed == False and r.end_time < one_day_ago])
+        
+        # 添加统计信息
+        user_details["statistics"] = {
+            "total_records": len(records),
+            "completed_records": completed_records,
+            "pending_plans": pending_plans,
+            "expired_uncompleted_plans": expired_uncompleted_plans,
+            "completion_rate": round((completed_records / len(records) * 100), 2) if records else 0
+        }
+        
+        return user_details
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取用户详情失败: {str(e)}")
 
 
