@@ -276,12 +276,137 @@ def register(user: RegisterRequest, db: Session = Depends(get_db)):
     
     return {"message": "注册成功", "username": new_user.username}
 
+@app.post("/generate-user-records/completed")
+def get_user_completed_records(request: UserIdRequest, db: Session = Depends(get_db)):
+    """获取指定用户的已完成训练记录（record_type是record的所有记录）"""
+    try:
+        # 获取当前时间用于比较
+        now = datetime.now()
+        
+        # 获取用户的训练记录 - 已完成记录
+        records = db.query(models.TrainingRecord).filter(
+            models.TrainingRecord.user_id == request.user_id,
+            models.TrainingRecord.record_type == "record"
+        ).all()
+        
+        # 格式化返回结果
+        result = []
+        for record in records:
+            record_dict = {
+                "id": record.id,
+                "user_id": record.user_id,
+                "start_time": record.start_time,
+                "end_time": record.end_time,
+                "activity_type": record.activity_type,
+                "duration_minutes": record.duration_minutes,
+                "is_completed": record.is_completed,
+                "record_type": record.record_type,
+                "reminder_time": record.reminder_time,
+                "distance": record.distance,
+                "calories": record.calories,
+                "average_heart_rate": record.average_heart_rate,
+                "max_heart_rate": record.max_heart_rate,
+                "minute_heart_rates": record.minute_heart_rates if record.minute_heart_rates else {}
+            }
+            result.append(record_dict)
+        
+        return {"records": result, "count": len(result)}
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取已完成训练记录失败: {str(e)}")
+
+@app.post("/generate-user-records/upcoming-plans")
+def get_user_upcoming_plans(request: UserIdRequest, db: Session = Depends(get_db)):
+    """获取指定用户的即将进行的计划（record_type是plan，is_completed是False，且end_time不早于当天时间一天以上）"""
+    try:
+        # 获取当前时间用于比较
+        now = datetime.now()
+        one_day_ago = now - timedelta(days=1)
+        
+        # 获取用户的训练记录 - 即将进行的计划
+        records = db.query(models.TrainingRecord).filter(
+            models.TrainingRecord.user_id == request.user_id,
+            models.TrainingRecord.record_type == "plan",
+            models.TrainingRecord.is_completed == False,
+            models.TrainingRecord.end_time >= one_day_ago
+        ).all()
+        
+        # 格式化返回结果
+        result = []
+        for record in records:
+            record_dict = {
+                "id": record.id,
+                "user_id": record.user_id,
+                "start_time": record.start_time,
+                "end_time": record.end_time,
+                "activity_type": record.activity_type,
+                "duration_minutes": record.duration_minutes,
+                "is_completed": record.is_completed,
+                "record_type": record.record_type,
+                "reminder_time": record.reminder_time,
+                "distance": record.distance,
+                "calories": record.calories,
+                "average_heart_rate": record.average_heart_rate,
+                "max_heart_rate": record.max_heart_rate,
+                "minute_heart_rates": record.minute_heart_rates if record.minute_heart_rates else {}
+            }
+            result.append(record_dict)
+        
+        return {"records": result, "count": len(result)}
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取即将进行的计划失败: {str(e)}")
+
+@app.post("/generate-user-records/missed-plans")
+def get_user_missed_plans(request: UserIdRequest, db: Session = Depends(get_db)):
+    """获取指定用户的已错过的计划（record_type是plan，end_time早于当前时间一天以上，且is_completed是False）"""
+    try:
+        # 获取当前时间用于比较
+        now = datetime.now()
+        one_day_ago = now - timedelta(days=1)
+        
+        # 获取用户的训练记录 - 已错过的计划
+        records = db.query(models.TrainingRecord).filter(
+            models.TrainingRecord.user_id == request.user_id,
+            models.TrainingRecord.record_type == "plan",
+            models.TrainingRecord.is_completed == False,
+            models.TrainingRecord.end_time < one_day_ago
+        ).all()
+        
+        # 格式化返回结果
+        result = []
+        for record in records:
+            record_dict = {
+                "id": record.id,
+                "user_id": record.user_id,
+                "start_time": record.start_time,
+                "end_time": record.end_time,
+                "activity_type": record.activity_type,
+                "duration_minutes": record.duration_minutes,
+                "is_completed": record.is_completed,
+                "record_type": record.record_type,
+                "reminder_time": record.reminder_time,
+                "distance": record.distance,
+                "calories": record.calories,
+                "average_heart_rate": record.average_heart_rate,
+                "max_heart_rate": record.max_heart_rate,
+                "minute_heart_rates": record.minute_heart_rates if record.minute_heart_rates else {}
+            }
+            result.append(record_dict)
+        
+        return {"records": result, "count": len(result)}
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取已错过的计划失败: {str(e)}")
+
 @app.post("/generate-user-records")
 def generate_user_records(request: UserIdRequest, db: Session = Depends(get_db)):
     """获取指定用户的所有训练记录"""
     try:
+        # 获取用户的训练记录
         records = crud.get_training_records_by_user(db, user_id=request.user_id)
         
+        # 格式化返回结果
         result = []
         for record in records:
             record_dict = {
@@ -306,7 +431,7 @@ def generate_user_records(request: UserIdRequest, db: Session = Depends(get_db))
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取训练记录失败: {str(e)}")
-    
+
 @app.post("/saveMission")
 def save_mission(data: SaveMissionRequest, db: Session = Depends(get_db)):
     try:
