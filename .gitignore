@@ -10,3 +10,4 @@ requirement.txt
 /backapp/cmd
 /backapp/test_data.sql
 /backapp/auth/__pycache__
+*.pyc

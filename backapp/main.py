@@ -49,6 +49,36 @@ def startup_db_client():
         
         db.commit()
         print("成功执行 test.sql 文件")
+        
+        # 更新training_records表的is_completed和record_type字段
+        try:
+            # 获取当前时间
+            now = datetime.now()
+            
+            # 查询所有training_records记录
+            records = db.query(models.TrainingRecord).all()
+            updated_count = 0
+            
+            for record in records:
+                # 确保datetime对象是naive的(不带时区)
+                record_start_time = record.start_time
+                if record_start_time.tzinfo is not None:
+                    record_start_time = record_start_time.replace(tzinfo=None)
+                
+                # 根据start_time与当前时间比较设置字段
+                if record_start_time < now:
+                    record.is_completed = True
+                    record.record_type = "record"
+                else:
+                    record.is_completed = False
+                    record.record_type = "plan"
+                updated_count += 1
+                
+            db.commit()
+            print(f"成功更新 {updated_count} 条训练记录的状态")
+        except Exception as e:
+            print(f"更新训练记录失败: {e}")
+        
     except Exception as e:
         print(f"执行 SQL 脚本出错: {e}")
     finally:
