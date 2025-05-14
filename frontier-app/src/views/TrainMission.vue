@@ -5,7 +5,8 @@
     <Header :base="routeBase" />
 
     <main>
-      <Banner
+      <section class="banner-wrapper">
+        <Banner
         cover="/assets/banner/banner.webp"
         hello="Hello, Vue"
         highText="Sensei’ TrainMission"
@@ -15,6 +16,8 @@
           { icon: 'fa-twitter', url: 'https://twitter.com' }
         ]"
       />
+      </section>
+
     </main>
 
     <PlanList />

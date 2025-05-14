@@ -3,40 +3,110 @@
     <h2 class="title">运动计划列表</h2>
     <p class="userid-global">用户ID：{{ userId || '未知' }}</p>
 
-    <div v-if="plans.length === 0" class="empty">暂无计划</div>
-    <table v-else class="plan-table">
-      <thead>
-      <tr>
-        <th><input type="checkbox" @change="toggleAll" :checked="isAllChecked" /></th> <!-- 全选框 -->
-        <th>开始时间</th>
-        <th>结束时间</th>
-        <th>运动类型</th>
-        <th>运动时长</th>
-        <th>消耗卡路里</th>
-        <th>平均心率</th>
-        <th>是否完成</th>
-      </tr>
-      </thead>
-      <tbody>
-        <tr v-for="plan in plans" :key="plan.id">
-          <td><input type="checkbox" v-model="selectedIds" :value="plan.id" /></td>
-          <td>{{ plan.startDate }}</td>
-          <td>{{ plan.endDate }}</td>
-          <td>{{ plan.type }}</td>
-          <td>{{ plan.duration }}</td>
-          <td>{{ plan.calories }}</td>
-          <td>{{ plan.heartRate }}</td>
-          <td>{{ plan.completed }}</td>
-        </tr>
-      </tbody>
+    <!-- ✅ 已完成记录 -->
+    <div class="table-section">
+      <h3 class="section-title">✅ 已完成记录</h3>
+      <div v-if="completedPlans.length === 0" class="empty">暂无记录</div>
+      <table v-else class="plan-table">
+        <thead>
+          <tr>
+            <th><input type="checkbox" @change="toggleAll(completedPlans)" :checked="isAllChecked(completedPlans)" /></th>
+            <th>开始时间</th>
+            <th>结束时间</th>
+            <th>运动类型</th>
+            <th>运动时长</th>
+            <th>消耗卡路里</th>
+            <th>平均心率</th>
+            <th>是否完成</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="plan in completedPlans" :key="'completed-' + plan.id">
+            <td><input type="checkbox" v-model="selectedIds" :value="plan.id" /></td>
+            <td>{{ plan.startDate }}</td>
+            <td>{{ plan.endDate }}</td>
+            <td>{{ plan.type }}</td>
+            <td>{{ plan.duration }}</td>
+            <td>{{ plan.calories }}</td>
+            <td>{{ plan.heartRate }}</td>
+            <td>{{ plan.completed ? '是' : '否' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
-    </table>
+    <!-- ⚠️ 错过的计划 -->
+    <div class="table-section">
+      <h3 class="section-title">⚠️ 错过的计划</h3>
+      <div v-if="missedPlans.length === 0" class="empty">暂无记录</div>
+      <table v-else class="plan-table">
+        <thead>
+          <tr>
+            <th><input type="checkbox" @change="toggleAll(missedPlans)" :checked="isAllChecked(missedPlans)" /></th>
+            <th>开始时间</th>
+            <th>结束时间</th>
+            <th>运动类型</th>
+            <th>运动时长</th>
+            <th>消耗卡路里</th>
+            <th>平均心率</th>
+            <th>是否完成</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="plan in missedPlans" :key="'missed-' + plan.id">
+            <td><input type="checkbox" v-model="selectedIds" :value="plan.id" /></td>
+            <td>{{ plan.startDate }}</td>
+            <td>{{ plan.endDate }}</td>
+            <td>{{ plan.type }}</td>
+            <td>{{ plan.duration }}</td>
+            <td>{{ plan.calories }}</td>
+            <td>{{ plan.heartRate }}</td>
+            <td>{{ plan.completed ? '是' : '否' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ⏳ 即将进行的计划 -->
+    <div class="table-section">
+      <h3 class="section-title">⏳ 即将进行的计划</h3>
+      <div v-if="upcomingPlans.length === 0" class="empty">暂无记录</div>
+      <table v-else class="plan-table">
+        <thead>
+          <tr>
+            <th><input type="checkbox" @change="toggleAll(upcomingPlans)" :checked="isAllChecked(upcomingPlans)" /></th>
+            <th>开始时间</th>
+            <th>结束时间</th>
+            <th>运动类型</th>
+            <th>运动时长</th>
+            <th>消耗卡路里</th>
+            <th>平均心率</th>
+            <th>是否完成</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="plan in upcomingPlans" :key="'upcoming-' + plan.id">
+            <td><input type="checkbox" v-model="selectedIds" :value="plan.id" /></td>
+            <td>{{ plan.startDate }}</td>
+            <td>{{ plan.endDate }}</td>
+            <td>{{ plan.type }}</td>
+            <td>{{ plan.duration }}</td>
+            <td>{{ plan.calories }}</td>
+            <td>{{ plan.heartRate }}</td>
+            <td>{{ plan.completed ? '是' : '否' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
 
 
     <!-- ✅ 加载按钮 -->
     <div class="btn-group">
       <button class="btn-add" @click="handleAdd">Add Record</button>
       <button class="btn-delete" @click="handleDelete">Delete Record</button>
+      <button class="btn-toggle" @click="handleToggleType">Change Record</button>
+
     </div>
 
     <!-- ✅ 加载动画 -->
@@ -121,6 +191,11 @@ const userId = ref<string | null>(null)
 const isLoading = ref(false)
 const showAddModal = ref(false)
 
+const completedPlans = ref<RecordItem[]>([]) //已经完成的记录
+const missedPlans = ref<RecordItem[]>([]) // 错过并且未完成的记录
+const upcomingPlans = ref<RecordItem[]>([]) // 还没有到时间完成的任务
+
+
 // 定义注册新记录的结构
 const newPlan = ref({
   start_time: '',
@@ -134,23 +209,32 @@ const newPlan = ref({
 
 const selectedIds = ref<number[]>([]) // 存放勾选的 ID
 // 是否全选
-const isAllChecked = computed(() => selectedIds.value.length === plans.value.length && plans.value.length > 0);
-
+const isAllChecked = (list: RecordItem[]) => {
+  return list.length > 0 && list.every(p => selectedIds.value.includes(p.id))
+}
 
 // 切换全选
-const toggleAll = () => {
-  if (isAllChecked.value) {
-    selectedIds.value = []
+const toggleAll = (list: RecordItem[]) => {
+  if (isAllChecked(list)) {
+    selectedIds.value = selectedIds.value.filter(id => !list.some(p => p.id === id))
   } else {
-    selectedIds.value = plans.value.map(p => p.id)
+    selectedIds.value = Array.from(new Set([...selectedIds.value, ...list.map(p => p.id)]))
   }
 }
 
 
+// onMounted(() => {
+//   userId.value = localStorage.getItem('user_id')
+//   fetchPlans()
+// })
+
 onMounted(() => {
   userId.value = localStorage.getItem('user_id')
-  fetchPlans()
+  fetchCompletedPlans()
+  fetchMissedPlans()
+  fetchUpcomingPlans()
 })
+
 
 
 
@@ -173,7 +257,9 @@ const handleDelete = async () => {
     }
     alert('删除成功')
     selectedIds.value = [] // 清空已选
-    await fetchPlans() // 刷新表格
+      await fetchCompletedPlans()
+      await fetchMissedPlans()
+      await fetchUpcomingPlans()
   } catch (err) {
     console.error('删除失败:', err)
     alert('删除失败，请稍后重试')
@@ -181,6 +267,34 @@ const handleDelete = async () => {
     isLoading.value = false
   }
 }
+
+
+const handleToggleType = async () => {
+  if (selectedIds.value.length === 0) {
+    alert('请先选择要修改的训练记录')
+    return
+  }
+
+  isLoading.value = true
+  try {
+    for (const id of selectedIds.value) {
+      await axios.post('http://localhost:8000/toggle-record-status', {
+        record_id: id
+      })
+    }
+    alert('类型切换成功')
+    selectedIds.value = [] // 清空已选
+    await fetchCompletedPlans()
+    await fetchMissedPlans()
+    await fetchUpcomingPlans()
+  } catch (err) {
+    console.error('切换失败:', err)
+    alert('类型切换失败，请稍后重试')
+  } finally {
+    isLoading.value = false
+  }
+}
+
 
 
 
@@ -208,7 +322,9 @@ const submitNewPlan = async () => {
     })
 
     // 刷新数据
-    await fetchPlans()
+    await fetchCompletedPlans()
+    await fetchMissedPlans()
+    await fetchUpcomingPlans()
   } catch (err) {
     console.error('添加失败:', err)
   } finally {
@@ -216,33 +332,83 @@ const submitNewPlan = async () => {
   }
 }
 
-const fetchPlans = async () => {
-  if (!userId.value) return
+// const fetchPlans = async () => {
+//   if (!userId.value) return
+//
+//   isLoading.value = true
+//   try {
+//     const response = await axios.post('http://localhost:8000/generate-user-records', {
+//       user_id: Number(userId.value)
+//     })
+//
+//     const records = response.data.records || []
+//
+//     plans.value = records.map((record: any) => ({
+//       id: record.id,
+//       type: record.activity_type || '未知',
+//       duration: `${record.duration_minutes}分钟`,
+//       calories: `${record.calories ?? 0} kcal`,
+//       heartRate: `${record.average_heart_rate ?? '-'} bpm`,
+//       startDate: new Date(record.start_time).toLocaleString(),
+//       endDate: new Date(record.end_time).toLocaleString(),
+//       completed: record.is_completed ? '是' : '否',
+//     }))
+//   } catch (error) {
+//     console.error('获取用户训练记录失败:', error)
+//   } finally {
+//     isLoading.value = false
+//   }
+// }
 
-  isLoading.value = true
+const fetchCompletedPlans = async () => {
+  if (!userId.value) return
   try {
-    const response = await axios.post('http://localhost:8000/generate-user-records', {
+    const res = await axios.post('http://localhost:8000/generate-user-records/completed', {
       user_id: Number(userId.value)
     })
-
-    const records = response.data.records || []
-
-    plans.value = records.map((record: any) => ({
-      id: record.id,
-      type: record.activity_type || '未知',
-      duration: `${record.duration_minutes}分钟`,
-      calories: `${record.calories ?? 0} kcal`,
-      heartRate: `${record.average_heart_rate ?? '-'} bpm`,
-      startDate: new Date(record.start_time).toLocaleString(),
-      endDate: new Date(record.end_time).toLocaleString(),
-      completed: record.is_completed ? '是' : '否',
-    }))
-  } catch (error) {
-    console.error('获取用户训练记录失败:', error)
-  } finally {
-    isLoading.value = false
+    completedPlans.value = res.data.records.map(formatRecord)
+  } catch (e) {
+    console.error('获取已完成记录失败', e)
   }
 }
+
+const fetchMissedPlans = async () => {
+  if (!userId.value) return
+  try {
+    const res = await axios.post('http://localhost:8000/generate-user-records/missed-plans', {
+      user_id: Number(userId.value)
+    })
+    missedPlans.value = res.data.records.map(formatRecord)
+  } catch (e) {
+    console.error('获取错过的计划失败', e)
+  }
+}
+
+const fetchUpcomingPlans = async () => {
+  if (!userId.value) return
+  try {
+    const res = await axios.post('http://localhost:8000/generate-user-records/upcoming-plans', {
+      user_id: Number(userId.value)
+    })
+    upcomingPlans.value = res.data.records.map(formatRecord)
+  } catch (e) {
+    console.error('获取即将进行的计划失败', e)
+  }
+}
+
+// 格式化记录通用方法
+const formatRecord = (record: any): RecordItem => ({
+  id: record.id,
+  type: record.activity_type || '未知',
+  duration: `${record.duration_minutes}分钟`,
+  calories: `${record.calories ?? 0} kcal`,
+  heartRate: `${record.average_heart_rate ?? '-'} bpm`,
+  startDate: new Date(record.start_time).toLocaleString(),
+  endDate: new Date(record.end_time).toLocaleString(),
+  completed: record.is_completed, // 保持布尔类型
+})
+
+
 
 </script>
 
@@ -329,6 +495,19 @@ const fetchPlans = async () => {
   background-color: #e53935;
 }
 
+.btn-toggle {
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  background-color: #1976d2;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+
 
 .modal-overlay {
   position: fixed;
@@ -369,6 +548,19 @@ const fetchPlans = async () => {
 .modal-buttons {
   display: flex;
   justify-content: space-between;
+}
+
+.table-section {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #ccc;
+  text-align: left;
+}
+
+.section-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
 }
 
 </style>
