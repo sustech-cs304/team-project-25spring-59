@@ -11,7 +11,6 @@ function goToCourse(id) {
   currentCom.value = GymCourses;
   gymId.value = id
   console.log(id)
-  console.log(gymId.value)
 }
 
 
