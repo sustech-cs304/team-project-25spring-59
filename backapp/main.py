@@ -1501,3 +1501,32 @@ def get_user_details(request: UserIdRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"获取用户详情失败: {str(e)}")
 
 
+@app.post("/leaderboard")
+def get_leaderboard(db: Session = Depends(get_db)):
+    """获取用户总分数排行榜"""
+    try:
+        # 查询所有用户的总分数，按分数降序排列
+        leaderboard = db.query(
+            models.User.id,
+            models.User.username,
+            models.User.score
+        ).order_by(
+            models.User.score.desc()
+        ).all()
+
+        # 格式化排行榜
+        response = [
+            {
+                "user_id": user.id,
+                "username": user.username,
+                "total_score": user.score
+            }
+            for user in leaderboard
+        ]
+
+        return response
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取排行榜失败: {str(e)}")
+
+
