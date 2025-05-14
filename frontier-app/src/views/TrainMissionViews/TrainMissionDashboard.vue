@@ -21,7 +21,7 @@
     <!-- 图表部分 -->
     <div class="chart-container">
       <TrainTimeChart />
-      <TimeBar />
+<!--      <TimeBar />-->
     </div>
 
   </div>
