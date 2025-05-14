@@ -129,15 +129,20 @@
           <input type="datetime-local" v-model="newPlan.end_time" required />
         </label>
 
+        <!-- 🕒 显示运动时间提示 -->
+        <p v-if="computedDuration" style="margin-top: -8px; font-size: 0.95rem; color: #555;">
+          🕒 预计运动时长：{{ computedDuration }}
+        </p>
+
         <label>
           运动类型：
           <input type="text" v-model="newPlan.activity_type" placeholder="如 跑步、游泳等" required />
         </label>
 
-        <label>
-          运动时长（分钟）：
-          <input type="number" v-model="newPlan.duration_minutes" required />
-        </label>
+<!--        <label>-->
+<!--          运动时长（分钟）：-->
+<!--          <input type="number" v-model="newPlan.duration_minutes" required />-->
+<!--        </label>-->
 
         <label>
           消耗卡路里（kcal）：
@@ -302,6 +307,45 @@ const handleToggleType = async () => {
 const submitNewPlan = async () => {
   if (!userId.value) return
 
+  // 自动计算运动时长（分钟）
+  const plan = newPlan.value
+  const start = new Date(plan.start_time).getTime()
+  const end = new Date(plan.end_time).getTime()
+  const durationInMinutes = Math.floor((end - start) / 60000) // 毫秒转分钟
+  plan.duration_minutes = durationInMinutes
+
+  // 基本校验
+
+  if (!plan.start_time || !plan.end_time) {
+    alert('开始时间和结束时间不能为空')
+    return
+  }
+
+  if (new Date(plan.start_time) >= new Date(plan.end_time)) {
+    alert('开始时间不能晚于或等于结束时间')
+    return
+  }
+
+  if (!plan.activity_type.trim()) {
+    alert('运动类型不能为空')
+    return
+  }
+
+  if (!plan.duration_minutes || plan.duration_minutes <= 0) {
+    alert('运动时长必须为正数')
+    return
+  }
+
+  if (plan.calories < 0) {
+    alert('卡路里不能为负数')
+    return
+  }
+
+  if (plan.average_heart_rate < 0 || plan.average_heart_rate > 220) {
+    alert('心率应在 0–220 之间')
+    return
+  }
+
   isLoading.value = true
   try {
     await axios.post('http://localhost:8000/saveMission', {
@@ -408,6 +452,20 @@ const formatRecord = (record: any): RecordItem => ({
   completed: record.is_completed, // 保持布尔类型
 })
 
+
+//计算运动时长的方法
+const computedDuration = computed(() => {
+  const start = newPlan.value.start_time
+  const end = newPlan.value.end_time
+
+  if (!start || !end) return ''
+  const startTime = new Date(start).getTime()
+  const endTime = new Date(end).getTime()
+  if (startTime >= endTime) return ''
+
+  const diffMinutes = Math.floor((endTime - startTime) / 60000)
+  return `${diffMinutes} 分钟`
+})
 
 
 </script>
@@ -562,5 +620,13 @@ const formatRecord = (record: any): RecordItem => ({
   font-weight: bold;
   margin-bottom: 0.5rem;
 }
+
+.duration-preview {
+  font-size: 0.95rem;
+  color: #444;
+  margin-top: -8px;
+  margin-bottom: 12px;
+}
+
 
 </style>
