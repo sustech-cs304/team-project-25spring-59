@@ -35,7 +35,12 @@ export default {
       xIndex: 0,
       timer: null,
       xData: [],
-      yData: [],
+      yDataMap: {
+        duration: [],
+        calories: [],
+        avg_hr: [],
+        max_hr: []
+      },
       selectedMonth: now.format('YYYY-MM')
     }
   },
@@ -64,7 +69,12 @@ export default {
         const data = await response.json()
 
         this.xData = []
-        this.yData = []
+        this.yDataMap = {
+          duration: [],
+          calories: [],
+          avg_hr: [],
+          max_hr: []
+        }
 
         // 遍历日期范围
         for (let i = 0; i < endDate.date(); i++) {
@@ -72,7 +82,12 @@ export default {
           const key = current.format('YYYY-MM-DD')
           this.xData.push(current.format('M月D日'))
 
-          this.yData.push(data[key]?.duration_minutes || 0)
+          const entry = data[key] || {}
+
+          this.yDataMap.duration.push(entry.duration_minutes || 0)
+          this.yDataMap.calories.push(entry.calories || 0)
+          this.yDataMap.avg_hr.push(entry.avg_heart_rate || 0)
+          this.yDataMap.max_hr.push(entry.max_heart_rate || 0)
         }
 
         this.getEchart()
@@ -99,12 +114,19 @@ export default {
           trigger: 'axis',
           showContent: true,
           formatter: (params) => {
-            params = params[0]
-            this.xIndex = params.dataIndex
-            return (
-              params.name + '</br>' + params.seriesName + '：' + params.value + ' min'
-            )
+            if (!params || !params.length) return ''
+            this.xIndex = params[0].dataIndex
+
+            let tooltipContent = params[0].name + '<br/>'
+            params.forEach(item => {
+              tooltipContent += `${item.marker}${item.seriesName}：${item.value}<br/>`
+            })
+            return tooltipContent
           }
+        },
+        legend: {
+          top: 'top',
+          data: ['运动时长（分钟）', '消耗卡路里（kcal）', '平均心率（bpm）', '最大心率（bpm）']
         },
 
         color: ['#5d83ff'],
@@ -142,19 +164,13 @@ export default {
         },
         series: [
           {
-            name: '运动时长',
+            name: '运动时长（分钟）',
             type: 'line',
-            data: this.yData,
+            data: this.yDataMap.duration,
             symbolSize: 10,
-            itemStyle: {
-              opacity: 0
-            },
+            itemStyle: { opacity: 0 },
             emphasis: {
-              label: {
-                show: true,
-                color: '#fff',
-                fontSize: 20
-              },
+              label: { show: true, color: '#fff', fontSize: 20 },
               itemStyle: {
                 color: '#5d83ff',
                 borderColor: '#fff',
@@ -169,8 +185,78 @@ export default {
               ])
             },
             smooth: true
+          },
+          {
+            name: '消耗卡路里（kcal）',
+            type: 'line',
+            data: this.yDataMap.calories,
+            symbolSize: 10,
+            itemStyle: { opacity: 0 },
+            emphasis: {
+              label: { show: true, color: '#fff', fontSize: 20 },
+              itemStyle: {
+                color: '#4caf50',
+                borderColor: '#fff',
+                borderWidth: 2,
+                opacity: 1
+              }
+            },
+            areaStyle: {
+              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                { offset: 0, color: '#4caf50' },
+                { offset: 1, color: 'rgba(0, 0, 0, 0)' }
+              ])
+            },
+            smooth: true
+          },
+          {
+            name: '平均心率（bpm）',
+            type: 'line',
+            data: this.yDataMap.avg_hr,
+            symbolSize: 10,
+            itemStyle: { opacity: 0 },
+            emphasis: {
+              label: { show: true, color: '#fff', fontSize: 20 },
+              itemStyle: {
+                color: '#ff9800',
+                borderColor: '#fff',
+                borderWidth: 2,
+                opacity: 1
+              }
+            },
+            areaStyle: {
+              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                { offset: 0, color: '#ff9800' },
+                { offset: 1, color: 'rgba(0, 0, 0, 0)' }
+              ])
+            },
+            smooth: true
+          },
+          {
+            name: '最大心率（bpm）',
+            type: 'line',
+            data: this.yDataMap.max_hr,
+            symbolSize: 10,
+            itemStyle: { opacity: 0 },
+            emphasis: {
+              label: { show: true, color: '#fff', fontSize: 20 },
+              itemStyle: {
+                color: '#f44336',
+                borderColor: '#fff',
+                borderWidth: 2,
+                opacity: 1
+              }
+            },
+            areaStyle: {
+              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                { offset: 0, color: '#f44336' },
+                { offset: 1, color: 'rgba(0, 0, 0, 0)' }
+              ])
+            },
+            smooth: true
           }
         ]
+
       }
 
       myChart.setOption(this.option, true)
