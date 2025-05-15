@@ -5,18 +5,32 @@
     <Header :base="routeBase" />
 
     <!--  用户训练统计数据展示区域 -->
-    <div class="stats-summary" v-if="summary">
+    <div class="stats-summary-cards" v-if="summary">
       <p>用户 ID：{{ userId }}</p>
-      <p>
-        总训练时长：{{ summary.total_minutes }} 分钟 ｜
-        估算卡路里：{{ summary.estimated_calories }} kcal ｜
-        实际卡路里：{{ summary.actual_calories }} kcal
-      </p>
-      <p>
-        平均心率：{{ summary.average_heart_rate ?? '-' }} bpm ｜
-        最大心率：{{ summary.max_heart_rate ?? '-' }} bpm
-      </p>
+      <div class="cards-container">
+        <div class="stat-card">
+          <h4>总训练时长</h4>
+          <p>{{ summary.total_minutes }} 分钟</p>
+        </div>
+        <div class="stat-card">
+          <h4>估算卡路里</h4>
+          <p>{{ summary.estimated_calories }} kcal</p>
+        </div>
+        <div class="stat-card">
+          <h4>实际卡路里</h4>
+          <p>{{ summary.actual_calories }} kcal</p>
+        </div>
+        <div class="stat-card">
+          <h4>平均心率</h4>
+          <p>{{ summary.average_heart_rate ?? '-' }} bpm</p>
+        </div>
+        <div class="stat-card">
+          <h4>最大心率</h4>
+          <p>{{ summary.max_heart_rate ?? '-' }} bpm</p>
+        </div>
+      </div>
     </div>
+
 
     <!-- 图表部分 -->
     <div class="chart-container">
@@ -124,5 +138,42 @@ main {
   color: #333;
   line-height: 1.6;
 }
+
+
+/*用户总体数据显示 */
+.stats-summary-cards {
+  text-align: center;
+  margin-bottom: 2rem;
+
+  .cards-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1.5rem;
+  }
+
+  .stat-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgb(0 0 0 / 0.1);
+    padding: 1.5rem 2rem;
+    width: 160px;
+    color: #333;
+
+    h4 {
+      margin-bottom: 0.6rem;
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    p {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #1976d2; /* 主色调 */
+      margin: 0;
+    }
+  }
+}
+
 
 </style>
