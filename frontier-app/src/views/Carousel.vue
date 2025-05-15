@@ -9,6 +9,7 @@ import { sound } from '@pixi/sound'
 import FooterMenu from "../components/FooterMenu.vue";
 import LevelBox from "../components/LevelBox.vue";
 import GridPanel from "../components/GridPanel.vue";
+import SpinePlayer from "../components/Spine-Player/index.vue";
 
 
 // 定义 L2D 资源路径

@@ -21,6 +21,8 @@
     </main>
 
     <PlanList />
+
+    <SpinePlayer></SpinePlayer>
   </div>
 </template>
 
@@ -29,6 +31,13 @@ import Banner from '../components/TrainMission/Banner.vue' // 你根据实际路
 import Header from '../components/TrainMission/Header.vue'
 import PlanList from '../components/TrainMission/MissionListVisualize/Planlist.vue'
 import {ref, onMounted} from "vue";
+
+
+// spine-player
+import SpinePlayer from '../components/Spine-Player/index.vue'
+
+
+
 const routeBase = ref('/')
 onMounted(() => {
   routeBase.value = window.location.origin + '/'  // 自动拼接 /
