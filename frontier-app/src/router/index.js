@@ -11,6 +11,7 @@ import TrainMission from "../views/TrainMission.vue";
 import Gym from "../views/Gym.vue";
 import Share from "../views/Share.vue"
 import Challenge from "../views/Challenge.vue";
+import Leaderboard from "../views/Leaderboard.vue";
 import TrainMissionSpecification from "../views/TrainMissionViews/TrainMissionSpecification.vue";
 import TrainMissionPlan from "../views/TrainMissionViews/TrainMissionPlan.vue";
 import TrainMissionDashboard from "../views/TrainMissionViews/TrainMissionDashboard.vue";
@@ -27,6 +28,7 @@ const routes = [
   { path: '/gym', component: Gym, meta: { requiresAuth: false } },
   { path: '/share', component: Share, meta: { requiresAuth: false } },
   { path: '/challenge', component: Challenge, meta: { requiresAuth: false } },
+  { path: '/leaderboard', component: Leaderboard, meta: { requiresAuth: false } },
 
   { path: '/TrainMission', component: TrainMission, meta: { requiresAuth: false } },//训练记录主界面，记录所有的运动数据
   { path: '/TrainMission/Specification', component: TrainMissionSpecification, meta: { requiresAuth: false } },//具体的运动界面

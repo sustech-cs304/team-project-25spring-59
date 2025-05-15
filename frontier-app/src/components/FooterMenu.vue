@@ -24,8 +24,8 @@
             <span @click="navigateTo('/gym')">健身排课</span>
           </li>
           <li>
-            <img src="../assets/Images/icon/Common/students.png" alt="竞技排行" class="menu-icon" />
-            <span @click="navigateTo('/services')">竞技排行</span>
+            <img src="../assets/Images/icon/Common/students.png" alt="积分排行" class="menu-icon" />
+            <span @click="navigateTo('/leaderboard')">积分排行</span>
           </li>
           <li>
             <img src="../assets/Images/icon/Common/formation.png" alt="社交分享" class="menu-icon" />
