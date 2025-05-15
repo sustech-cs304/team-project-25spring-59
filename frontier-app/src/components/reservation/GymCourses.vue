@@ -6,49 +6,32 @@ import request from "../../utils/request.js";
 import {getFullDate} from "../../utils/date.js";
 
 const props = defineProps(['gymId'])
-const courses = reactive({})
 const groupByDate = reactive({})
-const dates = reactive({})
-const dateList = [
-    new Date("2003-02-01 08:00:00"),
-    new Date("2003-02-12 09:30:00"),
-    new Date("2003-02-03 07:30:00"),
-    new Date("2003-02-07 08:30:00"),
-    new Date("2003-03-01 09:00:00"),
-].sort((a,b)=>a-b)  // sorted from small to large
+const dateList = reactive({})
+const currentCourses = reactive({data: []})
+
 const index = ref(0)
 const range = ref(5)
-const dateSlice = (start, end) => dateList.slice(start, end)  // export date slice
-
-function dateslice(dateList, start, end) {
-  if(end > dateList.length) {
-    return dateList.slice(start)
-  }
-  return dateList.slice(start, end)
-}
 
 function processCourses(coursesData) {
   coursesData.forEach((courseInfo)=>{
-    courseInfo.date = courseInfo.startTime.slice(0, 10)
+    courseInfo.date = courseInfo.startTime.slice(0, 10) // separate 'date' info
+    courseInfo.remain = courseInfo.capacity - courseInfo.currentReservations;
   });
+
   groupByDate.data = Object.groupBy(coursesData, ({ date }) => date);
+  // sort the courses by startTime on each date
   for (const key in groupByDate.data) {
-    // sorted date from small to large
-    groupByDate.data[key].sort((a, b)=>new Date(a.startTime) - new Date(b.startTime))
+    groupByDate.data[key].sort((a, b)=>new Date(a.startTime) - new Date(b.startTime));
   }
-  console.log(groupByDate.data)
-  dates.data = Object.keys(groupByDate.data)
-  console.log(dates.data)
 
-
-  coursesData.sort((a, b)=>{
-    let date_a = new Date(a.date), date_b = new Date(b.date);
-    if(date_a === date_b) {
-      return new Date(a.startTime) - new Date(b.startTime)
-    }
-    return date_a - date_b
-  });
-  return coursesData;
+  dateList.data = Object.keys(groupByDate.data);
+  if(dateList.data.length > 0) {
+    currentCourses.data = groupByDate.data[dateList.data[0]];  // initialize the current courses display
+  }
+  console.log(groupByDate.data);
+  console.log(dateList.data);
+  console.log(currentCourses.data);
 }
 
 
@@ -56,7 +39,7 @@ onMounted(()=>{
   request.get(`/gym/getCourses/${props.gymId}`)
       .then((response) => {
         console.log(response);
-        courses.data = processCourses(response.data);
+        processCourses(response.data);
       })
 })
 
@@ -77,9 +60,9 @@ onMounted(()=>{
           <el-col :span="1" style="display: flex; flex-direction: row-reverse"><!--left button-->
             <el-button :icon="ArrowLeftBold" circle @click="()=>index<=0 ? index=0 : index-=5"/>
           </el-col>
-          <el-col :span="4" v-for="date in dates.data"><!--dateList-->
-            <el-card shadow="hover">
-              {{getFullDate(date).month}}月{{getFullDate(date).day}}日/星期{{getFullDate(date).week}}
+          <el-col :span="4" v-for="date in dateList.data"><!--dateList-->
+            <el-card shadow="hover" @click="()=>currentCourses.data = groupByDate.data[date]">
+              {{getFullDate(new Date(date)).month}}月{{getFullDate(new Date(date)).day}}日/星期{{getFullDate(new Date(date)).week}}
             </el-card>
           </el-col>
           <el-col :span="1"><!--right button-->
@@ -91,7 +74,7 @@ onMounted(()=>{
   </el-row>
   <el-row>
     <el-col :span="16" :offset="4">
-      <el-table :data="courses.data">
+      <el-table :data="currentCourses.data">
         <el-table-column>
           <div class="block">
             <el-image
@@ -103,7 +86,7 @@ onMounted(()=>{
         <el-table-column label="授课教师" prop="coachName"></el-table-column>
         <el-table-column label="课程名称" prop="courseName"></el-table-column>
         <el-table-column label="课程容量" prop="capacity"></el-table-column>
-<!--        <el-table-column label="开课日期" prop="date"></el-table-column>-->
+        <el-table-column label="剩余" prop="remain"></el-table-column>
         <el-table-column label="上课时间" prop="startTime"></el-table-column>
         <el-table-column label="操作" :fixed="'right'">
           <el-button type="primary">预定</el-button>
