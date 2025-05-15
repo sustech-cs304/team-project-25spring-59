@@ -625,7 +625,7 @@ onUnmounted(() => {
 <style scoped lang="less">
 .playerContainer {
   position: fixed;
-  bottom: 25px;
+  bottom: 300px;
   left: 0%;
   z-index: 100;
   width: 12vw;
