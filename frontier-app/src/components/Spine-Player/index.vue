@@ -1,9 +1,3 @@
-<!--
- todo:
- 1. 优化暗色描边
- 2. 优化对话框三角布局
- 3. 整理代码结构
- -->
 <template>
   <template v-if="state.SpinePlayerEnabled">
     <div
