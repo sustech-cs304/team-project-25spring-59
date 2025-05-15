@@ -37,7 +37,8 @@ const menuList: MenuItem[] = [
   { name: '首页', url: 'TrainMission' },
   { name: '运动界面', url: 'TrainMission/Specification' },
   { name: '任务列表', url: 'TrainMission/Plans' },
-  { name: '训练数据', url: 'TrainMission/Dashboard' }
+  { name: '训练数据', url: 'TrainMission/Dashboard' },
+  { name: '返回大厅', url: 'carousel' }
 ]
 </script>
 
