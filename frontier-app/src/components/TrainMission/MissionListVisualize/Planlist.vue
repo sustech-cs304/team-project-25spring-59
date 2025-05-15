@@ -21,7 +21,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="plan in completedPlans" :key="'completed-' + plan.id">
+          <tr v-for="plan in pagedCompletedPlans" :key="'completed-' + plan.id">
             <td><input type="checkbox" v-model="selectedIds" :value="plan.id" /></td>
             <td>{{ plan.startDate }}</td>
             <td>{{ plan.endDate }}</td>
@@ -32,6 +32,12 @@
             <td>{{ plan.completed ? '是' : '否' }}</td>
           </tr>
         </tbody>
+        <div class="pagination">
+          <button :disabled="completedCurrentPage === 1" @click="completedCurrentPage--">上一页</button>
+          <span>第 {{ completedCurrentPage }} 页 / 共 {{ completedTotalPages }} 页</span>
+          <button :disabled="completedCurrentPage === completedTotalPages" @click="completedCurrentPage++">下一页</button>
+        </div>
+
       </table>
     </div>
 
@@ -53,7 +59,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="plan in missedPlans" :key="'missed-' + plan.id">
+          <tr v-for="plan in pagedMissedPlans" :key="'missed-' + plan.id">
             <td><input type="checkbox" v-model="selectedIds" :value="plan.id" /></td>
             <td>{{ plan.startDate }}</td>
             <td>{{ plan.endDate }}</td>
@@ -64,6 +70,11 @@
             <td>{{ plan.completed ? '是' : '否' }}</td>
           </tr>
         </tbody>
+        <div class="pagination">
+          <button :disabled="missedCurrentPage === 1" @click="missedCurrentPage--">上一页</button>
+          <span>第 {{ missedCurrentPage }} 页 / 共 {{ missedTotalPages }} 页</span>
+          <button :disabled="missedCurrentPage === missedTotalPages" @click="missedCurrentPage++">下一页</button>
+        </div>
       </table>
     </div>
 
@@ -85,7 +96,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="plan in upcomingPlans" :key="'upcoming-' + plan.id">
+          <tr v-for="plan in pagedUpcomingPlans" :key="'upcoming-' + plan.id">
             <td><input type="checkbox" v-model="selectedIds" :value="plan.id" /></td>
             <td>{{ plan.startDate }}</td>
             <td>{{ plan.endDate }}</td>
@@ -96,6 +107,11 @@
             <td>{{ plan.completed ? '是' : '否' }}</td>
           </tr>
         </tbody>
+        <div class="pagination">
+          <button :disabled="upcomingCurrentPage === 1" @click="upcomingCurrentPage--">上一页</button>
+          <span>第 {{ upcomingCurrentPage }} 页 / 共 {{ upcomingTotalPages }} 页</span>
+          <button :disabled="upcomingCurrentPage === upcomingTotalPages" @click="upcomingCurrentPage++">下一页</button>
+        </div>
       </table>
     </div>
 
@@ -199,6 +215,37 @@ const showAddModal = ref(false)
 const completedPlans = ref<RecordItem[]>([]) //已经完成的记录
 const missedPlans = ref<RecordItem[]>([]) // 错过并且未完成的记录
 const upcomingPlans = ref<RecordItem[]>([]) // 还没有到时间完成的任务
+
+//分页相关数据
+//已完成的计划的分页数据
+const completedCurrentPage = ref(1)
+const completedPageSize = 10
+const pagedCompletedPlans = computed(() => {
+  const start = (completedCurrentPage.value - 1) * completedPageSize
+  return completedPlans.value.slice(start, start + completedPageSize)
+})
+const completedTotalPages = computed(() => {
+  return Math.ceil(completedPlans.value.length / completedPageSize)
+})
+
+//错过计划
+const missedCurrentPage = ref(1)
+const missedPageSize = 10
+const pagedMissedPlans = computed(() => {
+  const start = (missedCurrentPage.value - 1) * missedPageSize
+  return missedPlans.value.slice(start, start + missedPageSize)
+})
+const missedTotalPages = computed(() => Math.ceil(missedPlans.value.length / missedPageSize))
+
+//即将到来的计划
+const upcomingCurrentPage = ref(1)
+const upcomingPageSize = 10
+const pagedUpcomingPlans = computed(() => {
+  const start = (upcomingCurrentPage.value - 1) * upcomingPageSize
+  return upcomingPlans.value.slice(start, start + upcomingPageSize)
+})
+const upcomingTotalPages = computed(() => Math.ceil(upcomingPlans.value.length / upcomingPageSize))
+
 
 
 // 定义注册新记录的结构
@@ -627,6 +674,42 @@ const computedDuration = computed(() => {
   margin-top: -8px;
   margin-bottom: 12px;
 }
+
+
+/* 切换分页的按钮和下栏的样式*/
+.pagination {
+  display: block;
+  width: 100%;
+  margin-top: 1rem;
+  text-align: center;
+  user-select: none;
+}
+
+.pagination button {
+  display: inline-block;
+  margin: 0 6px;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  background-color: #1976d2;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.pagination button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.pagination span {
+  display: inline-block;
+  margin: 0 10px;
+  font-weight: 600;
+  vertical-align: middle;
+}
+
 
 
 </style>
