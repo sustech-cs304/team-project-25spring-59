@@ -36,8 +36,8 @@
             <span @click="navigateTo('/challenge')">在线挑战</span>
           </li>
           <li>
-            <img src="../assets/Images/icon/Common/crafting.png" alt="Button6" class="menu-icon" />
-            <span @click="navigateTo('/trainMission')">Button6</span>
+            <img src="../assets/Images/icon/Common/crafting.png" alt="个人中心" class="menu-icon" />
+            <span @click="navigateTo('/personal')">个人中心</span>
           </li>
           <li>
             <img src="../assets/Images/icon/Common/shop.png" alt="Button7" class="menu-icon" />
