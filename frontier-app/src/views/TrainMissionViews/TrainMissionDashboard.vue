@@ -81,9 +81,9 @@
     </div>
 
     <!-- 控制显示按钮 -->
-    <button class="toggle-ai-btn" @click="toggleAISidebar" v-if="!showAISidebar">查看 AI 建议</button>
+<!--    <button class="toggle-ai-btn" @click="toggleAISidebar" v-if="!showAISidebar">查看 AI 建议</button>-->
   </div>
-<!--  <SpinePlayer></SpinePlayer>-->
+  <SpinePlayer @show-ai-panel="handleShowAI" />
 </template>
 
 
@@ -114,6 +114,10 @@ const userPrompt = ref('')
 const aiResponse = ref('')
 
 const toggleAISidebar = () => {
+  showAISidebar.value = !showAISidebar.value
+}
+
+const handleShowAI = () => {
   showAISidebar.value = !showAISidebar.value
 }
 
