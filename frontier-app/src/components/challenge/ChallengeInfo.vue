@@ -1,28 +1,30 @@
 <script setup>
 
-import {onMounted, reactive, watch, ref} from "vue";
+import {onMounted, reactive, watch, ref, computed} from "vue";
 import request from "../../utils/request.js";
 import {UserFilled} from "@element-plus/icons-vue";
+import {ElMessage} from "element-plus";
 
 const props = defineProps(['challengeId'])
 const challenge = reactive({});
-const challengeInfo = reactive({})
+const challengeInfo = reactive({data: {}})
 const participants = reactive({})
 
-const myValue = ref()
+const isMine = ((id)=>{return id === Number(localStorage.getItem('user_id'))})
 
-function update() {
-  console.log(localStorage)
+function update(value) {
+  console.log(value)
   request({
     method: "POST",
     url: '/challenges/update-progress',
     data: {
       challenge_id: props.challengeId,
       user_id: localStorage.getItem('user_id'),
-      current_value: myValue,
+      current_value: value,
     },
   }).then((response)=>{
     console.log(response)
+    ElMessage({message: '更新成功', type: 'success',})
   }).catch((error)=>{
     console.log(error)
   })
@@ -77,7 +79,6 @@ function loadParticipants(list) {
 }
 
 onMounted(()=>{
-  console.log(props.challengeId)
   request({
     method: 'post',
     url: '/challenges/detail',
@@ -97,41 +98,20 @@ onMounted(()=>{
   <el-row>
     <el-col :span="16" :offset="4">
       <el-card>
-        <el-row>
-          <el-text tag="b" size="large">挑战：</el-text>
-          {{ challengeInfo.data }}
-        </el-row>
-<!--        <el-row>-->
-<!--          <el-text tag="b" size="large">挑战：</el-text>-->
-<!--          {{ challengeInfo.data.title }}-->
-<!--        </el-row>-->
-<!--        <el-row>-->
-<!--          <el-text tag="b" size="large">创建者：</el-text>-->
-<!--          <el-text>{{ challengeInfo.data.created_by }}</el-text>-->
-<!--        </el-row>-->
-<!--        <el-row>-->
-<!--          <el-text tag="b" size="large">挑战类型：</el-text>-->
-<!--          <el-tag>{{ challengeInfo.data.challenge_type }}</el-tag>-->
-<!--        </el-row>-->
-<!--        <el-row>-->
-<!--          <el-text tag="b" size="large">挑战说明：</el-text>-->
-<!--          <el-text>{{ challengeInfo.data.description }}</el-text>-->
-<!--        </el-row>-->
-<!--        <el-row>-->
-<!--          <el-text tag="b" size="large">目标：</el-text>-->
-<!--          <el-text>{{ challengeInfo.data.target_value }}</el-text>-->
-<!--        </el-row>-->
-<!--        <el-row>-->
-<!--          <el-text tag="b" size="large">开始时间：</el-text>-->
-<!--          <el-text>{{ challengeInfo.data.start_date }}</el-text>-->
-<!--        </el-row>-->
-<!--        <el-row>-->
-<!--          <el-text tag="b" size="large">结束时间：</el-text>-->
-<!--          <el-text>{{ challengeInfo.data.end_date }}</el-text>-->
-<!--        </el-row>-->
-
-        <el-button type="primary" @click="joinChallenge">加入</el-button>
-        <el-button type="primary" @click="endChallenge">结束挑战</el-button>
+        <el-descriptions :title="challengeInfo.data.title">
+          <template #extra>
+            <el-button type="primary" @click="joinChallenge">加入挑战</el-button>
+            <el-button type="primary" @click="endChallenge" v-if="isMine(challengeInfo.data.created_by)">结束挑战</el-button>
+          </template>
+          <el-descriptions-item label="创建者：">{{ challengeInfo.data.created_by }}</el-descriptions-item>
+          <el-descriptions-item label="挑战类型：">
+            <el-tag>{{ challengeInfo.data.challenge_type }}</el-tag>
+          </el-descriptions-item>
+          <el-descriptions-item label="挑战说明：">{{ challengeInfo.data.description }}</el-descriptions-item>
+          <el-descriptions-item label="目标：">{{ challengeInfo.data.target_value }}</el-descriptions-item>
+          <el-descriptions-item label="开始时间：">{{ challengeInfo.data.start_date }}</el-descriptions-item>
+          <el-descriptions-item label="结束时间：">{{ challengeInfo.data.end_date }}</el-descriptions-item>
+        </el-descriptions>
 
       </el-card>
 
@@ -148,22 +128,23 @@ onMounted(()=>{
                     <el-col :span="4">
                       {{ participant.username }}
                     </el-col>
-<!--                    <el-col :span="8" :offset="10">-->
-<!--                      <el-text type="info" size="small">|{{ sharing.time }}</el-text>-->
-<!--                    </el-col>-->
                   </el-row>
                 </template>
-                <div>
-                  完成量：
-                  <el-input
-                    type="number"
-                    v-model="myValue"
-                    :placeholder="participant.current_value"
-                  ></el-input>
-                  <el-button type="primary" @click="update">更新</el-button>
-                  <br/>
-                  <el-tag type="primary">{{ participant.completed }}</el-tag><br/>
-                </div>
+                <el-row align="middle">
+                  <el-col :span="18">
+                    <span>完成量：</span>
+                    <el-input
+                        type="number"
+                        v-model="participant.current_value"
+                        style="width: 150px"
+                        :disabled="!isMine(participant.user_id)"
+                    />
+                  </el-col>
+                  <el-col :span="6">
+                    <el-button type="primary" @click="update(participant.current_value)">更新</el-button>
+                  </el-col>
+                </el-row>
+                <el-tag type="primary">{{ participant.completed }}</el-tag><br/>
               </el-card>
             </el-col>
           </el-row>
