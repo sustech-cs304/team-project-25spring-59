@@ -991,6 +991,7 @@ class CommentResponse(DTO):
 
 
 class PostResponse(DTO):
+    post_id: int
     user_id: int
     user_name: str
     content: str
@@ -1021,6 +1022,7 @@ def _serialize_comment(c: models.Comment) -> CommentResponse:
 
 def _serialize_post(p: models.Post) -> PostResponse:
     return PostResponse(
+        post_id=p.id,
         user_id=p.user_id,
         user_name=p.user.username,
         content=p.content,
