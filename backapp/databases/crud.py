@@ -318,14 +318,21 @@ def create_gym_reservation(db: Session, user_id: int, gym_id: int, reservation_d
 # --------------------------------------
 
 # Post
-def create_post(db: Session, user_id: int, content: str, images: list[str] | None = None):
-    """创建动态"""
-    db_post = models.Post(user_id=user_id, content=content, images=images)
+def create_post(
+    db: Session,
+    user_id: int,
+    content: str,
+    image_url: str | None = None,    
+):
+    db_post = models.Post(
+        user_id=user_id,
+        content=content,
+        image_url=image_url,         
+    )
     db.add(db_post)
     db.commit()
     db.refresh(db_post)
     return db_post
-
 
 def get_post(db: Session, post_id: int):
     """获取指定动态"""
