@@ -571,7 +571,18 @@ class GymResponse(DTO):
     open_time: str  # 格式如: "09:00:00-21:00:00"
     address: str
 
+class ReservedCourseResponse(DTO):
+    course_id: int
+    gym_id: int
+    course_name: str
+    start_time: datetime
+    end_time: datetime
+    coach_name: str
+    reservation_time: datetime
 
+class CancelCourseReservationRequest(DTO):
+    user_id: int
+    course_id: int
 
 
 @app.get("/gym/getCourses/{gym_id}", summary="获取健身房课程列表", response_model=list[GymCourseResponse])
@@ -604,6 +615,66 @@ async def reserve_course(
         raise HTTPException(status_code=400, detail="课程不存在或已满")
     
     return db_reservation
+
+from sqlalchemy.orm import aliased
+@app.get(
+    "/course/getReservedCourses/{user_id}",
+    summary="获取个人预约课程",
+    response_model=list[ReservedCourseResponse],
+)
+def get_reserved_courses(
+    user_id: int,
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+):
+    """
+    返回指定用户已预约的课程列表  
+    直接联表 `course_reservations` ➜ `gym_courses`。
+    """
+    Course = aliased(models.GymCourse)
+    Reservation = aliased(models.CourseReservation)
+
+    rows = (
+        db.query(
+            Reservation.id.label("course_id"),
+            Course.gym_id,
+            Course.course_name,
+            Course.start_time,
+            Course.end_time,
+            Course.coach_name,
+            Reservation.reservation_time,
+        )
+        .join(Course, Reservation.course_id == Course.id)
+        .filter(Reservation.user_id == user_id)
+        .order_by(Reservation.reservation_time.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+
+    # rows 是 Row 对象列表，直接转 dict/模型
+    return [ReservedCourseResponse(**row._mapping) for row in rows]
+
+@app.post("/gym/cancelCourseReservation", summary="取消健身课程预约")
+def cancel_course_reservation(
+    request: CancelCourseReservationRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    根据 user_id 和 course_id 取消健身课程预约
+    """
+    reservation = db.query(models.CourseReservation).filter(
+        models.CourseReservation.user_id == request.user_id,
+        models.CourseReservation.course_id == request.course_id
+    ).first()
+
+    if not reservation:
+        raise HTTPException(status_code=404, detail="找不到对应的预约记录")
+
+    db.delete(reservation)
+    db.commit()
+    return {"message": "取消预约成功", "course_id": request.course_id}
 
 @app.post("/gym/reserveGym", summary="预约健身房", response_model=GymReservationResponse)
 async def reserve_gym(
