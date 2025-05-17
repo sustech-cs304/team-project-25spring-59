@@ -34,7 +34,7 @@ import {ref, onMounted} from "vue";
 
 
 // spine-player
-import SpinePlayer from '../components/Spine-Player/index.vue'
+import SpinePlayer from '../components/Spine-Player-MainMenu/index.vue'
 
 
 

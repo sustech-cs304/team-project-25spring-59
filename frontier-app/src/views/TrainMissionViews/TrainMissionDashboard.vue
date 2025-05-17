@@ -39,6 +39,7 @@
     </div>
 
   </div>
+  <SpinePlayer></SpinePlayer>
 </template>
 
 <script setup lang="ts">
@@ -48,10 +49,11 @@ import TimeBar from "../../components/TrainMission/Charts/TimeBar.vue";
 import {ref, onMounted} from "vue";
 import Weekly_Plan from "../../components/TrainMission/Plans/Weekly_Plan.vue";
 import axios from "axios";
+import SpinePlayer from "../../components/Spine-Player-Dashboard/index.vue";
+
+
 const routeBase = ref('/')
 const userId = ref<string | null>(null)
-
-
 onMounted(() => {
   routeBase.value = window.location.origin + '/'
   userId.value = localStorage.getItem('user_id')
