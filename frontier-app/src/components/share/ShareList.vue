@@ -31,11 +31,7 @@ function addComment(postId) {
   request({
     method: "POST",
     url: `/posts/${postId}/comments`,
-    // data: form,
-    data: {
-      userId: 21,
-      comment: "很好很好"
-    }
+    data: form,
   }).then((response)=>{
     console.log(response)
   }).catch((error)=>{

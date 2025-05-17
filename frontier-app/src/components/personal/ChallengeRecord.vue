@@ -1,13 +1,12 @@
 <script setup>
 
 import {ref} from "vue";
-import ChallengeList from "../components/challenge/ChallengeList.vue";
-import ChallengeInfo from "../components/challenge/ChallengeInfo.vue";
-import ChallengeCreate from "../components/challenge/ChallengeCreate.vue";
+import JoinedChallenge from "./JoinedChallenge.vue";
+import ChallengeInfo from "../../components/challenge/ChallengeInfo.vue";
 
 const userId = ref('')
 const challengeId = ref('')
-const currentCom = ref(ChallengeList)
+const currentCom = ref(JoinedChallenge)
 
 function goToChallenge(id) {
   currentCom.value = ChallengeInfo;
@@ -15,12 +14,8 @@ function goToChallenge(id) {
   console.log(id)
 }
 
-function goToCreate() {
-  currentCom.value = ChallengeCreate;
-}
-
 function goToList() {
-  currentCom.value = ChallengeList;
+  currentCom.value = JoinedChallenge;
 }
 
 
@@ -31,7 +26,6 @@ function goToList() {
       :is="currentCom"
       :challengeId="challengeId"
       @clickChallenge="goToChallenge"
-      @createChallenge="goToCreate"
       @backToList="goToList"
   ></component>
 </template>
