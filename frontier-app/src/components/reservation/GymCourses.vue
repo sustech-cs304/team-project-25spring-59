@@ -34,12 +34,30 @@ function processCourses(coursesData) {
   console.log(currentCourses.data);
 }
 
+function reserveCourse(courseId) {
+  console.log(localStorage)
+  request({
+    method: "POST",
+    url: '/gym/reserveCourse',
+    data: {
+      userId: localStorage.getItem('user_id'),
+      courseId: courseId,
+    }
+  }).then((response)=>{
+    console.log(response)
+  }).catch((error)=>{
+    console.log(error)
+  })
+}
 
 onMounted(()=>{
   request.get(`/gym/getCourses/${props.gymId}`)
       .then((response) => {
         console.log(response);
         processCourses(response.data);
+      })
+      .catch((error) => {
+        console.log(error)
       })
 })
 
@@ -89,7 +107,9 @@ onMounted(()=>{
         <el-table-column label="剩余" prop="remain"></el-table-column>
         <el-table-column label="上课时间" prop="startTime"></el-table-column>
         <el-table-column label="操作" :fixed="'right'">
-          <el-button type="primary">预定</el-button>
+          <template #default="scope">
+            <el-button type="primary" @click="reserveCourse(scope.row.id)">预定</el-button>
+          </template>
         </el-table-column>
       </el-table>
     </el-col>

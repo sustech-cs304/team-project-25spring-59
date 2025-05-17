@@ -35,6 +35,10 @@ const spineVoiceLang = 'jp' // 或者硬编码或通过 props 传入
 import { spine } from './spine-player.js'
 console.log('spine:', spine);
 
+//这个是控制ai建议界面是否显示的变量
+const emit = defineEmits(['show-ai-panel'])
+
+
 
 // 定义两套spine资产信息
 const spineAssets = {
@@ -267,6 +271,9 @@ const resetBonesState = ref(null)
 const handlePlayerClick = debounce(async (event) => {
   event.preventDefault();
   event.stopPropagation();
+
+  //发送控制是否显示ai建议界面的信息
+  emit('show-ai-panel')
 
   // 检查是否正在播放
   if (!isPlaying) {
