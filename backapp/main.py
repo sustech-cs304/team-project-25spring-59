@@ -538,6 +538,7 @@ class GymCourseResponse(DTO):
     current_reservations: int
 
 class CourseReservationCreate(DTO):
+    user_id: int
     course_id: int
 
 class CourseReservationResponse(DTO):
@@ -549,6 +550,7 @@ class CourseReservationResponse(DTO):
 
 # 健身房预约相关模型
 class GymReservationCreate(DTO):
+    user_id: int
     gym_id: int
     reservation_date: datetime
     start_time: datetime
@@ -587,17 +589,14 @@ async def get_gym_courses(
 @app.post("/gym/reserveCourse", summary="预约健身课程", response_model=CourseReservationResponse)
 async def reserve_course(
     reservation: CourseReservationCreate,
-    current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """预约健身课程"""
-    user_dict = current_user.__dict__
-    user_id = user_dict["id"]
     
     # 创建课程预约
     db_reservation = crud.create_course_reservation(
         db=db,
-        user_id=user_id,
+        user_id=reservation.user_id,
         course_id=reservation.course_id
     )
     
@@ -609,17 +608,14 @@ async def reserve_course(
 @app.post("/gym/reserveGym", summary="预约健身房", response_model=GymReservationResponse)
 async def reserve_gym(
     reservation: GymReservationCreate,
-    current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """预约健身房"""
-    user_dict = current_user.__dict__
-    user_id = user_dict["id"]
     
     # 创建健身房预约
     db_reservation = crud.create_gym_reservation(
         db=db,
-        user_id=user_id,
+        user_id=reservation.user_id,
         gym_id=reservation.gym_id,
         reservation_date=reservation.reservation_date,
         start_time=reservation.start_time,
@@ -928,13 +924,14 @@ class PostResponse(DTO):
     user_name: str
     content: str
     time: datetime
-    img_list: Optional[List[dict]] = None
+    img: Optional[str] = None        
     comments: List[CommentResponse] = []
 
 
 class PostCreateRequest(DTO):
+    user_id: int
     content: str
-    img_list: Optional[List[dict]] = None  # [{"img":"url"}]
+    img: Optional[str] = None  
 
 
 class CommentCreateRequest(DTO):
@@ -951,14 +948,16 @@ def _serialize_comment(c: models.Comment) -> CommentResponse:
 
 
 def _serialize_post(p: models.Post) -> PostResponse:
-    img_list = [{"img": p.image_url}] if p.image_url else None  # >>> 修改点
     return PostResponse(
         user_id=p.user_id,
-        user_name=p.user.username,  # >>> 修改点
+        user_name=p.user.username,
         content=p.content,
         time=p.created_at,
-        img_list=img_list,
-        comments=[_serialize_comment(c) for c in sorted(p.comments, key=lambda x: x.created_at, reverse=True)],
+        img=p.image_url,             
+        comments=[
+            _serialize_comment(c)
+            for c in sorted(p.comments, key=lambda x: x.created_at, reverse=True)
+        ],
     )
 
 
@@ -983,13 +982,15 @@ def _get_post_full(db: Session, post_id: int) -> models.Post:
 @app.post("/posts", response_model=PostResponse)
 def create_post_api(
     body: PostCreateRequest,
-    current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    img_url = body.img_list[0]["img"] if body.img_list else None  # >>> 修改点
-    db_post = crud.create_post(db, user_id=current_user.id, content=body.content, image_url=img_url)  # >>> 修改点
+    db_post = crud.create_post(
+        db=db,
+        user_id=body.user_id,
+        content=body.content,
+        image_url=body.img,           # ← 直接传
+    )
     return _serialize_post(_get_post_full(db, db_post.id))
-
 
 @app.get("/posts", response_model=list[PostResponse])
 def list_posts_api(skip: int = 0, limit: int = 20, db: Session = Depends(get_db)):
