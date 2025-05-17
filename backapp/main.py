@@ -935,6 +935,7 @@ class PostCreateRequest(DTO):
 
 
 class CommentCreateRequest(DTO):
+    user_id: int
     comment: str
 
 
@@ -988,7 +989,7 @@ def create_post_api(
         db=db,
         user_id=body.user_id,
         content=body.content,
-        image_url=body.img,           # ← 直接传
+        image_url=body.img,           
     )
     return _serialize_post(_get_post_full(db, db_post.id))
 
@@ -1012,11 +1013,10 @@ def list_posts_api(skip: int = 0, limit: int = 20, db: Session = Depends(get_db)
 def add_comment_api(
     post_id: int,
     body: CommentCreateRequest,
-    current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     _get_post_full(db, post_id)
-    cmt = crud.add_comment(db, user_id=current_user.id, post_id=post_id, content=body.comment)
+    cmt = crud.add_comment(db, user_id=CommentCreateRequest.user_id, post_id=post_id, content=body.comment)
     return _serialize_comment(cmt)
 
 
