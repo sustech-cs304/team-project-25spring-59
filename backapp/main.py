@@ -1088,7 +1088,7 @@ def add_comment_api(
     body: CommentCreateRequest,
     db: Session = Depends(get_db),
 ):
-    cmt = crud.add_comment(db, user_id=CommentCreateRequest.user_id, post_id=post_id, content=body.comment)
+    cmt = crud.add_comment(db, user_id=body.user_id, post_id=post_id, content=body.comment)
     return _serialize_comment(cmt)
 
 
