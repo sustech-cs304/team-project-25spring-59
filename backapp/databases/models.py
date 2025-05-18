@@ -166,6 +166,7 @@ class Challenge(Base):
     end_date = Column(DateTime, nullable=False)
     challenge_type = Column(String(20), nullable=False)  # distance, calories, workouts, etc.
     target_value = Column(Float, nullable=False)  # 目标值
+    status = Column(String(20), nullable=False)  # 新增的status属性
     created_by = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     # 关系定义
     creator = relationship("User", backref="created_challenges")

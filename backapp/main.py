@@ -1234,15 +1234,8 @@ def get_all_challenges(db: Session = Depends(get_db)):
                 }
                 for entry in leaderboard_query
             ]
-            
-            # 计算挑战状态
             now = datetime.now()
-            if now < challenge.start_date:
-                status = "即将开始"
-            elif now > challenge.end_date:
-                status = "已结束"
-            else:
-                status = "进行中"
+        
             
             # 构建挑战详情
             challenge_detail = {
@@ -1252,10 +1245,10 @@ def get_all_challenges(db: Session = Depends(get_db)):
                 "start_date": challenge.start_date,
                 "end_date": challenge.end_date,
                 "challenge_type": challenge.challenge_type,
-                "target_value": challenge.target_value,
+                "target_value": challenge.target_value,                
                 "created_by": challenge.created_by,
                 "creator_name": creator_name,
-                "status": status,
+                "status": challenge.status,
                 "participants_count": participants_count,
                 "completion_rate": completion_rate,
                 "top_performers": top_performers,
@@ -1326,13 +1319,6 @@ def get_challenge_detail(request: ChallengeDetail, db: Session = Depends(get_db)
         participants_count = db.query(models.UserChallenge).filter(
             models.UserChallenge.challenge_id == request.challenge_id
         ).count()
-        now = datetime.now()
-        if now < challenge.start_date:
-            status = "即将开始"
-        elif now > challenge.end_date:
-            status = "已结束"
-        else:
-            status = "进行中"
 
 
         
@@ -1344,7 +1330,7 @@ def get_challenge_detail(request: ChallengeDetail, db: Session = Depends(get_db)
                 "description": challenge.description,
                 "start_date": challenge.start_date,
                 "end_date": challenge.end_date,
-                "status": status,
+                "status": challenge.status,
                 "challenge_type": challenge.challenge_type,
                 "target_value": challenge.target_value,
                 "created_by": challenge.created_by,
@@ -1419,7 +1405,8 @@ def end_challenge(request: EndChallengeRequest, db: Session = Depends(get_db)):
         # 设置挑战结束时间为当前时间（如果提前结束）
         if challenge.end_date > datetime.now():
             challenge.end_date = datetime.now()
-            db.commit()
+        challenge.status = "已结束"
+        db.commit()
         
         # 获取所有参与者，按完成值排序
         participants = db.query(
@@ -1490,7 +1477,7 @@ def end_challenge(request: EndChallengeRequest, db: Session = Depends(get_db)):
         return {
             "challenge_id": challenge.id,
             "challenge_title": challenge.title,
-            "status": "已结束",
+            "status": challenge.status,
             "participants_count": len(participants),
             "results": results
         }
