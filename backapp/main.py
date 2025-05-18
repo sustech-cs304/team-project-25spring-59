@@ -637,7 +637,7 @@ def get_reserved_courses(
 
     rows = (
         db.query(
-            Reservation.id.label("course_id"),
+            Reservation.course_id,
             Course.gym_id,
             Course.course_name,
             Course.start_time,
@@ -671,9 +671,16 @@ def cancel_course_reservation(
 
     if not reservation:
         raise HTTPException(status_code=404, detail="找不到对应的预约记录")
+    
+    # 找到对应课程
+    course = db.query(models.GymCourse).filter(models.GymCourse.id == request.course_id).first()
+    if course and course.current_reservations > 0:
+        course.current_reservations -= 1
 
+    # 删除预约
     db.delete(reservation)
     db.commit()
+
     return {"message": "取消预约成功", "course_id": request.course_id}
 
 @app.post("/gym/reserveGym", summary="预约健身房", response_model=GymReservationResponse)
