@@ -35,6 +35,7 @@
 
 <script setup lang="ts">
 import { ref, nextTick, defineProps, defineEmits } from 'vue'
+import {SILICON_API} from "../../configs/aiAdvisor_config.js"
 
 interface Message {
   role: 'user' | 'assistant'
@@ -61,6 +62,74 @@ const scrollToBottom = () => {
   })
 }
 
+// const getAISuggestion = async () => {
+//   const content = userPrompt.value.trim()
+//   if (!content) return
+//
+//   // 显示用户输入
+//   chatHistory.value.push({ role: 'user', content })
+//   userPrompt.value = ''
+//
+//   try {
+//     const response = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
+//       method: 'POST',
+//       headers: {
+//         Authorization: `Bearer ${SILICON_API}`,
+//         'Content-Type': 'application/json'
+//       },
+//       body: JSON.stringify({
+//         model: 'Qwen/QwQ-32B',
+//         messages: [
+//           { role: 'user', content }
+//         ],
+//         stream: false,
+//         max_tokens: 512,
+//         enable_thinking: false,
+//         thinking_budget: 4096,
+//         min_p: 0.05,
+//         stop: null,
+//         temperature: 0.7,
+//         top_p: 0.7,
+//         top_k: 50,
+//         frequency_penalty: 0.5,
+//         n: 1,
+//         response_format: { type: 'text' },
+//         tools: [
+//           {
+//             type: 'function',
+//             function: {
+//               description: '',
+//               name: '',
+//               parameters: {},
+//               strict: false
+//             }
+//           }
+//         ]
+//       })
+//     })
+//
+//     const result = await response.json()
+//
+//     // 获取 AI 回复内容（确保格式匹配）
+//     const replyText = result.choices?.[0]?.message?.content || 'AI 无响应'
+//
+//     chatHistory.value.push({
+//       role: 'assistant',
+//       content: replyText
+//     })
+//   } catch (error) {
+//     console.error('AI 接口调用失败:', error)
+//     chatHistory.value.push({
+//       role: 'assistant',
+//       content: '获取建议失败，请稍后重试。'
+//     })
+//   }
+//
+//   scrollToBottom()
+// }
+
+
+//流式输出
 const getAISuggestion = async () => {
   const content = userPrompt.value.trim()
   if (!content) return
@@ -68,15 +137,85 @@ const getAISuggestion = async () => {
   chatHistory.value.push({ role: 'user', content })
   userPrompt.value = ''
 
-  await new Promise(resolve => setTimeout(resolve, 500))
+  // 插入 assistant 占位消息
+  chatHistory.value.push({ role: 'assistant', content: '' })
+  scrollToBottom()
 
-  chatHistory.value.push({
-    role: 'assistant',
-    content: `收到：${content}`
-  })
+  const assistantIndex = chatHistory.value.length - 1
+
+  try {
+    const response = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${SILICON_API}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'Qwen/QwQ-32B',
+        messages: [{ role: 'user', content }],
+        stream: true,
+        max_tokens: 512,
+        enable_thinking: false,
+        thinking_budget: 4096,
+        min_p: 0.05,
+        stop: null,
+        temperature: 0.7,
+        top_p: 0.7,
+        top_k: 50,
+        frequency_penalty: 0.5,
+        n: 1,
+        response_format: { type: 'text' },
+        tools: [{
+          type: 'function',
+          function: { description: '', name: '', parameters: {}, strict: false }
+        }]
+      })
+    })
+
+    if (!response.body) throw new Error('No response body')
+
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder('utf-8')
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      const chunk = decoder.decode(value, { stream: true })
+
+      for (const line of chunk.split('\n')) {
+        const trimmed = line.trim()
+        if (!trimmed || trimmed === 'data: [DONE]') continue
+
+        let jsonLine = trimmed
+        if (jsonLine.startsWith('data:')) jsonLine = jsonLine.slice(5).trim()
+
+        try {
+          const parsed = JSON.parse(jsonLine)
+          const delta = parsed.choices?.[0]?.delta?.content
+          if (delta) {
+            chatHistory.value[assistantIndex].content += delta
+            scrollToBottom()
+          }
+        } catch (e) {
+          console.warn('JSON 解析失败:', jsonLine)
+        }
+      }
+    }
+
+  } catch (err) {
+    console.error('流式请求失败:', err)
+    chatHistory.value[assistantIndex].content += '\n[获取失败]'
+  }
 
   scrollToBottom()
 }
+
+
+
+
+
+
+
 </script>
 
 <style scoped lang="scss">
