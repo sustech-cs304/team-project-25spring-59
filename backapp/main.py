@@ -1324,6 +1324,15 @@ def get_challenge_detail(request: ChallengeDetail, db: Session = Depends(get_db)
         participants_count = db.query(models.UserChallenge).filter(
             models.UserChallenge.challenge_id == request.challenge_id
         ).count()
+        now = datetime.now()
+        if now < challenge.start_date:
+            status = "即将开始"
+        elif now > challenge.end_date:
+            status = "已结束"
+        else:
+            status = "进行中"
+
+
         
         # 初始化响应
         response = {
@@ -1333,6 +1342,7 @@ def get_challenge_detail(request: ChallengeDetail, db: Session = Depends(get_db)
                 "description": challenge.description,
                 "start_date": challenge.start_date,
                 "end_date": challenge.end_date,
+                "status": status,
                 "challenge_type": challenge.challenge_type,
                 "target_value": challenge.target_value,
                 "created_by": challenge.created_by,
