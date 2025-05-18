@@ -1084,7 +1084,7 @@ def create_post_api(
             file_path = os.path.join(UPLOAD_DIR, filename)
             with open(file_path, "wb") as f:
                 shutil.copyfileobj(file.file, f)
-            image_url = f"{BASE_URL}/static/uploads/{filename}"
+            image_url = f"/static/uploads/{filename}"
             db_image = models.PostImage(post_id=db_post.id, image_url=image_url)
             db.add(db_image)
 
