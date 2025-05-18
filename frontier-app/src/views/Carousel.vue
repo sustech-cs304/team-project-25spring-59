@@ -100,7 +100,7 @@ const playTransition = () => {
     transitionVideo.value.play();
     transitionVideo.value.onended = () => {
       isPlaying.value = false;
-      router.push("/dashboard"); // 播放完跳转
+      router.push("/TrainMission/Dashboard"); // 播放完跳转
     };
   }, 100); // 确保 DOM 渲染完成
 };

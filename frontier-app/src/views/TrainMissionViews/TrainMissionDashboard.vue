@@ -46,39 +46,42 @@
 
 
     <!-- AI 建议浮动侧栏 -->
-    <div v-if="showAISidebar" class="ai-float-sidebar animate__animated animate__fadeInRight">
-      <div class="ai-panel">
-        <div class="ai-header">
-          <h3>AI 建议</h3>
-          <button @click="toggleAISidebar">关闭</button>
-        </div>
-        <div class="ai-content" ref="chatContainer">
-          <div
-            v-for="(msg, index) in chatHistory"
-            :key="index"
-            class="chat-message"
-            :class="msg.role"
-          >
-            <img
-              class="avatar"
-              :src="msg.role === 'user' ? userAvatar : aiAvatar"
-              alt="avatar"
-            />
-            <div class="bubble">{{ msg.content }}</div>
-          </div>
-        </div>
+<!--    <div v-if="showAISidebar" class="ai-float-sidebar animate__animated animate__fadeInRight">-->
+<!--      <div class="ai-panel">-->
+<!--        <div class="ai-header">-->
+<!--          <h3>AI 建议</h3>-->
+<!--          <button @click="toggleAISidebar">关闭</button>-->
+<!--        </div>-->
+<!--        <div class="ai-content" ref="chatContainer">-->
+<!--          <div-->
+<!--            v-for="(msg, index) in chatHistory"-->
+<!--            :key="index"-->
+<!--            class="chat-message"-->
+<!--            :class="msg.role"-->
+<!--          >-->
+<!--            <img-->
+<!--              class="avatar"-->
+<!--              :src="msg.role === 'user' ? userAvatar : aiAvatar"-->
+<!--              alt="avatar"-->
+<!--            />-->
+<!--            <div class="bubble">{{ msg.content }}</div>-->
+<!--          </div>-->
+<!--        </div>-->
 
-        <div class="ai-input">
-          <input
-            type="text"
-            v-model="userPrompt"
-            placeholder="请输入问题或请求"
-            @keyup.enter="getAISuggestion"
-          />
-          <button @click="getAISuggestion">发送</button>
-        </div>
-      </div>
-    </div>
+<!--        <div class="ai-input">-->
+<!--          <input-->
+<!--            type="text"-->
+<!--            v-model="userPrompt"-->
+<!--            placeholder="请输入问题或请求"-->
+<!--            @keyup.enter="getAISuggestion"-->
+<!--          />-->
+<!--          <button @click="getAISuggestion">发送</button>-->
+<!--        </div>-->
+<!--      </div>-->
+<!--    </div>-->
+    <AITrainerAssistant :visible="showAISidebar" @close="showAISidebar = false" />
+
+
 
     <!-- 控制显示按钮 -->
 <!--    <button class="toggle-ai-btn" @click="toggleAISidebar" v-if="!showAISidebar">查看 AI 建议</button>-->
@@ -95,6 +98,7 @@ import {ref, onMounted, nextTick} from "vue";
 import Weekly_Plan from "../../components/TrainMission/Plans/Weekly_Plan.vue";
 import axios from "axios";
 import SpinePlayer from "../../components/Spine-Player-Dashboard/index.vue";
+import AITrainerAssistant from './aitrainer.vue'
 
 //用户及ai的ai建议头像
 const userAvatar = '/avatar-user.jpg'
@@ -118,7 +122,9 @@ const toggleAISidebar = () => {
 }
 
 const handleShowAI = () => {
+  console.log('[debug] show-ai-panel event received!')
   showAISidebar.value = !showAISidebar.value
+
 }
 
 
