@@ -387,17 +387,17 @@ def delete_post(db: Session, post_id: int):
 def like_post(db: Session, user_id: int, post_id: int):
     """点赞（若已点则返回现有记录）"""
     existing = (
-        db.query(models.PostLike)
+        db.query(models.Like)
         .filter(
-            models.PostLike.user_id == user_id,
-            models.PostLike.post_id == post_id,
+            models.Like.user_id == user_id,
+            models.Like.post_id == post_id,
         )
         .first()
     )
     if existing:
         return existing
 
-    db_like = models.PostLike(user_id=user_id, post_id=post_id)
+    db_like = models.Like(user_id=user_id, post_id=post_id)
     db.add(db_like)
     db.commit()
     db.refresh(db_like)
@@ -407,10 +407,10 @@ def like_post(db: Session, user_id: int, post_id: int):
 def unlike_post(db: Session, user_id: int, post_id: int):
     """取消点赞"""
     like = (
-        db.query(models.PostLike)
+        db.query(models.Like)
         .filter(
-            models.PostLike.user_id == user_id,
-            models.PostLike.post_id == post_id,
+            models.Like.user_id == user_id,
+            models.Like.post_id == post_id,
         )
         .first()
     )
@@ -423,13 +423,13 @@ def unlike_post(db: Session, user_id: int, post_id: int):
 
 def count_post_likes(db: Session, post_id: int) -> int:
     """统计点赞数"""
-    return db.query(models.PostLike).filter(models.PostLike.post_id == post_id).count()
+    return db.query(models.Like).filter(models.Like.post_id == post_id).count()
 
 
 # Comment
 def add_comment(db: Session, user_id: int, post_id: int, content: str):
     """添加评论"""
-    db_comment = models.PostComment(
+    db_comment = models.Comment(
         user_id=user_id,
         post_id=post_id,
         content=content,
@@ -443,9 +443,9 @@ def add_comment(db: Session, user_id: int, post_id: int, content: str):
 def get_comments(db: Session, post_id: int, skip: int = 0, limit: int = 50):
     """获取评论列表（倒序）"""
     return (
-        db.query(models.PostComment)
-        .filter(models.PostComment.post_id == post_id)
-        .order_by(models.PostComment.created_at.desc())
+        db.query(models.Comment)
+        .filter(models.Comment.post_id == post_id)
+        .order_by(models.Comment.created_at.desc())
         .offset(skip)
         .limit(limit)
         .all()
@@ -454,7 +454,7 @@ def get_comments(db: Session, post_id: int, skip: int = 0, limit: int = 50):
 
 def delete_comment(db: Session, comment_id: int):
     """删除评论"""
-    db_comment = db.query(models.PostComment).filter(models.PostComment.id == comment_id).first()
+    db_comment = db.query(models.Comment).filter(models.Comment.id == comment_id).first()
     if db_comment:
         db.delete(db_comment)
         db.commit()
@@ -464,4 +464,4 @@ def delete_comment(db: Session, comment_id: int):
 
 def count_post_comments(db: Session, post_id: int) -> int:
     """统计评论数"""
-    return db.query(models.PostComment).filter(models.PostComment.post_id == post_id).count()
+    return db.query(models.Comment).filter(models.Comment.post_id == post_id).count()
