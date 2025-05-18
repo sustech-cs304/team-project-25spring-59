@@ -1085,10 +1085,12 @@ def create_post_api(
             with open(file_path, "wb") as f:
                 shutil.copyfileobj(file.file, f)
             image_url = f"/static/uploads/{filename}"
-            db_image = models.PostImage(post_id=db_post.id, image_url=image_url)
+            db_image = models.PostImage(post_id=db_post.id, url=image_url)
             db.add(db_image)
 
     db.commit()
+    return _serialize_post(_get_post_full(db, db_post.id))
+
 
 @app.get("/posts", response_model=list[PostResponse])
 def list_posts_api(skip: int = 0, limit: int = 20, db: Session = Depends(get_db)):
