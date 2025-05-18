@@ -46,39 +46,6 @@
 
 
     <!-- AI 建议浮动侧栏 -->
-<!--    <div v-if="showAISidebar" class="ai-float-sidebar animate__animated animate__fadeInRight">-->
-<!--      <div class="ai-panel">-->
-<!--        <div class="ai-header">-->
-<!--          <h3>AI 建议</h3>-->
-<!--          <button @click="toggleAISidebar">关闭</button>-->
-<!--        </div>-->
-<!--        <div class="ai-content" ref="chatContainer">-->
-<!--          <div-->
-<!--            v-for="(msg, index) in chatHistory"-->
-<!--            :key="index"-->
-<!--            class="chat-message"-->
-<!--            :class="msg.role"-->
-<!--          >-->
-<!--            <img-->
-<!--              class="avatar"-->
-<!--              :src="msg.role === 'user' ? userAvatar : aiAvatar"-->
-<!--              alt="avatar"-->
-<!--            />-->
-<!--            <div class="bubble">{{ msg.content }}</div>-->
-<!--          </div>-->
-<!--        </div>-->
-
-<!--        <div class="ai-input">-->
-<!--          <input-->
-<!--            type="text"-->
-<!--            v-model="userPrompt"-->
-<!--            placeholder="请输入问题或请求"-->
-<!--            @keyup.enter="getAISuggestion"-->
-<!--          />-->
-<!--          <button @click="getAISuggestion">发送</button>-->
-<!--        </div>-->
-<!--      </div>-->
-<!--    </div>-->
     <AITrainerAssistant :visible="showAISidebar" @close="showAISidebar = false" />
 
 
@@ -100,10 +67,6 @@ import axios from "axios";
 import SpinePlayer from "../../components/Spine-Player-Dashboard/index.vue";
 import AITrainerAssistant from './aitrainer.vue'
 
-//用户及ai的ai建议头像
-const userAvatar = '/avatar-user.jpg'
-const aiAvatar = '/avatar-ai.jpg'
-
 const routeBase = ref('/')
 const userId = ref<string | null>(null)
 onMounted(() => {
@@ -114,12 +77,6 @@ onMounted(() => {
 
 //这一部分是显示ai界面或者隐藏的方法
 const showAISidebar = ref(false)
-const userPrompt = ref('')
-const aiResponse = ref('')
-
-const toggleAISidebar = () => {
-  showAISidebar.value = !showAISidebar.value
-}
 
 const handleShowAI = () => {
   console.log('[debug] show-ai-panel event received!')
@@ -150,48 +107,6 @@ const fetchSummary = async () => {
   } catch (e) {
     console.error('获取训练汇总失败:', e)
   }
-}
-
-
-//下面是ai对话的部分
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-}
-
-const chatHistory = ref<Message[]>([])
-const chatContainer = ref<HTMLElement | null>(null)
-const getAISuggestion = async () => {
-  const content = userPrompt.value.trim()
-  if (!content) return
-
-  // 添加用户消息
-  chatHistory.value.push({
-    role: 'user',
-    content,
-  })
-
-  userPrompt.value = ''
-
-  // 模拟 AI 返回响应（回显用户输入内容）
-  // 实际开发中将此处替换为真实 API 请求逻辑
-  await new Promise(resolve => setTimeout(resolve, 500)) // 模拟延迟
-
-  chatHistory.value.push({
-    role: 'assistant',
-    content: `收到：${content}`, // 模拟返回内容
-  })
-
-  // 滚动到底部
-  scrollToBottom()
-}
-
-const scrollToBottom = () => {
-  nextTick(() => {
-    if (chatContainer.value) {
-      chatContainer.value.scrollTop = chatContainer.value.scrollHeight
-    }
-  })
 }
 
 
