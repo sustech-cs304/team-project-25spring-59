@@ -7,18 +7,15 @@ import request from "../../utils/request.js";
 defineEmits(['backToList'])
 
 const form = reactive({
-  userId: 1,
-  username: 'testuser',
   content: '',
-  time: '',
-  imgList: [],
+  img: '',
 })
 
 function submit() {
-  form.time = toISO(new Date())
+  form.userId = localStorage.getItem('user_id')
   request({
     method: "POST",
-    url: '/share/create',
+    url: '/posts',
     data: form,
   }).then((response) => {
     console.log(response);

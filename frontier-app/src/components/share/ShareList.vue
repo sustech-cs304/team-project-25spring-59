@@ -1,30 +1,53 @@
 <script setup>
 
-import {onMounted, reactive, watch} from "vue";
-import {Plus, UserFilled} from "@element-plus/icons-vue";
+import {onMounted, reactive, watch, ref} from "vue";
+import {Plus, UserFilled, Edit} from "@element-plus/icons-vue";
 import request from "../../utils/request.js";
+import {ElMessage} from "element-plus";
 
 defineEmits(['createShare'])
 
 const sharings = reactive({});
+const form = reactive({
+  comment: "",
+})
 
-watch(
-    sharings,
-    async (newValue, oldValue)=>{
-      // sort the sharings by time from large to small
-      newValue.data.sort((a,b)=>new Date(b.time) - new Date(a.time));
-      // sort the sharings.comment by time from large to small
-      newValue.data.forEach((sharing)=>{
-        sharing.comments.sort((a,b)=>new Date(b.time) - new Date(a.time))
-      });
-    }
-)
+
+function processData(data) {
+  sharings.data = data;
+  // sort the sharings by time from large to small
+  sharings.data.sort((a,b)=>new Date(b.time) - new Date(a.time));
+  sharings.data.forEach((sharing)=>{
+    // sort the sharings.comment by time from large to small
+    sharing.comments.sort((a,b)=>new Date(b.time) - new Date(a.time))
+    // add blank comment area
+    sharing.newComment = "";
+    sharing.showCommentArea = false;
+  });
+}
+
+function addComment(postId, comment) {
+  console.log(postId, comment)
+  request({
+    method: "POST",
+    url: `/posts/${postId}/comments`,
+    data: {
+      userId: Number(localStorage.getItem('user_id')),
+      comment: comment,
+    },
+  }).then((response)=>{
+    console.log(response)
+    ElMessage({message: '评论成功', type: 'success',})
+  }).catch((error)=>{
+    console.log(error)
+  })
+}
 
 onMounted(()=>{
-  request.get('/share/getAll')
+  request.get('/posts')
       .then((response) => {
         console.log(response);
-        sharings.data = response.data
+        processData(response.data);
       })
       .catch((error) => {
         console.log(error)
@@ -54,7 +77,25 @@ onMounted(()=>{
           {{ sharing.content }}
         </p>
         <template #footer>
-          <el-text tag="b">评论：</el-text>
+          <el-row justify="space-between">
+            <el-text tag="b">评论：</el-text>
+            <el-button :icon="Edit" link @click="sharing.showCommentArea=true">写评论</el-button>
+          </el-row>
+          <div v-show="sharing.showCommentArea">
+            <el-input v-model="sharing.newComment" type="textarea" placeholder="说说你的想法："/>
+            <el-button type="primary" @click="addComment(sharing.postId, sharing.newComment)">发布</el-button>
+            <el-button @click="sharing.showCommentArea=false">取消</el-button>
+          </div>
+
+          <el-form :model="form">
+            <el-form-item>
+
+            </el-form-item>
+            <el-form-item>
+
+            </el-form-item>
+          </el-form>
+
           <el-row>
             <el-col :span="20" :offset="2">
               <el-card shadow="never" v-for="comment in sharing.comments">

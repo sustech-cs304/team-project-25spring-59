@@ -5,7 +5,6 @@ import request from "../../utils/request.js";
 
 defineEmits(['backToList'])
 
-const props = defineProps(['userId'])
 const form = reactive({
   title: '',
   description: '',
@@ -13,10 +12,11 @@ const form = reactive({
   end_date: '',
   challenge_type: '',
   target_value: '',
-  created_by: props.userId,
+  created_by: localStorage.getItem('user_id'),
 })
 
 function submit() {
+  console.log(form)
   request({
     method: "POST",
     url: '/challenges',
@@ -51,7 +51,7 @@ function submit() {
         </el-form-item>
         <el-form-item label="结束时间：">
           <el-date-picker
-              v-model="form.start_date"
+              v-model="form.end_date"
               type="datetime"
               placeholder="选择结束时间"
               style="width: 100%"
