@@ -187,25 +187,22 @@ class UserChallenge(Base):
     challenge = relationship("Challenge", back_populates="participants")
 
 class Post(Base):
-    """社交帖子表"""
     __tablename__ = "posts"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     content = Column(String(500), nullable=False)
-    image_url = Column(String(255), nullable=True)
     created_at = Column(DateTime, server_default=func.now())
     likes_count = Column(Integer, default=0)
     comments_count = Column(Integer, default=0)
-    
-    # 可以关联到训练记录
     training_record_filename = Column(Integer, ForeignKey("training_records.id"), nullable=True)
-    
-    # 关系定义
+
     user = relationship("User", back_populates="posts")
     likes = relationship("Like", back_populates="post", cascade="all, delete-orphan")
     comments = relationship("Comment", back_populates="post", cascade="all, delete-orphan")
     training_record = relationship("TrainingRecord", backref="posts")
+    images = relationship("PostImage", back_populates="post", cascade="all, delete-orphan")
+
 
 class Like(Base):
     """点赞表"""
@@ -234,3 +231,11 @@ class Comment(Base):
     user = relationship("User", backref="comments")
     post = relationship("Post", back_populates="comments")
 
+class PostImage(Base):
+    __tablename__ = "post_images"
+
+    id = Column(Integer, primary_key=True, index=True)
+    post_id = Column(Integer, ForeignKey("posts.id", ondelete="CASCADE"))
+    url = Column(String(255), nullable=False)
+
+    post = relationship("Post", back_populates="images")

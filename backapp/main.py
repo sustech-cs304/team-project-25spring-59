@@ -13,6 +13,9 @@ from typing import List, Optional
 from sqlalchemy.orm import joinedload
 from typing import Optional 
 
+from fastapi import UploadFile, File, Form
+import os, uuid, shutil
+from fastapi.staticfiles import StaticFiles
 
 # 添加当前目录到路径
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -1003,14 +1006,14 @@ class PostResponse(DTO):
     user_name: str
     content: str
     time: datetime
-    img: Optional[str] = None        
+    img_list: Optional[List[dict]] = []  # [{"img": "http://..."}, ...]
     comments: List[CommentResponse] = []
 
 
 class PostCreateRequest(DTO):
     user_id: int
     content: str
-    img: Optional[str] = None  
+    img_list: Optional[List[str]] = None  # ["http://...", "http://..."]
 
 
 class CommentCreateRequest(DTO):
@@ -1034,20 +1037,20 @@ def _serialize_post(p: models.Post) -> PostResponse:
         user_name=p.user.username,
         content=p.content,
         time=p.created_at,
-        img=p.image_url,             
+        img_list=[{"img": img.url} for img in p.images],  # 使用 PostImage.url
         comments=[
             _serialize_comment(c)
             for c in sorted(p.comments, key=lambda x: x.created_at, reverse=True)
         ],
     )
 
-
 def _get_post_full(db: Session, post_id: int) -> models.Post:
     post = (
         db.query(models.Post)
         .options(
-            joinedload(models.Post.comments).joinedload(models.Comment.user),  # >>> 修改点
-            joinedload(models.Post.user),  # >>> 修改点
+            joinedload(models.Post.comments).joinedload(models.Comment.user),
+            joinedload(models.Post.user),
+            joinedload(models.Post.images),  # 加载 PostImage 列表
         )
         .filter(models.Post.id == post_id)
         .first()
@@ -1056,22 +1059,36 @@ def _get_post_full(db: Session, post_id: int) -> models.Post:
         raise HTTPException(404, "Post not found")
     return post
 
-
 # -------------------------------------------------
 # 动态分享接口
 # -------------------------------------------------
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+STATIC_DIR = os.path.join(BASE_DIR, "static")
+UPLOAD_DIR = os.path.join(STATIC_DIR, "uploads")
+BASE_URL = "http://10.26.63.155:8000"  # 部署时替换成你的域名或IP
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
 @app.post("/posts", response_model=PostResponse)
 def create_post_api(
-    body: PostCreateRequest,
+    user_id: int = Form(...),
+    content: str = Form(...),
+    files: Optional[List[UploadFile]] = File(None),
     db: Session = Depends(get_db),
 ):
-    db_post = crud.create_post(
-        db=db,
-        user_id=body.user_id,
-        content=body.content,
-        image_url=body.img,           
-    )
-    return _serialize_post(_get_post_full(db, db_post.id))
+    
+    db_post = crud.create_post(db=db, user_id=user_id, content=content)
+
+    if files:
+        for file in files:
+            filename = f"{uuid.uuid4().hex}_{file.filename}"
+            file_path = os.path.join(UPLOAD_DIR, filename)
+            with open(file_path, "wb") as f:
+                shutil.copyfileobj(file.file, f)
+            image_url = f"{BASE_URL}/static/uploads/{filename}"
+            db_image = models.PostImage(post_id=db_post.id, image_url=image_url)
+            db.add(db_image)
+
+    db.commit()
 
 @app.get("/posts", response_model=list[PostResponse])
 def list_posts_api(skip: int = 0, limit: int = 20, db: Session = Depends(get_db)):
@@ -1080,6 +1097,7 @@ def list_posts_api(skip: int = 0, limit: int = 20, db: Session = Depends(get_db)
         .options(
             joinedload(models.Post.comments).joinedload(models.Comment.user),
             joinedload(models.Post.user),
+            joinedload(models.Post.images),  # 加载多图
         )
         .order_by(models.Post.created_at.desc())
         .offset(skip)
