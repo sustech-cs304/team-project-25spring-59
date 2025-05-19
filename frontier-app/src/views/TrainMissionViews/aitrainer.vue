@@ -27,15 +27,17 @@
           placeholder="请输入问题或请求"
           @keyup.enter="getAISuggestion"
         />
-        <button @click="getAISuggestion">发送</button>
+        <button @click="getAISuggestionFull">发送</button>
       </div>
     </div>
   </div>
+
 </template>
 
 <script setup lang="ts">
 import { ref, nextTick, defineProps, defineEmits } from 'vue'
 import {SILICON_API} from "../../configs/aiAdvisor_config.js"
+import yaml from 'js-yaml'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -62,75 +64,11 @@ const scrollToBottom = () => {
   })
 }
 
-// const getAISuggestion = async () => {
-//   const content = userPrompt.value.trim()
-//   if (!content) return
-//
-//   // 显示用户输入
-//   chatHistory.value.push({ role: 'user', content })
-//   userPrompt.value = ''
-//
-//   try {
-//     const response = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
-//       method: 'POST',
-//       headers: {
-//         Authorization: `Bearer ${SILICON_API}`,
-//         'Content-Type': 'application/json'
-//       },
-//       body: JSON.stringify({
-//         model: 'Qwen/QwQ-32B',
-//         messages: [
-//           { role: 'user', content }
-//         ],
-//         stream: false,
-//         max_tokens: 512,
-//         enable_thinking: false,
-//         thinking_budget: 4096,
-//         min_p: 0.05,
-//         stop: null,
-//         temperature: 0.7,
-//         top_p: 0.7,
-//         top_k: 50,
-//         frequency_penalty: 0.5,
-//         n: 1,
-//         response_format: { type: 'text' },
-//         tools: [
-//           {
-//             type: 'function',
-//             function: {
-//               description: '',
-//               name: '',
-//               parameters: {},
-//               strict: false
-//             }
-//           }
-//         ]
-//       })
-//     })
-//
-//     const result = await response.json()
-//
-//     // 获取 AI 回复内容（确保格式匹配）
-//     const replyText = result.choices?.[0]?.message?.content || 'AI 无响应'
-//
-//     chatHistory.value.push({
-//       role: 'assistant',
-//       content: replyText
-//     })
-//   } catch (error) {
-//     console.error('AI 接口调用失败:', error)
-//     chatHistory.value.push({
-//       role: 'assistant',
-//       content: '获取建议失败，请稍后重试。'
-//     })
-//   }
-//
-//   scrollToBottom()
-// }
+
 
 
 //流式输出
-const getAISuggestion = async () => {
+const getAISuggestionFlow = async () => {
   const content = userPrompt.value.trim()
   if (!content) return
 
@@ -210,6 +148,268 @@ const getAISuggestion = async () => {
   scrollToBottom()
 }
 
+
+
+//-----------------------下面是针对ai建议pipeline的全流程方法--------------------------//
+//定义template属性格式
+export interface PromptTemplate {
+  template_name: string
+  description?: string
+  inputs: string[]
+  prompt: string
+}
+
+
+/**
+ * 加载一个提示词 YAML 文件，并解析为结构化模板对象
+ * @param fileName 文件名，如 'classify_input_type.yaml'
+ */
+const loadYamlPrompt = async (fileName: string): Promise<PromptTemplate> => {
+  try {
+    const response = await fetch(`/prompts/${fileName}`)
+    if (!response.ok) throw new Error('提示词文件加载失败')
+
+    const text = await response.text()
+    const parsed = yaml.load(text)
+
+    if (typeof parsed !== 'object' || parsed === null) {
+      throw new Error('YAML 格式错误：不是对象')
+    }
+
+    const { template_name, prompt, inputs } = parsed as any
+    if (!template_name || !prompt || !Array.isArray(inputs)) {
+      throw new Error('YAML 缺少必要字段')
+    }
+
+    console.log('[loadYamlPrompt] 成功加载：', template_name)
+    return parsed as PromptTemplate
+  } catch (err) {
+    console.error(`[loadYamlPrompt] 加载失败: ${fileName}`, err)
+    throw err
+  }
+}
+
+
+/**
+ * 使用 PromptTemplate 对象生成最终提示词（并填充变量）
+ * @param tpl PromptTemplate 对象（包含 template_name、prompt、inputs 等）
+ * @param vars 变量对象，形如 { user_input: '你好' }
+ * @returns 完整替换变量后的提示词字符串
+ */
+const buildPrompt = (tpl: PromptTemplate, vars: Record<string, string>): string => {
+  const finalPrompt = tpl.prompt.replace(/{{\s*(\w+)\s*}}/g, (_, key: string) => {
+    if (key in vars) {
+      return vars[key]
+    } else {
+      console.warn(`[buildPrompt] 缺少变量: ${key}`)
+      return ''
+    }
+  })
+
+  console.log(`[buildPrompt] 生成的提示词内容:\n${finalPrompt}`)
+  return finalPrompt
+}
+
+
+/**
+ * 使用提示词 classify_input_type.yaml 判断输入类型
+ * @param userInput 用户的自然语言输入
+ * @returns 'task' | 'chat'
+ */
+const classifyUserInputType = async (userInput: string): Promise<'task' | 'chat'> => {
+  try {
+    const template = await loadYamlPrompt('classify_input_type.yaml')
+    const prompt = buildPrompt(template, { user_input: userInput })
+    console.log(`[buildPrompt] 生成的提示词内容:\n${prompt}`)
+
+
+    const response = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${SILICON_API}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'Qwen/QwQ-32B',
+        messages: [{ role: 'user', content: prompt }],
+        stream: false,
+        max_tokens: 50,
+        temperature: 0,
+        top_p: 0.7,
+        n: 1,
+        response_format: { type: 'text' }
+      })
+    })
+
+    const result = await response.json()
+    const reply = result.choices?.[0]?.message?.content?.trim().toLowerCase()
+
+    if (reply === 'task' || reply === 'chat') {
+      return reply
+    }
+
+    console.warn('[classifyUserInputType] 无效回复:', reply)
+    return 'chat'
+  } catch (err) {
+    console.error('[classifyUserInputType] 处理失败:', err)
+    return 'chat'
+  }
+}
+
+
+
+const getAISuggestionFull = async () => {
+  const content = userPrompt.value.trim()
+  if (!content) return
+
+  // 添加用户消息
+  chatHistory.value.push({ role: 'user', content })
+  userPrompt.value = ''
+
+  try {
+    // 1. 使用提示词模板 classify_input_type.yaml 判断类型
+    const type = await classifyUserInputType(content)
+    console.log('[分类结果] 输入类型为:', type)
+
+    // 2. 将分类信息显示出来（可选）
+    chatHistory.value.push({
+      role: 'assistant',
+      content: `输入被识别为「${type === 'task' ? '任务指令' : '闲聊对话'}」`
+    })
+
+    // 3. 根据分类执行不同的处理流程
+    if (type === 'chat') {
+      // 直接对闲聊内容进行回复
+      const response = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${SILICON_API}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'Qwen/QwQ-32B',
+          messages: [{ role: 'user', content }],
+          stream: false,
+          max_tokens: 512,
+          temperature: 0.7,
+          top_p: 0.8,
+          response_format: { type: 'text' }
+        })
+      })
+
+      const result = await response.json()
+      const reply = result.choices?.[0]?.message?.content?.trim() || 'assistant 无响应'
+      chatHistory.value.push({ role: 'assistant', content: reply })
+
+    } else {
+      // 若为任务，则加载特定的 task 提示词模板
+      // const taskTpl = await loadYamlPrompt('generate_plan.yaml') // 假设你有这个模板
+      // const filledPrompt = buildPrompt(taskTpl, { user_input: content })
+      //
+      // const taskRes = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
+      //   method: 'POST',
+      //   headers: {
+      //     Authorization: `Bearer ${SILICON_API}`,
+      //     'Content-Type': 'application/json'
+      //   },
+      //   body: JSON.stringify({
+      //     model: 'Qwen/QwQ-32B',
+      //     messages: [{ role: 'user', content: filledPrompt }],
+      //     stream: false,
+      //     max_tokens: 1024,
+      //     temperature: 0.7,
+      //     top_p: 0.9,
+      //     response_format: { type: 'text' }
+      //   })
+      // })
+      //
+      // const taskResult = await taskRes.json()
+      // const reply = taskResult.choices?.[0]?.message?.content?.trim() || 'assistant 无响应'
+      // chatHistory.value.push({ role: 'assistant', content: reply })
+       chatHistory.value.push({
+          role: 'assistant',
+          content: `当前被识别为任务类型（task），但任务模板未定义，因此未执行具体操作。`
+       })
+    }
+
+  } catch (err) {
+    console.error('[getAISuggestionFull] 出错:', err)
+    chatHistory.value.push({
+      role: 'assistant',
+      content: '❌ AI 生成建议失败，请稍后重试。'
+    })
+  }
+
+  scrollToBottom()
+}
+
+
+
+// const getAISuggestionFull = async () => {
+//   const content = userPrompt.value.trim()
+//   if (!content) return
+//
+//   // 显示用户输入
+//   chatHistory.value.push({ role: 'user', content })
+//   userPrompt.value = ''
+//
+//   try {
+//     const response = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
+//       method: 'POST',
+//       headers: {
+//         Authorization: `Bearer ${SILICON_API}`,
+//         'Content-Type': 'application/json'
+//       },
+//       body: JSON.stringify({
+//         model: 'Qwen/QwQ-32B',
+//         messages: [
+//           { role: 'user', content }
+//         ],
+//         stream: false,
+//         max_tokens: 512,
+//         enable_thinking: false,
+//         thinking_budget: 4096,
+//         min_p: 0.05,
+//         stop: null,
+//         temperature: 0.7,
+//         top_p: 0.7,
+//         top_k: 50,
+//         frequency_penalty: 0.5,
+//         n: 1,
+//         response_format: { type: 'text' },
+//         tools: [
+//           {
+//             type: 'function',
+//             function: {
+//               description: '',
+//               name: '',
+//               parameters: {},
+//               strict: false
+//             }
+//           }
+//         ]
+//       })
+//     })
+//
+//     const result = await response.json()
+//
+//     // 获取 AI 回复内容（确保格式匹配）
+//     const replyText = result.choices?.[0]?.message?.content || 'AI 无响应'
+//
+//     chatHistory.value.push({
+//       role: 'assistant',
+//       content: replyText
+//     })
+//   } catch (error) {
+//     console.error('AI 接口调用失败:', error)
+//     chatHistory.value.push({
+//       role: 'assistant',
+//       content: '获取建议失败，请稍后重试。'
+//     })
+//   }
+//
+//   scrollToBottom()
+// }
 
 
 

@@ -20,6 +20,7 @@
     "chart.js": "^4.4.8",
     "echarts": "^5.6.0",
     "element-plus": "^2.9.6",
+    "js-yaml": "^4.1.0",
     "live2d-widget": "^3.1.4",
     "markdown-it-custom-attrs": "^1.0.2",
     "markdown-it-mathjax3": "^4.3.2",
