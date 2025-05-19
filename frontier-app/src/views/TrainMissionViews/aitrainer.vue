@@ -6,6 +6,7 @@
         <button @click="$emit('close')">关闭</button>
       </div>
       <div class="ai-content" ref="chatContainer">
+        <!-- 聊天历史消息 -->
         <div
           v-for="(msg, index) in chatHistory"
           :key="index"
@@ -19,7 +20,19 @@
           />
           <div class="bubble">{{ msg.content }}</div>
         </div>
+
+        <!-- AI 加载中动画（不污染 chatHistory） -->
+        <div v-if="isLoading" class="chat-message assistant loading-placeholder">
+          <img class="avatar" :src="aiAvatar" alt="avatar" />
+          <div class="bubble">
+            <span class="loading-dot">阿罗娜正在思考中</span>
+            <span class="dot dot1"></span>
+            <span class="dot dot2"></span>
+            <span class="dot dot3"></span>
+          </div>
+        </div>
       </div>
+
       <div class="ai-input">
         <input
           type="text"
@@ -482,7 +495,8 @@ const generatePersonaResponse = async (
 
 
 
-
+//显示是否ai正在思考的变量
+const isLoading = ref(false)
 
 //完整的ai分类作业的流程
 const getAISuggestion = async () => {
@@ -492,6 +506,10 @@ const getAISuggestion = async () => {
   // 添加用户消息
   chatHistory.value.push({ role: 'user', content })
   userPrompt.value = ''
+
+  //设置ai思考中的占位为true
+  isLoading.value = true
+  scrollToBottom()
 
   try {
     // 1. 使用提示词模板 classify_input_type.yaml 判断类型
@@ -525,6 +543,8 @@ const getAISuggestion = async () => {
       const reply = await generatePersonaResponse(content, detectedIntent, coreMeaning)
       chatHistory.value.push({ role: 'assistant', content: reply })
 
+      isLoading.value = false
+
     } else {
       // 若为任务，则加载特定的 task 提示词模板
       // const taskTpl = await loadYamlPrompt('generate_plan.yaml') // 假设你有这个模板
@@ -554,6 +574,8 @@ const getAISuggestion = async () => {
           role: 'assistant',
           content: `当前被识别为任务类型（task），但任务模板未定义，因此未执行具体操作。`
        })
+
+      isLoading.value = false
     }
 
   } catch (err) {
@@ -562,6 +584,7 @@ const getAISuggestion = async () => {
       role: 'assistant',
       content: '❌ AI 生成建议失败，请稍后重试。'
     })
+    isLoading.value = false
   }
 
   scrollToBottom()
@@ -690,4 +713,28 @@ const getAISuggestion = async () => {
     background-color: #eee;
   }
 }
+
+.loading-dot {
+  margin-right: 6px;
+  font-size: 0.9rem;
+  color: #666;
+}
+.dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-left: 2px;
+  border-radius: 50%;
+  background-color: #999;
+  animation: blink 1.4s infinite both;
+}
+.dot1 { animation-delay: 0s; }
+.dot2 { animation-delay: 0.2s; }
+.dot3 { animation-delay: 0.4s; }
+
+@keyframes blink {
+  0%, 80%, 100% { opacity: 0; }
+  40% { opacity: 1; }
+}
+
 </style>
