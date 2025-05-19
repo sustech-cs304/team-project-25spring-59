@@ -52,6 +52,9 @@ import { ref, nextTick, defineProps, defineEmits } from 'vue'
 import {SILICON_API} from "../../configs/aiAdvisor_config.js"
 import yaml from 'js-yaml'
 
+//定义最多存10条信息，在silicon中限制
+const MAX_HISTORY = 10
+
 interface Message {
   role: 'user' | 'assistant'
   content: string
@@ -77,6 +80,17 @@ const scrollToBottom = () => {
   })
 }
 
+//添加聊天记录的统一代码
+const addMessage = (msg: Message) => {
+  chatHistory.value.push(msg)
+
+  // 如果超出最大长度，移除最前面的旧消息
+  if (chatHistory.value.length > MAX_HISTORY) {
+    chatHistory.value.splice(0, chatHistory.value.length - MAX_HISTORY)
+  }
+
+  scrollToBottom()
+}
 
 
 
@@ -85,11 +99,11 @@ const getAISuggestionFlow = async () => {
   const content = userPrompt.value.trim()
   if (!content) return
 
-  chatHistory.value.push({ role: 'user', content })
+  addMessage({ role: 'user', content })
   userPrompt.value = ''
 
   // 插入 assistant 占位消息
-  chatHistory.value.push({ role: 'assistant', content: '' })
+  addMessage({ role: 'assistant', content: '' })
   scrollToBottom()
 
   const assistantIndex = chatHistory.value.length - 1
@@ -178,7 +192,7 @@ const getAISuggestionFull = async () => {
   if (!content) return
 
   // 显示用户输入
-  chatHistory.value.push({ role: 'user', content })
+  addMessage({ role: 'user', content })
   userPrompt.value = ''
 
   try {
@@ -224,13 +238,13 @@ const getAISuggestionFull = async () => {
     // 获取 AI 回复内容（确保格式匹配）
     const replyText = result.choices?.[0]?.message?.content || 'AI 无响应'
 
-    chatHistory.value.push({
+    addMessage({
       role: 'assistant',
       content: replyText
     })
   } catch (error) {
     console.error('AI 接口调用失败:', error)
-    chatHistory.value.push({
+    addMessage({
       role: 'assistant',
       content: '获取建议失败，请稍后重试。'
     })
@@ -504,7 +518,7 @@ const getAISuggestion = async () => {
   if (!content) return
 
   // 添加用户消息
-  chatHistory.value.push({ role: 'user', content })
+  addMessage({ role: 'user', content })
   userPrompt.value = ''
 
   //设置ai思考中的占位为true
@@ -517,7 +531,7 @@ const getAISuggestion = async () => {
     console.log('[分类结果] 输入类型为:', type)
 
     // 2. 将分类信息显示出来（可选）!!!分类信息不能显示，这样会污染chathistory
-    // chatHistory.value.push({
+    // addMessage({
     //   role: 'assistant',
     //   content: `输入被识别为「${type === 'task' ? '任务指令' : '闲聊对话'}」`
     // })
@@ -526,14 +540,14 @@ const getAISuggestion = async () => {
     if (type === 'chat') {
       //首先提炼用户的核心信息
       const coreMeaning = await extractMainMeaning(content)
-      // chatHistory.value.push({
+      // addMessage({
       //   role: 'assistant',
       //   content: `用户的核心信息为：「${coreMeaning}」`
       // })
 
       //然后判断用户的意图
       const detectedIntent = await detectUserIntent(content)
-      // chatHistory.value.push({
+      // addMessage({
       //   role: 'assistant',
       //   content: `用户的意图为：「${detectedIntent}」`
       // })
@@ -541,7 +555,7 @@ const getAISuggestion = async () => {
 
       // 直接对闲聊内容进行回复
       const reply = await generatePersonaResponse(content, detectedIntent, coreMeaning)
-      chatHistory.value.push({ role: 'assistant', content: reply })
+      addMessage({ role: 'assistant', content: reply })
 
       isLoading.value = false
 
@@ -569,8 +583,8 @@ const getAISuggestion = async () => {
       //
       // const taskResult = await taskRes.json()
       // const reply = taskResult.choices?.[0]?.message?.content?.trim() || 'assistant 无响应'
-      // chatHistory.value.push({ role: 'assistant', content: reply })
-       chatHistory.value.push({
+      // addMessage({ role: 'assistant', content: reply })
+       addMessage({
           role: 'assistant',
           content: `当前被识别为任务类型（task），但任务模板未定义，因此未执行具体操作。`
        })
@@ -580,7 +594,7 @@ const getAISuggestion = async () => {
 
   } catch (err) {
     console.error('[getAISuggestionFull] 出错:', err)
-    chatHistory.value.push({
+    addMessage({
       role: 'assistant',
       content: '❌ AI 生成建议失败，请稍后重试。'
     })
