@@ -505,9 +505,167 @@ const generatePersonaResponse = async (
 }
 
 
+/**
+ * 提炼用户任务目标（例如“生成训练计划”、“分析数据”等）
+ * 使用模板 extract_task_goal.yaml
+ * @param userInput 用户的原始输入
+ * @returns 返回一句话核心目标描述
+ */
+const extractTaskGoal = async (userInput: string): Promise<string> => {
+  try {
+    // 加载提示词模板
+    const template = await loadYamlPrompt('extract_task_goal.yaml')
+    // 构建提示词内容
+    const prompt = buildPrompt(template, { user_input: userInput })
+
+    const response = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${SILICON_API}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'Qwen/QwQ-32B',
+        messages: [{ role: 'user', content: prompt }],
+        stream: false,
+        max_tokens: 50,
+        temperature: 0.3,
+        top_p: 0.8,
+        response_format: { type: 'text' }
+      })
+    })
+
+    const result = await response.json()
+    const reply = result.choices?.[0]?.message?.content?.trim()
+
+    if (reply) {
+      console.log('[extractTaskGoal] 提炼成功:', reply)
+      return reply
+    } else {
+      console.warn('[extractTaskGoal] 无内容返回')
+      return '（未识别目标）'
+    }
+  } catch (err) {
+    console.error('[extractTaskGoal] 出错:', err)
+    return '（提炼失败）'
+  }
+}
+
+
+/**
+ * 使用提示词 detect_task_category.yaml 判断用户任务类型
+ * @param taskGoal 用户任务目标（例如“生成周训练计划”）
+ * @returns 返回一个分类标签：analyze_data | analyze_plan | generate_plan | delete_plan | other
+ */
+const detectTaskCategory = async (taskGoal: string): Promise<string> => {
+  try {
+    // 加载 YAML 模板
+    const template = await loadYamlPrompt('detect_task_category.yaml')
+
+    // 构建替换变量后的提示内容
+    const prompt = buildPrompt(template, { task_goal: taskGoal })
+
+    const response = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${SILICON_API}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'Qwen/QwQ-32B',
+        messages: [{ role: 'user', content: prompt }],
+        stream: false,
+        max_tokens: 20,
+        temperature: 0.2,
+        top_p: 0.8,
+        response_format: { type: 'text' }
+      })
+    })
+
+    const result = await response.json()
+    const label = result.choices?.[0]?.message?.content?.trim().toLowerCase()
+
+    // 校验返回值是否是预设标签
+    const validLabels = ['analyze_data', 'analyze_plan', 'generate_plan', 'delete_plan', 'other']
+    if (label && validLabels.includes(label)) {
+      console.log('[detectTaskCategory] 任务分类识别成功:', label)
+      return label
+    }
+
+    console.warn('[detectTaskCategory] 未识别有效标签:', label)
+    return 'other'
+  } catch (err) {
+    console.error('[detectTaskCategory] 出错:', err)
+    return 'other'
+  }
+}
 
 
 
+//这是我定义的提取的时间范围的结构体
+interface ExtractedDateRange {
+  status: 'ok' | 'missing'
+  start_date?: string
+  end_date?: string
+  message?: string
+}
+
+/**
+ * 使用 extract_date_range.yaml 模板，从用户输入中提取分析时间范围
+ * @param userInput 用户自然语言输入
+ * @returns 返回格式化的时间段数据，或缺失提示
+ */
+const extractDateRange = async (userInput: string): Promise<ExtractedDateRange> => {
+  try {
+    const template = await loadYamlPrompt('extract_date_range.yaml')
+    const prompt = buildPrompt(template, { user_input: userInput })
+
+    const response = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${SILICON_API}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'Qwen/QwQ-32B',
+        messages: [{ role: 'user', content: prompt }],
+        stream: false,
+        max_tokens: 150,
+        temperature: 0,
+        top_p: 0.8,
+        response_format: { type: 'text' }
+      })
+    })
+
+    const result = await response.json()
+    const reply = result.choices?.[0]?.message?.content?.trim()
+
+    if (!reply) throw new Error('AI 无有效返回')
+
+    const parsed = JSON.parse(reply)
+    if (parsed.status === 'ok' && parsed.start_date && parsed.end_date) {
+      return parsed
+    } else if (parsed.status === 'missing') {
+      return parsed
+    } else {
+      throw new Error('返回格式无效')
+    }
+  } catch (err) {
+    console.error('[extractDateRange] 出错:', err)
+    return {
+      status: 'missing',
+      message: '解析时间范围失败，请确保输入包含时间信息。'
+    }
+  }
+}
+
+
+
+
+
+
+
+//----------------------------------------下面是核心pipeline集成所有的聊天方法--------------------------------------------------
 
 //显示是否ai正在思考的变量
 const isLoading = ref(false)
@@ -584,10 +742,29 @@ const getAISuggestion = async () => {
       // const taskResult = await taskRes.json()
       // const reply = taskResult.choices?.[0]?.message?.content?.trim() || 'assistant 无响应'
       // addMessage({ role: 'assistant', content: reply })
-       addMessage({
-          role: 'assistant',
-          content: `当前被识别为任务类型（task），但任务模板未定义，因此未执行具体操作。`
-       })
+      //  addMessage({
+      //     role: 'assistant',
+      //     content: `当前被识别为任务类型（task），但任务模板未定义，因此未执行具体操作。`
+      //  })
+      const taskGoal = await extractTaskGoal(content)
+      // taskGoal 现在是如“分析运动计划”、“生成周训练表”这样的字符串
+      // addMessage({ role: 'assistant', content: taskGoal })
+      console.log('[Test:extractTaskGoal]: ',taskGoal)
+
+      const category = await detectTaskCategory(taskGoal)
+      // addMessage({ role: 'assistant', content: category })
+      console.log('[Test:detectTaskCategory]:',category)
+
+      const timeRange = await extractDateRange(content)
+      if (timeRange.status === 'ok') {
+        console.log('时间范围：', timeRange.start_date, '到', timeRange.end_date)
+      } else {
+        console.warn('时间缺失：', timeRange.message)
+        addMessage({ role: 'assistant', content: "未给出明确时间范围" })
+      }
+
+
+
 
       isLoading.value = false
     }
