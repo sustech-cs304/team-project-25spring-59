@@ -1,0 +1,13 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`DropdownMenu.vue > matches snapshot 1`] = `
+"<div data-v-d18104a4="" class="dropdown-menu">
+  <div data-v-d18104a4="" class="menu-content">
+    <div data-v-d18104a4="" class="first-row">
+      <div data-v-d18104a4="" class="mock-music-control">MusicControl</div>
+      <div data-v-d18104a4="" class="mock-search-button">SearchButton</div>
+    </div>
+    <div data-v-d18104a4="" class="mock-toggle-switch">ToggleSwitch</div>
+  </div>
+</div>"
+`;
