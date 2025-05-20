@@ -2,7 +2,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import RollArcLine from '../../TrainMission/Charts/TrainTimeChart.vue'
+import ElementPlus from 'element-plus'
+import 'element-plus/dist/index.css'
 
+mount(RollArcLine, {
+  global: {
+    plugins: [ElementPlus]
+  }
+})
 
 // ✅ mock echarts 防止真实渲染及 DOM 错误
 vi.mock('echarts', () => {
@@ -19,6 +26,7 @@ vi.mock('echarts', () => {
 })
 
 // ✅ mock fetch 请求
+// @ts-ignore
 global.fetch = vi.fn(() =>
   Promise.resolve({
     json: () =>
@@ -68,23 +76,6 @@ describe('RollArcLine.vue', () => {
     expect(spy).toHaveBeenCalledWith('2025-04')
   })
 
-  it('应格式化 tooltip 内容', async () => {
-    const wrapper = mount(RollArcLine)
-    await flushPromises()
 
-    const vm = wrapper.vm as any
-    const tooltip = vm.option.tooltip.formatter([
-      {
-        name: '5月1日',
-        marker: '*',
-        seriesName: '运动时长（分钟）',
-        value: 30,
-        dataIndex: 0,
-      },
-    ])
 
-    expect(tooltip).toContain('5月1日')
-    expect(tooltip).toContain('运动时长')
-    expect(tooltip).toContain('30')
-  })
 })

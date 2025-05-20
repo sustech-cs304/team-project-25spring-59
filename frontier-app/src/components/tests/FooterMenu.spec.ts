@@ -1,8 +1,9 @@
-
+/// <reference types="vitest" />
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, fireEvent } from '@testing-library/vue'
 import FooterMenu from '../FooterMenu.vue'
 import { useRouter } from 'vue-router'
+
 
 // ✅ mock vue-router push 方法
 vi.mock('vue-router', () => {
@@ -10,12 +11,13 @@ vi.mock('vue-router', () => {
     useRouter: vi.fn()
   }
 })
-/// <reference types="vitest" />
+
 describe('FooterMenu.vue', () => {
   let pushMock: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
     pushMock = vi.fn()
+    // @ts-ignore
     ;(useRouter as unknown as vi.Mock).mockReturnValue({ push: pushMock })
 
     // 设置用户 ID 以测试 handleTrainMissionClick
