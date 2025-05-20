@@ -1,7 +1,7 @@
 /// <reference types="vitest" />
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
-import RollArcLine from '../../../../TrainMission/Charts/TrainTimeChart.vue'
+import RollArcLine from '../../../TrainMission/Charts/TrainTimeChart.vue'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 
