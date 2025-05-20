@@ -25,6 +25,7 @@ from databases.database import get_db, SessionLocal
 from databases import models, crud
 from databases.init_db import init_db, insert_mock_data
 from sqlalchemy.orm import Session
+from sqlalchemy import text, or_, and_
 
 current_user_id = None
 app = FastAPI()
@@ -69,7 +70,7 @@ def startup_db_client():
                     record_start_time = record_start_time.replace(tzinfo=None)
                 
                 # 根据start_time与当前时间比较设置字段
-                if record_start_time < now:
+                if record.end_time < now:
                     record.is_completed = True
                     record.record_type = "record"
                 else:
@@ -226,6 +227,10 @@ class EndChallengeRequest(BaseModel):
 class RecordIdRequest(BaseModel):
     record_id: int
 
+class PlanTimeRequest(BaseModel):
+    user_id: int
+    minutes: int
+
 @app.get("/")
 def read_root():
     return {"message": "FastAPI 服务器运行成功！"}
@@ -323,18 +328,25 @@ def get_user_completed_records(request: UserIdRequest, db: Session = Depends(get
 
 @app.post("/generate-user-records/upcoming-plans")
 def get_user_upcoming_plans(request: UserIdRequest, db: Session = Depends(get_db)):
-    """获取指定用户的即将进行的计划（record_type是plan，is_completed是False，且end_time不早于当天时间一天以上）"""
+    """获取指定用户的即将进行的计划（计划未完成，且满足：当前时间<开始时间 或 （结束时间<当前时间<结束时间+1天））"""
     try:
         # 获取当前时间用于比较
         now = datetime.now()
-        one_day_ago = now - timedelta(days=1)
         
         # 获取用户的训练记录 - 即将进行的计划
         records = db.query(models.TrainingRecord).filter(
             models.TrainingRecord.user_id == request.user_id,
             models.TrainingRecord.record_type == "plan",
             models.TrainingRecord.is_completed == False,
-            models.TrainingRecord.end_time >= one_day_ago
+            or_(
+                # 条件1: 当前时间<开始时间（未来计划）
+                models.TrainingRecord.start_time > now,
+                # 条件2: 结束时间<当前时间<结束时间+1天（刚结束的计划）
+                and_(
+                    models.TrainingRecord.end_time < now,
+                    models.TrainingRecord.end_time > now - timedelta(days=1)
+                )
+            )
         ).all()
         
         # 格式化返回结果
@@ -1625,5 +1637,90 @@ def get_leaderboard(db: Session = Depends(get_db)):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取排行榜失败: {str(e)}")
+
+@app.post("/generate-user-records/starting-soon")
+def get_plans_starting_soon(request: PlanTimeRequest, db: Session = Depends(get_db)):
+    """获取指定用户在x分钟后即将开始的运动计划"""
+    try:
+        # 获取当前时间用于比较
+        now = datetime.now()
+        future_time = now + timedelta(minutes=request.minutes)
+        
+        # 获取用户的训练记录 - 即将开始的计划
+        records = db.query(models.TrainingRecord).filter(
+            models.TrainingRecord.user_id == request.user_id,
+            models.TrainingRecord.record_type == "plan",
+            models.TrainingRecord.is_completed == False,
+            models.TrainingRecord.start_time >= now,
+            models.TrainingRecord.start_time <= future_time
+        ).all()
+        
+        # 格式化返回结果
+        result = []
+        for record in records:
+            record_dict = {
+                "id": record.id,
+                "user_id": record.user_id,
+                "start_time": record.start_time,
+                "end_time": record.end_time,
+                "activity_type": record.activity_type,
+                "duration_minutes": record.duration_minutes,
+                "is_completed": record.is_completed,
+                "record_type": record.record_type,
+                "reminder_time": record.reminder_time,
+                "distance": record.distance,
+                "calories": record.calories,
+                "average_heart_rate": record.average_heart_rate,
+                "max_heart_rate": record.max_heart_rate,
+                "minute_heart_rates": record.minute_heart_rates if record.minute_heart_rates else {}
+            }
+            result.append(record_dict)
+        
+        return {"records": result, "count": len(result), "time_window": f"当前至{request.minutes}分钟后"}
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取即将开始的计划失败: {str(e)}")
+
+@app.post("/generate-user-records/in-progress")
+def get_plans_in_progress(request: UserIdRequest, db: Session = Depends(get_db)):
+    """获取指定用户正在进行中的计划（当前时间在start_time和end_time之间且为plan的）"""
+    try:
+        # 获取当前时间用于比较
+        now = datetime.now()
+        
+        # 获取用户的训练记录 - 正在进行中的计划
+        records = db.query(models.TrainingRecord).filter(
+            models.TrainingRecord.user_id == request.user_id,
+            models.TrainingRecord.record_type == "plan",
+            models.TrainingRecord.is_completed == False,
+            models.TrainingRecord.start_time <= now,
+            models.TrainingRecord.end_time >= now
+        ).all()
+        
+        # 格式化返回结果
+        result = []
+        for record in records:
+            record_dict = {
+                "id": record.id,
+                "user_id": record.user_id,
+                "start_time": record.start_time,
+                "end_time": record.end_time,
+                "activity_type": record.activity_type,
+                "duration_minutes": record.duration_minutes,
+                "is_completed": record.is_completed,
+                "record_type": record.record_type,
+                "reminder_time": record.reminder_time,
+                "distance": record.distance,
+                "calories": record.calories,
+                "average_heart_rate": record.average_heart_rate,
+                "max_heart_rate": record.max_heart_rate,
+                "minute_heart_rates": record.minute_heart_rates if record.minute_heart_rates else {}
+            }
+            result.append(record_dict)
+        
+        return {"records": result, "count": len(result), "status": "正在进行中"}
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取正在进行中的计划失败: {str(e)}")
 
 
