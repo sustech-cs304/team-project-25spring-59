@@ -10,7 +10,7 @@ vi.mock('echarts', () => {
 
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
-import DynamicBar from '../../TrainMission/Charts/TimeBar.vue'
+import DynamicBar from '../../../../TrainMission/Charts/TimeBar.vue'
 
 describe('DynamicBar.vue', () => {
   it('应挂载并渲染 chart 容器', () => {
