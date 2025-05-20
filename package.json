@@ -1,0 +1,8 @@
+{
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@vitejs/plugin-vue": "^5.2.4",
+    "@vitest/ui": "^3.1.4",
+    "flush-promises": "^1.0.2"
+  }
+}
