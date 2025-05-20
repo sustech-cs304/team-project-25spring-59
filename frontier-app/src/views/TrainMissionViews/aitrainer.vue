@@ -661,6 +661,98 @@ const extractDateRange = async (userInput: string): Promise<ExtractedDateRange> 
 
 
 
+/**
+ * 从后端获取训练数据并使用大模型分析
+ * @param userInput 用户输入的原始内容
+ * @param dateRange 提取的时间范围对象（包含 start_date 和 end_date）
+ * @param taskGoal 提炼出的任务目标（如“分析运动数据”）
+ * @param userId 用户 ID（用于请求数据）
+ * @returns AI 分析结果
+ */
+const analyzeDataWithModel = async (
+  userInput: string,
+  dateRange: ExtractedDateRange,
+  taskGoal: string,
+  userId: string
+): Promise<string> => {
+  try {
+    // 校验时间范围
+    if (dateRange.status !== 'ok' || !dateRange.start_date || !dateRange.end_date) {
+      return dateRange.message || '❌ 无法识别时间范围，请补充具体日期。'
+    }
+
+    // Step 1: 获取训练数据
+    const apiResp = await fetch(
+      `http://localhost:8000/stats/weekly-trend?start_date=${dateRange.start_date}&end_date=${dateRange.end_date}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: parseInt(userId) })
+      }
+    )
+
+    if (!apiResp.ok) throw new Error('训练数据接口请求失败')
+
+    const activityData = await apiResp.json()
+
+    // Step 2: 构建并发送提示词请求
+    const template = await loadYamlPrompt('analyze_data.yaml')
+    const prompt = buildPrompt(template, {
+      user_input: userInput,
+      task_goal: taskGoal,
+      activity_data: JSON.stringify(activityData)
+    })
+
+    const modelResp = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${SILICON_API}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'Qwen/QwQ-32B',
+        messages: [{ role: 'user', content: prompt }],
+        stream: false,
+        max_tokens: 400,
+        temperature: 0.7,
+        top_p: 0.9,
+        response_format: { type: 'text' }
+      })
+    })
+
+    const modelJson = await modelResp.json()
+    return modelJson.choices?.[0]?.message?.content?.trim() || '❌ 分析失败，AI 无响应'
+
+  } catch (err) {
+    console.error('[analyzeDataWithModel] 错误:', err)
+    return '❌ 分析训练数据失败，请稍后重试。'
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -761,6 +853,18 @@ const getAISuggestion = async () => {
       } else {
         console.warn('时间缺失：', timeRange.message)
         addMessage({ role: 'assistant', content: "未给出明确时间范围" })
+      }
+
+      if(category === 'analyze_data' ){
+        const result = await analyzeDataWithModel(
+        content,
+        timeRange,     // e.g. { status: 'ok', start_date: '2025-04-01', end_date: '2025-04-07' }
+        taskGoal,
+        localStorage.getItem('user_id')                     // 用户 ID
+        )
+        addMessage({ role: 'assistant', content: result })
+      }else {
+        addMessage({ role: 'assistant', content: "任务未定义" })
       }
 
 
