@@ -1,4 +1,4 @@
-/// <reference types="vitest" />
+
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, fireEvent } from '@testing-library/vue'
 import FooterMenu from '../FooterMenu.vue'
@@ -10,7 +10,7 @@ vi.mock('vue-router', () => {
     useRouter: vi.fn()
   }
 })
-
+/// <reference types="vitest" />
 describe('FooterMenu.vue', () => {
   let pushMock: ReturnType<typeof vi.fn>
 
