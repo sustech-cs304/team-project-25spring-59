@@ -937,7 +937,7 @@ const getAISuggestion = async () => {
         console.log('时间范围：', timeRange.start_date, '到', timeRange.end_date)
       } else {
         console.warn('时间缺失：', timeRange.message)
-        addMessage({ role: 'assistant', content: "未给出明确时间范围" })
+        addMessage({ role: 'assistant', content: "老师没有给阿罗娜具体的时间呢...(未给出明确时间范围)" })
       }
 
       if(category === 'analyze_data' ){
@@ -953,7 +953,7 @@ const getAISuggestion = async () => {
         chatHistory.value.push({ role: 'assistant', content: result })
       }
       else {
-        addMessage({ role: 'assistant', content: "任务未定义" })
+        addMessage({ role: 'assistant', content: "阿罗娜不知道怎么执行老师的任务呢...(任务未定义)" })
       }
 
 
@@ -966,7 +966,7 @@ const getAISuggestion = async () => {
     console.error('[getAISuggestionFull] 出错:', err)
     addMessage({
       role: 'assistant',
-      content: '❌ AI 生成建议失败，请稍后重试。'
+      content: '阿罗娜找不到建议内容了呢…(AI 生成建议失败)'
     })
     isLoading.value = false
   }
