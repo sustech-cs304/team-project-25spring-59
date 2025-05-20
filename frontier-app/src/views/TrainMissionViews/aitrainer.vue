@@ -51,6 +51,9 @@
 import { ref, nextTick, defineProps, defineEmits } from 'vue'
 import {SILICON_API} from "../../configs/aiAdvisor_config.js"
 import yaml from 'js-yaml'
+import dayjs from 'dayjs'
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore'
+dayjs.extend(isSameOrBefore)
 
 //定义最多存10条信息，在silicon中限制
 const MAX_HISTORY = 10
@@ -733,7 +736,89 @@ const analyzeDataWithModel = async (
 
 
 
+interface DailyPlan {
+  date: string
+  full_date: string
+  training_items: string[]
+}
 
+/**
+ * 从后端获取训练计划JI HUA并使用大模型分析
+ * @param userInput 用户输入的原始内容
+ * @param taskGoal 提炼出的任务目标（如“分析运动数据”）
+ * @param extractedDateRange 提取的时间范围对象（包含 start_date 和 end_date）
+ * @param userId 用户 ID（用于请求数据）,从localstorage.get("user_id")获取
+ * @returns AI 分析结果
+ */
+const analyzePlanWithModel = async (
+  userInput: string,
+  taskGoal: string,
+  extractedDateRange: ExtractedDateRange,
+  userId: string
+): Promise<string> => {
+  if (extractedDateRange.status !== 'ok' || !extractedDateRange.start_date || !extractedDateRange.end_date) {
+    throw new Error('时间范围无效')
+  }
+
+  const start = dayjs(extractedDateRange.start_date)
+  const end = dayjs(extractedDateRange.end_date)
+  const planData: Record<string, string> = {}
+
+  // 遍历每一天
+  for (let d = start; d.isSameOrBefore(end); d = d.add(1, 'day')) {
+    const dateStr = d.format('YYYY年M月D日') // 修改为带年份格式
+    try {
+      const res = await fetch('http://localhost:8000/get-daily-plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: userId,
+          date_str: dateStr
+        })
+      })
+
+      const data: DailyPlan = await res.json()
+      if (data.training_items && data.training_items.length > 0) {
+        planData[data.full_date] = data.training_items.join('，')
+      }
+    } catch (err) {
+      console.warn(`获取 ${dateStr} 计划失败`, err)
+    }
+  }
+
+
+  const planJson = JSON.stringify(planData, null, 2)
+
+  // 构造 Prompt
+  const template = await loadYamlPrompt('analyze_plan.yaml')
+  const prompt = buildPrompt(template, {
+    user_input: userInput,
+    task_goal: taskGoal,
+    plan_data: planJson
+  })
+
+  // 调用大模型分析
+  const response = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${SILICON_API}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: 'Qwen/QwQ-32B',
+      messages: [{ role: 'user', content: prompt }],
+      stream: false,
+      max_tokens: 400,
+      temperature: 0.6,
+      top_p: 0.9,
+      response_format: { type: 'text' }
+    })
+  })
+
+  const result = await response.json()
+  const reply = result.choices?.[0]?.message?.content?.trim()
+  return reply || '阿罗娜找不到训练计划的建议结果了…'
+}
 
 
 
@@ -863,7 +948,11 @@ const getAISuggestion = async () => {
         localStorage.getItem('user_id')                     // 用户 ID
         )
         addMessage({ role: 'assistant', content: result })
-      }else {
+      }else if (category === 'analyze_plan') {
+        const result = await analyzePlanWithModel(content, taskGoal, timeRange, localStorage.getItem('user_id'))
+        chatHistory.value.push({ role: 'assistant', content: result })
+      }
+      else {
         addMessage({ role: 'assistant', content: "任务未定义" })
       }
 
