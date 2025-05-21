@@ -23,6 +23,7 @@ const mockedAxios = axios as unknown as {
 vi.mock('element-plus', async (importOriginal) => {
   const original = await importOriginal()
   return {
+    // @ts-ignore
     ...original,
     ElMessage: {
       success: vi.fn(),

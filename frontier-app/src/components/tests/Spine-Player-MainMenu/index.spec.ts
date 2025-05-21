@@ -48,9 +48,11 @@ vi.mock('@/components/spine-player.js', () => ({
 
 vi.stubGlobal('WeakRef', class {
   constructor(value) {
+    // @ts-ignore
     this.value = value
   }
   deref() {
+    // @ts-ignore
     return this.value
   }
 })

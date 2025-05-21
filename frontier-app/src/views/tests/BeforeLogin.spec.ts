@@ -45,12 +45,15 @@ describe('BeforeLogin.vue', () => {
 
     // 这里模拟的 router.push 只是被调用了，但因为 mock，不会真的跳转
     // 验证触发流程结束并改变状态
+    // @ts-ignore
     expect(wrapper.vm.isLoading).toBe(true)
   })
 
   it('应初始化进度和状态文字', async () => {
     const wrapper = mount(BeforeLogin)
+    // @ts-ignore
     wrapper.vm.progress = 50
+    // @ts-ignore
     wrapper.vm.statusText = '加载中...'
     await nextTick()
 

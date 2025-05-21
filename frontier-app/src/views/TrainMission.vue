@@ -20,7 +20,10 @@
 
     </main>
 
-    <PlanList />
+    <section class="plans-container">
+      <PlanList />
+      <InprogressPlan />
+    </section>
 
     <SpinePlayer></SpinePlayer>
   </div>
@@ -30,6 +33,7 @@
 import Banner from '../components/TrainMission/Banner.vue' // 你根据实际路径调整
 import Header from '../components/TrainMission/Header.vue'
 import PlanList from '../components/TrainMission/MissionListVisualize/Planlist.vue'
+import InprogressPlan from "../components/TrainMission/MissionListVisualize/InprogressPlan.vue";
 import {ref, onMounted} from "vue";
 
 
@@ -79,6 +83,24 @@ main {
   position: relative;
   z-index: 1;
   padding: 0; // 去掉默认 padding
+}
+
+
+//横向展示的容器
+.plans-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 2rem;
+  padding: 2rem;
+  margin-left: 25rem;
+}
+
+// 可选：让每个计划组件宽度更合适
+.plans-container > * {
+  flex: 1 1 45%;
+  max-width: 600px;
 }
 
 </style>
