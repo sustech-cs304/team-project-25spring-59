@@ -28,6 +28,7 @@ function update(value) {
   }).then((response)=>{
     console.log(response)
     ElMessage({message: '更新成功', type: 'success',})
+    window.location.reload()
   }).catch((error)=>{
     console.log(error)
   })
@@ -162,13 +163,13 @@ onMounted(()=>{
                         type="number"
                         v-model="participant.current_value"
                         style="width: 150px"
-                        :disabled="!isMine(participant.user_id)"
+                        :disabled="!isMine(participant.user_id) || isEnd"
                     />
                   </el-col>
                   <el-col :span="6">
                     <el-button
                         type="primary"
-                        :disabled="!isMine(participant.user_id)"
+                        :disabled="!isMine(participant.user_id) || isEnd"
                         @click="update(participant.current_value)"
                     >更新</el-button>
                   </el-col>
