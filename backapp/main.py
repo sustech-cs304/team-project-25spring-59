@@ -328,7 +328,7 @@ def get_user_completed_records(request: UserIdRequest, db: Session = Depends(get
 
 @app.post("/generate-user-records/upcoming-plans")
 def get_user_upcoming_plans(request: UserIdRequest, db: Session = Depends(get_db)):
-    """获取指定用户的即将进行的计划（计划未完成，且满足：当前时间<开始时间 或 （结束时间<当前时间<结束时间+1天））"""
+    """获取指定用户的即将进行的计划（计划未完成，且满足：当前时间<开始时间 或 （结束时间<当前时间<结束时间））"""
     try:
         # 获取当前时间用于比较
         now = datetime.now()
@@ -338,15 +338,7 @@ def get_user_upcoming_plans(request: UserIdRequest, db: Session = Depends(get_db
             models.TrainingRecord.user_id == request.user_id,
             models.TrainingRecord.record_type == "plan",
             models.TrainingRecord.is_completed == False,
-            or_(
-                # 条件1: 当前时间<开始时间（未来计划）
-                models.TrainingRecord.start_time > now,
-                # 条件2: 结束时间<当前时间<结束时间+1天（刚结束的计划）
-                and_(
-                    models.TrainingRecord.end_time < now,
-                    models.TrainingRecord.end_time > now - timedelta(days=1)
-                )
-            )
+            models.TrainingRecord.start_time > now
         ).all()
         
         # 格式化返回结果
@@ -377,18 +369,17 @@ def get_user_upcoming_plans(request: UserIdRequest, db: Session = Depends(get_db
 
 @app.post("/generate-user-records/missed-plans")
 def get_user_missed_plans(request: UserIdRequest, db: Session = Depends(get_db)):
-    """获取指定用户的已错过的计划（record_type是plan，end_time早于当前时间一天以上，且is_completed是False）"""
+    """获取指定用户的已错过的计划（record_type是plan，end_time早于当前时间，且is_completed是False）"""
     try:
         # 获取当前时间用于比较
         now = datetime.now()
-        one_day_ago = now - timedelta(days=1)
         
         # 获取用户的训练记录 - 已错过的计划
         records = db.query(models.TrainingRecord).filter(
             models.TrainingRecord.user_id == request.user_id,
             models.TrainingRecord.record_type == "plan",
             models.TrainingRecord.is_completed == False,
-            models.TrainingRecord.end_time < one_day_ago
+            models.TrainingRecord.end_time < now
         ).all()
         
         # 格式化返回结果
@@ -1087,9 +1078,10 @@ def create_post_api(
     files: Optional[List[UploadFile]] = File(None),
     db: Session = Depends(get_db),
 ):
-    
+    print("files:")
+    print(files)
     db_post = crud.create_post(db=db, user_id=user_id, content=content)
-
+    
     if files:
         for file in files:
             filename = f"{uuid.uuid4().hex}_{file.filename}"
@@ -1614,18 +1606,16 @@ def get_user_details(request: UserIdRequest, db: Session = Depends(get_db)):
         # 获取用户的训练记录
         records = crud.get_training_records_by_user(db, user_id=request.user_id)
         
-        # 获取当前时间和一天前的时间用于比较
         now = datetime.now()
-        one_day_ago = now - timedelta(days=1)
         
         # 计算不同类型记录的数量
         completed_records = len([r for r in records if r.record_type == "record"])
         
-        # 计算未过期的待完成计划(pending_plans): record_type是plan且is_completed是假的且end_time不早于当前时间一天以上
-        pending_plans = len([r for r in records if r.record_type == "plan" and r.is_completed == False and r.end_time >= one_day_ago])
+        # 计算未过期的待完成计划(pending_plans): record_type是plan且is_completed是假的且end_time不早于当前时间
+        pending_plans = len([r for r in records if r.record_type == "plan" and r.is_completed == False and r.end_time >= now])
         
-        # 计算已过期未完成的计划(expired_uncompleted_plans): record_type是plan且is_completed是假的且end_time早于当前时间一天以上
-        expired_uncompleted_plans = len([r for r in records if r.record_type == "plan" and r.is_completed == False and r.end_time < one_day_ago])
+        # 计算已过期未完成的计划(expired_uncompleted_plans): record_type是plan且is_completed是假的且end_time早于当前时间
+        expired_uncompleted_plans = len([r for r in records if r.record_type == "plan" and r.is_completed == False and r.end_time < now])
         
         # 添加统计信息
         user_details["statistics"] = {
