@@ -1,17 +1,24 @@
 <script setup>
 
-import {onMounted, reactive, ref, watch} from "vue";
+import {onMounted, reactive, ref} from "vue";
 import {ArrowLeftBold, ArrowRightBold} from "@element-plus/icons-vue";
 import request from "../../utils/request.js";
 import {getFullDate} from "../../utils/date.js";
+import {ElMessage} from "element-plus";
 
+const userId = localStorage.getItem('user_id')
 const props = defineProps(['gymId'])
 const groupByDate = reactive({})
 const dateList = reactive({})
 const currentCourses = reactive({data: []})
+const personalCourses = reactive([])
 
 const index = ref(0)
 const range = ref(5)
+
+const isReserved = ((courseId)=>{
+  return personalCourses.indexOf(courseId) !== -1;
+})
 
 function processCourses(coursesData) {
   coursesData.forEach((courseInfo)=>{
@@ -34,6 +41,12 @@ function processCourses(coursesData) {
   console.log(currentCourses.data);
 }
 
+function getPersonalCourses(data) {
+  data.forEach((course)=>{
+    personalCourses.push(course.courseId);
+  })
+}
+
 function reserveCourse(courseId) {
   console.log(localStorage)
   request({
@@ -45,16 +58,29 @@ function reserveCourse(courseId) {
     }
   }).then((response)=>{
     console.log(response)
+    ElMessage({message: '预定成功', type: 'success',})
+    window.location.reload()
   }).catch((error)=>{
     console.log(error)
+    ElMessage({message: '预约失败', type: 'error',})
   })
 }
 
 onMounted(()=>{
+  //  get all courses from the gymId
   request.get(`/gym/getCourses/${props.gymId}`)
       .then((response) => {
         console.log(response);
         processCourses(response.data);
+      })
+      .catch((error) => {
+        console.log(error)
+      })
+  // get all courses that the user reserved
+  request.get(`/course/getReservedCourses/${userId}`)
+      .then((response) => {
+        console.log(response);
+        getPersonalCourses(response.data);
       })
       .catch((error) => {
         console.log(error)
@@ -108,7 +134,17 @@ onMounted(()=>{
         <el-table-column label="上课时间" prop="startTime"></el-table-column>
         <el-table-column label="操作" :fixed="'right'">
           <template #default="scope">
-            <el-button type="primary" @click="reserveCourse(scope.row.id)">预定</el-button>
+            <el-button
+                v-if="isReserved(scope.row.id)"
+                type="info"
+                disabled
+                @click="reserveCourse(scope.row.id)"
+            >已预定</el-button>
+            <el-button
+                v-else
+                type="primary"
+                @click="reserveCourse(scope.row.id)"
+            >预定</el-button>
           </template>
         </el-table-column>
       </el-table>
