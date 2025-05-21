@@ -1146,13 +1146,22 @@ def create_challenge(challenge: ChallengeCreate, db: Session = Depends(get_db)):
         if challenge.start_date >= challenge.end_date:
             raise HTTPException(status_code=400, detail="结束日期必须晚于开始日期")
         
-        # 验证挑战类型
-        valid_types = ['distance', 'calories', 'workouts', 'duration']
-        if challenge.challenge_type not in valid_types:
-            raise HTTPException(status_code=400, detail=f"挑战类型必须是以下之一: {', '.join(valid_types)}")
+        # # 验证挑战类型
+        # valid_types = ['distance', 'calories', 'workouts', 'duration']
+        # if challenge.challenge_type not in valid_types:
+        #     raise HTTPException(status_code=400, detail=f"挑战类型必须是以下之一: {', '.join(valid_types)}")
         
+        # 根据开始和结束时间确定状态
+        now = datetime.now()
+        status = ""
+        if now < challenge.start_date:
+            status = "即将开始"
+        elif now > challenge.end_date:
+            status = "已结束"
+        else:
+            status = "进行中"
+            
         # 创建挑战
-        
         description = challenge.description if challenge.description is not None else ""
         db_challenge = crud.create_challenge(
             db=db,
@@ -1163,6 +1172,7 @@ def create_challenge(challenge: ChallengeCreate, db: Session = Depends(get_db)):
             challenge_type=challenge.challenge_type,
             target_value=challenge.target_value,
             created_by=challenge.created_by,
+            status=status  # 添加状态字段
         )
         return db_challenge
     
