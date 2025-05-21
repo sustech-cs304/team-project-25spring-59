@@ -1,38 +1,38 @@
 <script setup>
 
-import {onMounted, reactive, ref, watch} from "vue";
+import {onMounted, reactive, ref} from "vue";
 import request from "../../utils/request.js";
+import {ElMessage} from "element-plus";
 
-const userId = ref(1)
+const userId = localStorage.getItem('user_id')
 const personalCourses = reactive({})
 
 // sort the reservation records by reservation time from large to small
-watch(
-    personalCourses,
-    async (newValue, oldValue)=>{
-      newValue.data.sort((a, b)=>new Date(b.reservationTime) - new Date(a.reservationTime))
-    }
-)
+function processData(data) {
+  personalCourses.data = data;
+  personalCourses.data.sort((a, b)=>new Date(b.reservationTime) - new Date(a.reservationTime))
+}
 
-function denyReservation(courseId, gymId) {
-  console.log(courseId, gymId)
+function denyReservation(courseId) {
+  console.log(courseId)
   request({
     method: "POST",
-    url: '/gym/denyReservation',
+    url: '/gym/cancelCourseReservation',
     data: {
       userId: userId,
       courseId: courseId,
-      gymId: gymId,
     }
   }).then((response)=>{
     console.log(response)
+    ElMessage({message: '已取消课程', type: 'success',})
+    window.location.reload()
   }).catch((error)=>{
     console.log(error)
   })
 }
 
 onMounted(()=>{
-  request.get(`/gym/getPersonalCourses/${userId}`)
+  request.get(`/course/getReservedCourses/${userId}`)
       .then((response) => {
         console.log(response);
         personalCourses.data = response.data;
@@ -53,10 +53,7 @@ onMounted(()=>{
         <el-table-column label="上课时间" prop="startTime"></el-table-column>
         <el-table-column label="操作" :fixed="'right'">
           <template #default="scope">
-            <el-button
-                type="danger"
-                @click="denyReservation(scope.row.courseId, scope.row.gymId)"
-            >取消预定</el-button>
+            <el-button type="danger" @click="denyReservation(scope.row.courseId)">取消预定</el-button>
           </template>
         </el-table-column>
       </el-table>

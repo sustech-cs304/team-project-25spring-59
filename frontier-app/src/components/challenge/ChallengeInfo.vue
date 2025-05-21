@@ -1,16 +1,19 @@
 <script setup>
 
-import {onMounted, reactive, watch, ref, computed} from "vue";
+import {onMounted, reactive, ref, computed} from "vue";
 import request from "../../utils/request.js";
 import {UserFilled} from "@element-plus/icons-vue";
 import {ElMessage} from "element-plus";
 
+const userId = Number(localStorage.getItem('user_id'))
 const props = defineProps(['challengeId'])
 const challenge = reactive({});
 const challengeInfo = reactive({data: {}})
 const participants = reactive({})
 
-const isMine = ((id)=>{return id === Number(localStorage.getItem('user_id'))})
+const isMine = ((id)=>{return id === userId})
+const isJoined = ref(false)
+const isEnd = computed(()=>{return challengeInfo.data.status === '已结束'})
 
 function update(value) {
   console.log(value)
@@ -19,7 +22,7 @@ function update(value) {
     url: '/challenges/update-progress',
     data: {
       challenge_id: props.challengeId,
-      user_id: localStorage.getItem('user_id'),
+      user_id: userId,
       current_value: value,
     },
   }).then((response)=>{
@@ -40,6 +43,8 @@ function endChallenge() {
     },
   }).then((response)=>{
     console.log(response)
+    ElMessage({message: '已结束挑战', type: 'success',})
+    window.location.reload()
   }).catch((error)=>{
     console.log(error)
   })
@@ -52,10 +57,12 @@ function joinChallenge() {
     url: '/challenges/join',
     data: {
       challenge_id: props.challengeId,
-      user_id: localStorage.getItem('user_id')
+      user_id: userId
     },
   }).then((response)=>{
     console.log(response)
+    ElMessage({message: '加入成功', type: 'success',})
+    window.location.reload()
   }).catch((error)=>{
     console.log(error)
   })
@@ -64,6 +71,10 @@ function joinChallenge() {
 function processData(data) {
   challengeInfo.data = data.challenge;
   loadParticipants(data.leaderboard);
+  // check if the user has joined the challenge
+  const participantList = Array.from(data.leaderboard, ({ user_id })=> user_id)
+  isJoined.value = participantList.indexOf(userId) !== -1;
+  console.log(isJoined.value)
 }
 
 function loadParticipants(list) {
@@ -100,12 +111,25 @@ onMounted(()=>{
       <el-card>
         <el-descriptions :title="challengeInfo.data.title">
           <template #extra>
-            <el-button type="primary" @click="joinChallenge">加入挑战</el-button>
-            <el-button type="primary" @click="endChallenge" v-if="isMine(challengeInfo.data.created_by)">结束挑战</el-button>
+            <el-button v-if="isJoined" type="info" disabled>已加入</el-button>
+            <el-button v-else type="primary" @click="joinChallenge">加入挑战</el-button>
+            <el-button
+                v-if="isMine(challengeInfo.data.created_by) && !isEnd"
+                type="primary"
+                @click="endChallenge"
+            >结束挑战</el-button>
+            <el-button
+                v-else-if="isMine(challengeInfo.data.created_by) && isEnd"
+                type="info"
+                disabled
+            >结束挑战</el-button>
           </template>
           <el-descriptions-item label="创建者：">{{ challengeInfo.data.created_by }}</el-descriptions-item>
           <el-descriptions-item label="挑战类型：">
             <el-tag>{{ challengeInfo.data.challenge_type }}</el-tag>
+          </el-descriptions-item>
+          <el-descriptions-item label="挑战状态：">
+            <el-tag>{{ challengeInfo.data.status }}</el-tag>
           </el-descriptions-item>
           <el-descriptions-item label="挑战说明：">{{ challengeInfo.data.description }}</el-descriptions-item>
           <el-descriptions-item label="目标：">{{ challengeInfo.data.target_value }}</el-descriptions-item>
@@ -141,7 +165,11 @@ onMounted(()=>{
                     />
                   </el-col>
                   <el-col :span="6">
-                    <el-button type="primary" @click="update(participant.current_value)">更新</el-button>
+                    <el-button
+                        type="primary"
+                        :disabled="!isMine(participant.user_id)"
+                        @click="update(participant.current_value)"
+                    >更新</el-button>
                   </el-col>
                 </el-row>
                 <el-tag type="primary">{{ participant.completed }}</el-tag><br/>

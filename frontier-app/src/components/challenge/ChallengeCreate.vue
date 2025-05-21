@@ -2,6 +2,7 @@
 
 import {reactive} from "vue";
 import request from "../../utils/request.js";
+import {ElMessage} from "element-plus";
 
 defineEmits(['backToList'])
 
@@ -23,7 +24,8 @@ function submit() {
     data: form,
   }).then((response) => {
     console.log(response);
-    console.log(form)
+    ElMessage({message: '创建成功', type: 'success',})
+    window.location.reload()
   }).catch((error) => {
     console.log(error)
   })
@@ -58,7 +60,12 @@ function submit() {
           />
         </el-form-item>
         <el-form-item label="挑战类型：">
-          <el-input v-model="form.challenge_type"/>
+          <el-select v-model="form.challenge_type" placeholder="选择挑战类型">
+            <el-option label="distance" value="distance" />
+            <el-option label="calories" value="calories" />
+            <el-option label="workouts" value="workouts" />
+            <el-option label="duration" value="duration" />
+          </el-select>
         </el-form-item>
         <el-form-item label="目标">
           <el-input v-model="form.target_value" type="number"/>

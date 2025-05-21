@@ -32,12 +32,13 @@ function addComment(postId, comment) {
     method: "POST",
     url: `/posts/${postId}/comments`,
     data: {
-      userId: Number(localStorage.getItem('user_id')),
+      userId: localStorage.getItem('user_id'),
       comment: comment,
     },
   }).then((response)=>{
     console.log(response)
     ElMessage({message: '评论成功', type: 'success',})
+    window.location.reload()
   }).catch((error)=>{
     console.log(error)
   })
