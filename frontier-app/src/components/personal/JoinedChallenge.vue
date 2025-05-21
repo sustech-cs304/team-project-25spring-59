@@ -35,29 +35,26 @@ onMounted(()=>{
 <template>
   <el-row class="challenge-container">
     <el-col :span="12" :offset="6">
-      <el-card
-          shadow="hover"
-          v-for="challenge in challenges.data"
-          @click="$emit('clickChallenge', challenge.id)">
-        <el-row align="middle">
-          <el-col :span="12">
+      <el-card shadow="never" v-for="challenge in challenges.data">
+        <el-row align="top" justify="space-between">
+          <el-col :span="6">
             <el-row>
               {{ challenge.title }}
             </el-row>
-            <el-row>
-              <el-col :span="8">
-                <el-tag type="primary">{{ challenge.challenge_type }}</el-tag>
-              </el-col>
-<!--              <el-col :span="8">-->
-<!--                <el-tag type="primary">{{ challenge.status }}</el-tag>-->
-<!--              </el-col>-->
-            </el-row>
+            <el-tag type="primary">{{ challenge.challenge_type }}</el-tag>
           </el-col>
-          <el-col :span="8" :offset="4">
+          <el-col :span="9">
             <div>
               开始：<el-text type="info" size="small">{{ challenge.start_date }}</el-text><br/>
               结束：<el-text type="info" size="small">{{ challenge.end_date }}</el-text>
             </div>
+          </el-col>
+          <el-col :span="3">
+            <el-button
+                link
+                type="primary"
+                @click="$emit('clickChallenge', challenge.id)"
+            >查看详情</el-button>
           </el-col>
         </el-row>
       </el-card>
