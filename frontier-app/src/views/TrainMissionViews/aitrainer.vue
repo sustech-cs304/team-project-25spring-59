@@ -5,6 +5,13 @@
         <h3>AI 建议</h3>
         <button @click="$emit('close')">关闭</button>
       </div>
+      <!-- 计划确认按钮（显示在聊天区域上方） -->
+      <div v-if="pendingPlan && pendingPlan.length" class="plan-confirm-box">
+        <p>是否将以下计划添加至后端？</p>
+        <button @click="confirmAddPlan">✅ 同意添加</button>
+        <button @click="pendingPlan = null">❌ 不添加</button>
+      </div>
+
       <div class="ai-content" ref="chatContainer">
         <!-- 聊天历史消息 -->
         <div
@@ -94,6 +101,9 @@ const addMessage = (msg: Message) => {
 
   scrollToBottom()
 }
+
+//最后10条的chathistory
+const recentMessages = chatHistory.value.slice(-10)
 
 
 
@@ -825,6 +835,110 @@ const analyzePlanWithModel = async (
 
 
 
+interface PlanItem {
+  start_time: string
+  end_time: string
+  activity_type: string
+  duration_minutes: number
+  calories: number
+  average_heart_rate: number
+  is_completed: boolean
+}
+
+/**
+ * 基于 AI 生成训练计划并返回候选计划项
+ * @param userInput 用户输入的原始内容
+ * @param taskGoal 提炼出的任务目标（如“分析运动数据”）
+ * @param extractedDateRange 提取的时间范围对象（包含 start_date 和 end_date）
+ * @param userId 用户 ID（用于请求数据）,从localstorage.get("user_id")获取
+ * @param chatHistory: 用户的对话历史
+ * @returns AI 分析结果
+ */
+const generatePlanWithModel = async (
+  userInput: string,
+  taskGoal: string,
+  extractedDateRange: ExtractedDateRange,
+  userId: string,
+  chatHistory: Message[]
+): Promise<PlanItem[] | null> => {
+  try {
+    const date_range = extractedDateRange.status === 'ok'
+      ? `${extractedDateRange.start_date} 到 ${extractedDateRange.end_date}`
+      : '未指定'
+
+    const historyStr = chatHistory.map(
+      m => `${m.role === 'user' ? '用户' : '助手'}：${m.content}`
+    ).join('\n')
+
+    const template = await loadYamlPrompt('generate_plan.yaml')
+    const prompt = buildPrompt(template, {
+      user_input: userInput,
+      task_goal: taskGoal,
+      date_range,
+      chat_history: historyStr
+    })
+
+    const response = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${SILICON_API}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'Qwen/QwQ-32B',
+        messages: [{ role: 'user', content: prompt }],
+        stream: false,
+        max_tokens: 800,
+        temperature: 0.7,
+        top_p: 0.9,
+        response_format: { type: 'text' }
+      })
+    })
+
+    const result = await response.json()
+    const reply = result.choices?.[0]?.message?.content?.trim()
+    console.log('[generatePlanWithModel] AI 返回内容：', reply)
+
+
+    // 尝试解析 JSON 数组
+    // 去掉 markdown 代码块标记
+    const cleaned = reply?.replace(/```json\s*([\s\S]*?)\s*```/, '$1').trim()
+    if (!cleaned) throw new Error('AI 返回内容为空或格式不正确')
+    const parsed = JSON.parse(cleaned)
+    if (Array.isArray(parsed)) {
+      return parsed
+    } else {
+      throw new Error('返回不是数组格式')
+    }
+  } catch (err) {
+    console.error('[generatePlanWithModel] 生成计划失败:', err)
+    return null
+  }
+}
+
+const pendingPlan = ref<PlanItem[] | null>(null)
+
+const confirmAddPlan = async () => {
+  if (!pendingPlan.value) return
+
+  for (const item of pendingPlan.value) {
+    await fetch('http://localhost:8000/saveMission', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: parseInt(localStorage.getItem('user_id') || '1'),
+        ...item
+      })
+    })
+  }
+
+  addMessage({
+    role: 'assistant',
+    content: '阿罗娜已经帮老师添加好训练记录啦～(绿色发光圆环)'
+  })
+  pendingPlan.value = null
+}
+
 
 
 
@@ -951,8 +1065,33 @@ const getAISuggestion = async () => {
       }else if (category === 'analyze_plan') {
         const result = await analyzePlanWithModel(content, taskGoal, timeRange, localStorage.getItem('user_id'))
         chatHistory.value.push({ role: 'assistant', content: result })
-      }
-      else {
+      }else if (category === 'generate_plan') {
+        // 提取用户 ID
+        const userId = localStorage.getItem('user_id') || '1'
+
+        if (timeRange.status !== 'ok') {
+          addMessage({ role: 'assistant', content: '请提供计划生成的具体时间范围，例如：4月1日到4月7日' })
+          return
+        }
+
+        // 2. 调用大模型生成候选计划
+        const planList = await generatePlanWithModel(content, taskGoal, timeRange, userId, chatHistory.value)
+
+        if (!planList || planList.length === 0) {
+          addMessage({ role: 'assistant', content: '阿罗娜没有成功生成计划，请老师稍后再试一次…' })
+          return
+        }
+
+        // 3. 显示生成计划内容
+        const readable = planList.map((item, idx) =>
+          `【第${idx + 1}项】${item.activity_type}，${item.duration_minutes}分钟，心率约 ${item.average_heart_rate}，预计消耗 ${item.calories} 卡，时间 ${item.start_time} ~ ${item.end_time}`
+        ).join('\n\n')
+
+        addMessage({ role: 'assistant', content: `阿罗娜为老师生成了以下训练计划，是否添加到记录中？\n\n${readable}` })
+
+        // 4. 暂存结果等待用户确认按钮
+        pendingPlan.value = planList
+      } else {
         addMessage({ role: 'assistant', content: "阿罗娜不知道怎么执行老师的任务呢...(任务未定义)" })
       }
 
