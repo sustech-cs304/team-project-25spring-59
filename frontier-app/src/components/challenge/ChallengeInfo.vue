@@ -65,6 +65,7 @@ function joinChallenge() {
     window.location.reload()
   }).catch((error)=>{
     console.log(error)
+    ElMessage({message: `${error.response.data.detail}`, type: 'error',})
   })
 }
 
