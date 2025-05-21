@@ -1153,10 +1153,20 @@ def create_challenge(challenge: ChallengeCreate, db: Session = Depends(get_db)):
         
         # 根据开始和结束时间确定状态
         now = datetime.now()
+        
+        # 确保datetime对象没有时区信息
+        start_date = challenge.start_date
+        if start_date.tzinfo is not None:
+            start_date = start_date.replace(tzinfo=None)
+            
+        end_date = challenge.end_date
+        if end_date.tzinfo is not None:
+            end_date = end_date.replace(tzinfo=None)
+        
         status = ""
-        if now < challenge.start_date:
+        if now < start_date:
             status = "即将开始"
-        elif now > challenge.end_date:
+        elif now > end_date:
             status = "已结束"
         else:
             status = "进行中"
