@@ -1225,9 +1225,25 @@ def get_all_challenges(db: Session = Depends(get_db)):
         challenges = db.query(models.Challenge).all()
         
         result = []
+        now = datetime.now()
         
         # 为每个挑战获取详细信息
         for challenge in challenges:
+            # 更新挑战状态（如果需要）
+            if challenge.status != "已结束":
+                new_status = ""
+                if now < challenge.start_date:
+                    new_status = "即将开始"
+                elif now > challenge.end_date:
+                    new_status = "已结束"
+                else:
+                    new_status = "进行中"
+                
+                # 如果状态有变化，更新数据库
+                if challenge.status != new_status:
+                    challenge.status = new_status
+                    db.commit()
+            
             # 获取参与者数量
             participants_count = db.query(models.UserChallenge).filter(
                 models.UserChallenge.challenge_id == challenge.id
@@ -1266,8 +1282,6 @@ def get_all_challenges(db: Session = Depends(get_db)):
                 }
                 for entry in leaderboard_query
             ]
-            now = datetime.now()
-        
             
             # 构建挑战详情
             challenge_detail = {
