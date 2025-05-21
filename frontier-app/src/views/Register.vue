@@ -66,7 +66,7 @@ const register = async () => {
 
   try {
     console.log("发送注册请求", username.value, email.value, password.value);
-    const response = await axios.post("http://127.0.0.1:8000/register", {
+    const response = await axios.post("http://10.12.184.92:8000/register", {
       username: username.value,
       email: email.value,
       password: password.value,

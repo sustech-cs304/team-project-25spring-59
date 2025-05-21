@@ -1077,7 +1077,7 @@ def _get_post_full(db: Session, post_id: int) -> models.Post:
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 UPLOAD_DIR = os.path.join(STATIC_DIR, "uploads")
-BASE_URL = "http://10.26.63.155:8000"  # 部署时替换成你的域名或IP
+BASE_URL = "http://10.12.184.92:8000"  # 部署时替换成你的域名或IP
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 @app.post("/posts", response_model=PostResponse)
