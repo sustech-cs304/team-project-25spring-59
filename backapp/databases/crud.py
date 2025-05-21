@@ -119,7 +119,8 @@ def create_challenge(db: Session,
                     end_date: datetime,
                     challenge_type: str,
                     target_value: float,
-                    created_by: int):
+                    created_by: int,
+                    status: str):
     """创建新的挑战"""
     db_challenge = models.Challenge(
         title=title,
@@ -129,6 +130,7 @@ def create_challenge(db: Session,
         challenge_type=challenge_type,
         target_value=target_value,
         created_by=created_by,
+        status=status
     )
     db.add(db_challenge)
     db.commit()
