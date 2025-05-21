@@ -303,7 +303,7 @@ const handleDelete = async () => {
   isLoading.value = true
   try {
     for (const id of selectedIds.value) {
-      await axios.post('http://localhost:8000/delete-record', {
+      await axios.post('http://10.12.184.92:8000/delete-record', {
         record_id: id
       })
     }
@@ -330,7 +330,7 @@ const handleToggleType = async () => {
   isLoading.value = true
   try {
     for (const id of selectedIds.value) {
-      await axios.post('http://localhost:8000/toggle-record-status', {
+      await axios.post('http://10.12.184.92:8000/toggle-record-status', {
         record_id: id
       })
     }
@@ -395,7 +395,7 @@ const submitNewPlan = async () => {
 
   isLoading.value = true
   try {
-    await axios.post('http://localhost:8000/saveMission', {
+    await axios.post('http://10.12.184.92:8000/saveMission', {
       user_id: Number(userId.value),
       ...newPlan.value
     })
@@ -428,7 +428,7 @@ const submitNewPlan = async () => {
 //
 //   isLoading.value = true
 //   try {
-//     const response = await axios.post('http://localhost:8000/generate-user-records', {
+//     const response = await axios.post('http://10.12.184.92:8000/generate-user-records', {
 //       user_id: Number(userId.value)
 //     })
 //
@@ -454,7 +454,7 @@ const submitNewPlan = async () => {
 const fetchCompletedPlans = async () => {
   if (!userId.value) return
   try {
-    const res = await axios.post('http://localhost:8000/generate-user-records/completed', {
+    const res = await axios.post('http://10.12.184.92:8000/generate-user-records/completed', {
       user_id: Number(userId.value)
     })
     completedPlans.value = res.data.records.map(formatRecord)
@@ -466,7 +466,7 @@ const fetchCompletedPlans = async () => {
 const fetchMissedPlans = async () => {
   if (!userId.value) return
   try {
-    const res = await axios.post('http://localhost:8000/generate-user-records/missed-plans', {
+    const res = await axios.post('http://10.12.184.92:8000/generate-user-records/missed-plans', {
       user_id: Number(userId.value)
     })
     missedPlans.value = res.data.records.map(formatRecord)
@@ -478,7 +478,7 @@ const fetchMissedPlans = async () => {
 const fetchUpcomingPlans = async () => {
   if (!userId.value) return
   try {
-    const res = await axios.post('http://localhost:8000/generate-user-records/upcoming-plans', {
+    const res = await axios.post('http://10.12.184.92:8000/generate-user-records/upcoming-plans', {
       user_id: Number(userId.value)
     })
     upcomingPlans.value = res.data.records.map(formatRecord)

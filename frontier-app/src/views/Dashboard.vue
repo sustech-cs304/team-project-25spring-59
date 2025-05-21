@@ -107,12 +107,12 @@ const pieData = computed(() => {
 const fetchTrainingData = async () => {
   try {
     // 获取训练总览数据
-    const summaryResponse = await axios.post("http://localhost:5000/stats/summary", { user_id: 1 });
+    const summaryResponse = await axios.post("http://10.12.184.92:5000/stats/summary", { user_id: 1 });
     totalDuration.value = summaryResponse.data.total_minutes;
     totalCalories.value = summaryResponse.data.estimated_calories;
 
     // 获取每周趋势数据
-    const weeklyTrendResponse = await axios.post("http://localhost:5000/stats/weekly-trend", { user_id: 1 });
+    const weeklyTrendResponse = await axios.post("http://10.12.184.92:5000/stats/weekly-trend", { user_id: 1 });
     const trendData = weeklyTrendResponse.data;
 
     // 更新折线图数据

@@ -9,7 +9,7 @@
 ## 一、登录前连接服务器api
 
 ```
-http://localhost:5000/register
+http://10.12.184.92:5000/register
 ```
 
 

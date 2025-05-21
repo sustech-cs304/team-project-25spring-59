@@ -61,7 +61,7 @@ export default {
       if (!userId) return
 
       try {
-        const response = await fetch(`http://localhost:8000/stats/weekly-trend?start_date=${startStr}&end_date=${endStr}`, {
+        const response = await fetch(`http://10.12.184.92:8000/stats/weekly-trend?start_date=${startStr}&end_date=${endStr}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ user_id: parseInt(userId) })

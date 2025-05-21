@@ -116,7 +116,7 @@ const inProgressTotalPages = computed(() => Math.ceil(inProgressPlans.value.leng
 const fetchInProgressPlans = async () => {
   if (!userId.value) return
   try {
-    const res = await axios.post('http://localhost:8000/generate-user-records/in-progress', {
+    const res = await axios.post('http://10.12.184.92:8000/generate-user-records/in-progress', {
       user_id: Number(userId.value)
     })
     inProgressPlans.value = res.data.records.map(formatRecordWithProgress)
@@ -180,7 +180,7 @@ const startingTotalPages = computed(() => Math.ceil(startingPlans.value.length /
 const fetchStartingSoonPlans = async () => {
   if (!userId.value || !queryMinutes.value || queryMinutes.value <= 0) return
   try {
-    const res = await axios.post('http://localhost:8000/generate-user-records/starting-soon', {
+    const res = await axios.post('http://10.12.184.92:8000/generate-user-records/starting-soon', {
       user_id: Number(userId.value),
       minutes: queryMinutes.value
     })

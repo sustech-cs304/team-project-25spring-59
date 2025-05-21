@@ -743,7 +743,7 @@ async def get_gyms(
 
 if __name__ == '__main__':
     import uvicorn
-    uvicorn.run("main:app", host="localhost", port=8000, reload=True)
+    uvicorn.run("main:app", host="10.12.184.92", port=8000, reload=True)
 
 
 @app.post("/delete-record")
