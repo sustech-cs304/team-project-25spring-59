@@ -24,6 +24,7 @@
 
 <script setup lang="ts">
 import TaskPanel from './TaskPanel.vue'
+// @ts-ignore
 import bgImage from '../../../assets/plans/weekly_plan.png'
 import { ref, computed, watch } from 'vue'
 import dayjs from 'dayjs'
@@ -51,13 +52,13 @@ const weekTasks = ref([
 ])
 
 const panelPositions = [
-  { top: '280px', left: '60px' },
-  { top: '280px', left: '550px' },
-  { top: '280px', left: '1040px' },
-  { top: '280px', left: '1530px' },
-  { top: '900px', left: '60px' },
-  { top: '900px', left: '550px' },
-  { top: '900px', left: '1040px' }
+  { top: '350px', left: '80px' },
+  { top: '350px', left: '680px' },
+  { top: '350px', left: '1280px' },
+  { top: '350px', left: '1880px' },
+  { top: '1100px', left: '80px' },
+  { top: '1100px', left: '680px' },
+  { top: '1100px', left: '1280px' }
 ]
 
 // 计算 weekDays 和日期格式化

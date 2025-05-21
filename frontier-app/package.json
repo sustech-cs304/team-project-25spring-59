@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@arco-design/web-vue": "^2.57.0",
@@ -20,6 +21,7 @@
     "chart.js": "^4.4.8",
     "echarts": "^5.6.0",
     "element-plus": "^2.9.6",
+    "js-yaml": "^4.1.0",
     "live2d-widget": "^3.1.4",
     "markdown-it-custom-attrs": "^1.0.2",
     "markdown-it-mathjax3": "^4.3.2",
@@ -35,7 +37,11 @@
     "vue3-loading-overlay": "^0.0.0"
   },
   "devDependencies": {
+    "@testing-library/vue": "^8.1.0",
+    "@vitest/coverage-v8": "^3.1.4",
+    "jsdom": "^26.1.0",
     "less": "^4.2.2",
-    "sass-embedded": "^1.86.3"
+    "sass-embedded": "^1.86.3",
+    "vitest": "^3.1.4"
   }
 }

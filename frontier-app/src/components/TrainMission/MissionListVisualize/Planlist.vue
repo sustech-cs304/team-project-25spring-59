@@ -78,9 +78,9 @@
       </table>
     </div>
 
-    <!-- ⏳ 即将进行的计划 -->
+    <!-- ⏳ 未来的计划 -->
     <div class="table-section">
-      <h3 class="section-title">⏳ 即将进行的计划</h3>
+      <h3 class="section-title">⏳ 未来的计划</h3>
       <div v-if="upcomingPlans.length === 0" class="empty">暂无记录</div>
       <table v-else class="plan-table">
         <thead>

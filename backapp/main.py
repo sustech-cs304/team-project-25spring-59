@@ -13,6 +13,9 @@ from typing import List, Optional
 from sqlalchemy.orm import joinedload
 from typing import Optional 
 
+from fastapi import UploadFile, File, Form
+import os, uuid, shutil
+from fastapi.staticfiles import StaticFiles
 
 # 添加当前目录到路径
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -22,6 +25,7 @@ from databases.database import get_db, SessionLocal
 from databases import models, crud
 from databases.init_db import init_db, insert_mock_data
 from sqlalchemy.orm import Session
+from sqlalchemy import text, or_, and_
 
 current_user_id = None
 app = FastAPI()
@@ -66,7 +70,7 @@ def startup_db_client():
                     record_start_time = record_start_time.replace(tzinfo=None)
                 
                 # 根据start_time与当前时间比较设置字段
-                if record_start_time < now:
+                if record.end_time < now:
                     record.is_completed = True
                     record.record_type = "record"
                 else:
@@ -223,6 +227,10 @@ class EndChallengeRequest(BaseModel):
 class RecordIdRequest(BaseModel):
     record_id: int
 
+class PlanTimeRequest(BaseModel):
+    user_id: int
+    minutes: int
+
 @app.get("/")
 def read_root():
     return {"message": "FastAPI 服务器运行成功！"}
@@ -320,18 +328,25 @@ def get_user_completed_records(request: UserIdRequest, db: Session = Depends(get
 
 @app.post("/generate-user-records/upcoming-plans")
 def get_user_upcoming_plans(request: UserIdRequest, db: Session = Depends(get_db)):
-    """获取指定用户的即将进行的计划（record_type是plan，is_completed是False，且end_time不早于当天时间一天以上）"""
+    """获取指定用户的即将进行的计划（计划未完成，且满足：当前时间<开始时间 或 （结束时间<当前时间<结束时间+1天））"""
     try:
         # 获取当前时间用于比较
         now = datetime.now()
-        one_day_ago = now - timedelta(days=1)
         
         # 获取用户的训练记录 - 即将进行的计划
         records = db.query(models.TrainingRecord).filter(
             models.TrainingRecord.user_id == request.user_id,
             models.TrainingRecord.record_type == "plan",
             models.TrainingRecord.is_completed == False,
-            models.TrainingRecord.end_time >= one_day_ago
+            or_(
+                # 条件1: 当前时间<开始时间（未来计划）
+                models.TrainingRecord.start_time > now,
+                # 条件2: 结束时间<当前时间<结束时间+1天（刚结束的计划）
+                and_(
+                    models.TrainingRecord.end_time < now,
+                    models.TrainingRecord.end_time > now - timedelta(days=1)
+                )
+            )
         ).all()
         
         # 格式化返回结果
@@ -637,7 +652,7 @@ def get_reserved_courses(
 
     rows = (
         db.query(
-            Reservation.id.label("course_id"),
+            Reservation.course_id,
             Course.gym_id,
             Course.course_name,
             Course.start_time,
@@ -671,9 +686,16 @@ def cancel_course_reservation(
 
     if not reservation:
         raise HTTPException(status_code=404, detail="找不到对应的预约记录")
+    
+    # 找到对应课程
+    course = db.query(models.GymCourse).filter(models.GymCourse.id == request.course_id).first()
+    if course and course.current_reservations > 0:
+        course.current_reservations -= 1
 
+    # 删除预约
     db.delete(reservation)
     db.commit()
+
     return {"message": "取消预约成功", "course_id": request.course_id}
 
 @app.post("/gym/reserveGym", summary="预约健身房", response_model=GymReservationResponse)
@@ -996,14 +1018,14 @@ class PostResponse(DTO):
     user_name: str
     content: str
     time: datetime
-    img: Optional[str] = None        
+    img_list: Optional[List[dict]] = []  # [{"img": "http://..."}, ...]
     comments: List[CommentResponse] = []
 
 
 class PostCreateRequest(DTO):
     user_id: int
     content: str
-    img: Optional[str] = None  
+    img_list: Optional[List[str]] = None  # ["http://...", "http://..."]
 
 
 class CommentCreateRequest(DTO):
@@ -1027,20 +1049,20 @@ def _serialize_post(p: models.Post) -> PostResponse:
         user_name=p.user.username,
         content=p.content,
         time=p.created_at,
-        img=p.image_url,             
+        img_list=[{"img": img.url} for img in p.images],  # 使用 PostImage.url
         comments=[
             _serialize_comment(c)
             for c in sorted(p.comments, key=lambda x: x.created_at, reverse=True)
         ],
     )
 
-
 def _get_post_full(db: Session, post_id: int) -> models.Post:
     post = (
         db.query(models.Post)
         .options(
-            joinedload(models.Post.comments).joinedload(models.Comment.user),  # >>> 修改点
-            joinedload(models.Post.user),  # >>> 修改点
+            joinedload(models.Post.comments).joinedload(models.Comment.user),
+            joinedload(models.Post.user),
+            joinedload(models.Post.images),  # 加载 PostImage 列表
         )
         .filter(models.Post.id == post_id)
         .first()
@@ -1049,22 +1071,38 @@ def _get_post_full(db: Session, post_id: int) -> models.Post:
         raise HTTPException(404, "Post not found")
     return post
 
-
 # -------------------------------------------------
 # 动态分享接口
 # -------------------------------------------------
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+STATIC_DIR = os.path.join(BASE_DIR, "static")
+UPLOAD_DIR = os.path.join(STATIC_DIR, "uploads")
+BASE_URL = "http://10.26.63.155:8000"  # 部署时替换成你的域名或IP
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
 @app.post("/posts", response_model=PostResponse)
 def create_post_api(
-    body: PostCreateRequest,
+    user_id: int = Form(...),
+    content: str = Form(...),
+    files: Optional[List[UploadFile]] = File(None),
     db: Session = Depends(get_db),
 ):
-    db_post = crud.create_post(
-        db=db,
-        user_id=body.user_id,
-        content=body.content,
-        image_url=body.img,           
-    )
+    
+    db_post = crud.create_post(db=db, user_id=user_id, content=content)
+
+    if files:
+        for file in files:
+            filename = f"{uuid.uuid4().hex}_{file.filename}"
+            file_path = os.path.join(UPLOAD_DIR, filename)
+            with open(file_path, "wb") as f:
+                shutil.copyfileobj(file.file, f)
+            image_url = f"/static/uploads/{filename}"
+            db_image = models.PostImage(post_id=db_post.id, url=image_url)
+            db.add(db_image)
+
+    db.commit()
     return _serialize_post(_get_post_full(db, db_post.id))
+
 
 @app.get("/posts", response_model=list[PostResponse])
 def list_posts_api(skip: int = 0, limit: int = 20, db: Session = Depends(get_db)):
@@ -1073,6 +1111,7 @@ def list_posts_api(skip: int = 0, limit: int = 20, db: Session = Depends(get_db)
         .options(
             joinedload(models.Post.comments).joinedload(models.Comment.user),
             joinedload(models.Post.user),
+            joinedload(models.Post.images),  # 加载多图
         )
         .order_by(models.Post.created_at.desc())
         .offset(skip)
@@ -1088,7 +1127,7 @@ def add_comment_api(
     body: CommentCreateRequest,
     db: Session = Depends(get_db),
 ):
-    cmt = crud.add_comment(db, user_id=CommentCreateRequest.user_id, post_id=post_id, content=body.comment)
+    cmt = crud.add_comment(db, user_id=body.user_id, post_id=post_id, content=body.comment)
     return _serialize_comment(cmt)
 
 
@@ -1207,15 +1246,8 @@ def get_all_challenges(db: Session = Depends(get_db)):
                 }
                 for entry in leaderboard_query
             ]
-            
-            # 计算挑战状态
             now = datetime.now()
-            if now < challenge.start_date:
-                status = "即将开始"
-            elif now > challenge.end_date:
-                status = "已结束"
-            else:
-                status = "进行中"
+        
             
             # 构建挑战详情
             challenge_detail = {
@@ -1225,10 +1257,10 @@ def get_all_challenges(db: Session = Depends(get_db)):
                 "start_date": challenge.start_date,
                 "end_date": challenge.end_date,
                 "challenge_type": challenge.challenge_type,
-                "target_value": challenge.target_value,
+                "target_value": challenge.target_value,                
                 "created_by": challenge.created_by,
                 "creator_name": creator_name,
-                "status": status,
+                "status": challenge.status,
                 "participants_count": participants_count,
                 "completion_rate": completion_rate,
                 "top_performers": top_performers,
@@ -1299,6 +1331,8 @@ def get_challenge_detail(request: ChallengeDetail, db: Session = Depends(get_db)
         participants_count = db.query(models.UserChallenge).filter(
             models.UserChallenge.challenge_id == request.challenge_id
         ).count()
+
+
         
         # 初始化响应
         response = {
@@ -1308,6 +1342,7 @@ def get_challenge_detail(request: ChallengeDetail, db: Session = Depends(get_db)
                 "description": challenge.description,
                 "start_date": challenge.start_date,
                 "end_date": challenge.end_date,
+                "status": challenge.status,
                 "challenge_type": challenge.challenge_type,
                 "target_value": challenge.target_value,
                 "created_by": challenge.created_by,
@@ -1382,7 +1417,8 @@ def end_challenge(request: EndChallengeRequest, db: Session = Depends(get_db)):
         # 设置挑战结束时间为当前时间（如果提前结束）
         if challenge.end_date > datetime.now():
             challenge.end_date = datetime.now()
-            db.commit()
+        challenge.status = "已结束"
+        db.commit()
         
         # 获取所有参与者，按完成值排序
         participants = db.query(
@@ -1453,7 +1489,7 @@ def end_challenge(request: EndChallengeRequest, db: Session = Depends(get_db)):
         return {
             "challenge_id": challenge.id,
             "challenge_title": challenge.title,
-            "status": "已结束",
+            "status": challenge.status,
             "participants_count": len(participants),
             "results": results
         }
@@ -1601,5 +1637,90 @@ def get_leaderboard(db: Session = Depends(get_db)):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"获取排行榜失败: {str(e)}")
+
+@app.post("/generate-user-records/starting-soon")
+def get_plans_starting_soon(request: PlanTimeRequest, db: Session = Depends(get_db)):
+    """获取指定用户在x分钟后即将开始的运动计划"""
+    try:
+        # 获取当前时间用于比较
+        now = datetime.now()
+        future_time = now + timedelta(minutes=request.minutes)
+        
+        # 获取用户的训练记录 - 即将开始的计划
+        records = db.query(models.TrainingRecord).filter(
+            models.TrainingRecord.user_id == request.user_id,
+            models.TrainingRecord.record_type == "plan",
+            models.TrainingRecord.is_completed == False,
+            models.TrainingRecord.start_time >= now,
+            models.TrainingRecord.start_time <= future_time
+        ).all()
+        
+        # 格式化返回结果
+        result = []
+        for record in records:
+            record_dict = {
+                "id": record.id,
+                "user_id": record.user_id,
+                "start_time": record.start_time,
+                "end_time": record.end_time,
+                "activity_type": record.activity_type,
+                "duration_minutes": record.duration_minutes,
+                "is_completed": record.is_completed,
+                "record_type": record.record_type,
+                "reminder_time": record.reminder_time,
+                "distance": record.distance,
+                "calories": record.calories,
+                "average_heart_rate": record.average_heart_rate,
+                "max_heart_rate": record.max_heart_rate,
+                "minute_heart_rates": record.minute_heart_rates if record.minute_heart_rates else {}
+            }
+            result.append(record_dict)
+        
+        return {"records": result, "count": len(result), "time_window": f"当前至{request.minutes}分钟后"}
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取即将开始的计划失败: {str(e)}")
+
+@app.post("/generate-user-records/in-progress")
+def get_plans_in_progress(request: UserIdRequest, db: Session = Depends(get_db)):
+    """获取指定用户正在进行中的计划（当前时间在start_time和end_time之间且为plan的）"""
+    try:
+        # 获取当前时间用于比较
+        now = datetime.now()
+        
+        # 获取用户的训练记录 - 正在进行中的计划
+        records = db.query(models.TrainingRecord).filter(
+            models.TrainingRecord.user_id == request.user_id,
+            models.TrainingRecord.record_type == "plan",
+            models.TrainingRecord.is_completed == False,
+            models.TrainingRecord.start_time <= now,
+            models.TrainingRecord.end_time >= now
+        ).all()
+        
+        # 格式化返回结果
+        result = []
+        for record in records:
+            record_dict = {
+                "id": record.id,
+                "user_id": record.user_id,
+                "start_time": record.start_time,
+                "end_time": record.end_time,
+                "activity_type": record.activity_type,
+                "duration_minutes": record.duration_minutes,
+                "is_completed": record.is_completed,
+                "record_type": record.record_type,
+                "reminder_time": record.reminder_time,
+                "distance": record.distance,
+                "calories": record.calories,
+                "average_heart_rate": record.average_heart_rate,
+                "max_heart_rate": record.max_heart_rate,
+                "minute_heart_rates": record.minute_heart_rates if record.minute_heart_rates else {}
+            }
+            result.append(record_dict)
+        
+        return {"records": result, "count": len(result), "status": "正在进行中"}
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取正在进行中的计划失败: {str(e)}")
 
 

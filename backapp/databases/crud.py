@@ -321,13 +321,11 @@ def create_gym_reservation(db: Session, user_id: int, gym_id: int, reservation_d
 def create_post(
     db: Session,
     user_id: int,
-    content: str,
-    image_url: str | None = None,    
+    content: str
 ):
     db_post = models.Post(
         user_id=user_id,
-        content=content,
-        image_url=image_url,         
+        content=content
     )
     db.add(db_post)
     db.commit()

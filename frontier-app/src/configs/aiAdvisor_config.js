@@ -1,2 +1,2 @@
 //在这里配置ai建议相关配置
-silicon_api = sk-fbvsqxfhslwontesbohnybnwdcnpfgjmhmaryneabldpyeab
+export const SILICON_API = "sk-fbvsqxfhslwontesbohnybnwdcnpfgjmhmaryneabldpyeab"

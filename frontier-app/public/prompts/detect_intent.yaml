@@ -1,0 +1,29 @@
+template_name: detect_intent
+description: 判断用户输入的意图类型
+inputs:
+  - user_input
+prompt: |
+  你是一个智能助手，需要判断用户输入的意图类型。
+
+  用户输入如下：
+  ---
+  {{user_input}}
+  ---
+
+  请从以下选项中选择一个最符合的意图标签，仅返回标签，不要解释：
+
+  - greeting：打招呼
+  - farewell：道别
+  - emotion：表达情绪（如开心、生气、难过）
+  - question：提问信息（如事实、定义、建议）
+  - suggestion_request：请求建议或指导
+  - gratitude：表达感谢
+  - apology：道歉
+  - command：指令、命令性要求
+  - smalltalk：寒暄、聊日常
+  - joke：讲笑话或玩笑
+  - compliment：称赞或表扬
+  - complaint：抱怨或表达不满
+  - other：无法归类
+
+  你只能输出一个英文标签。
