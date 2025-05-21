@@ -2,9 +2,11 @@
 
 import {reactive} from "vue";
 import request from "../../utils/request.js";
+import {toISO} from "../../utils/date.js";
 import {ElMessage} from "element-plus";
 
 defineEmits(['backToList'])
+const userId = Number(localStorage.getItem('user_id'))
 
 const form = reactive({
   title: '',
@@ -13,10 +15,12 @@ const form = reactive({
   end_date: '',
   challenge_type: '',
   target_value: '',
-  created_by: localStorage.getItem('user_id'),
+  created_by: userId,
 })
 
 function submit() {
+  form.start_date = toISO(form.start_date)
+  form.end_date = toISO(form.end_date)
   console.log(form)
   request({
     method: "POST",
