@@ -2,7 +2,7 @@
 
 import {onMounted, reactive, watch, ref} from "vue";
 import {Plus, UserFilled, Edit} from "@element-plus/icons-vue";
-import request from "../../utils/request.js";
+import request, {baseurl} from "../../utils/request.js";
 import {ElMessage} from "element-plus";
 
 defineEmits(['createShare'])
@@ -23,6 +23,8 @@ function processData(data) {
     // add blank comment area
     sharing.newComment = "";
     sharing.showCommentArea = false;
+    // process imgList
+    sharing.imgList = Array.from(sharing.imgList, ({ img })=>baseurl+img)
   });
 }
 
@@ -77,6 +79,14 @@ onMounted(()=>{
         <p>
           {{ sharing.content }}
         </p>
+        <div v-for="url in sharing.imgList" style="display: inline-block">
+          <el-image
+              style="width: 100px; height: 100px; margin: 1px"
+              :src="url"
+              fit="cover"
+              :preview-src-list="sharing.imgList"
+          />
+        </div>
         <template #footer>
           <el-row justify="space-between">
             <el-text tag="b">评论：</el-text>
