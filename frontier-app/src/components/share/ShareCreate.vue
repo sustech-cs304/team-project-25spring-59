@@ -17,6 +17,7 @@ const formdata = new FormData()
 function submit() {
   formdata.append('user_id', userId.toString())
   formdata.append('content', form.content)
+  console.log(formdata.getAll('files'))
   request({
     method: "POST",
     url: '/posts',

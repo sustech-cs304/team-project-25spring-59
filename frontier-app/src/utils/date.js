@@ -24,6 +24,12 @@ export function toISO(date) {
     return `${dateList.year}-${month}-${day}T${hour}:${minute}:${second}`
 }
 
+// change 'Date' struct to the short-ISO form without T: YYYY-MM-DD HH:MM:SS
+export function toFormal(date) {
+    const iso = toISO(date)
+    return iso.replace('T', '')
+}
+
 function changeDateWeek(week) {
     const weekList = ['天', '一', '二', '三', '四', '五', '六']
     return weekList[week]

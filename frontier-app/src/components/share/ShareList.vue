@@ -1,16 +1,13 @@
 <script setup>
 
 import {onMounted, reactive, watch, ref} from "vue";
-import {Plus, UserFilled, Edit} from "@element-plus/icons-vue";
+import {Plus, UserFilled, ChatDotRound, Star} from "@element-plus/icons-vue";
 import request, {baseurl} from "../../utils/request.js";
 import {ElMessage} from "element-plus";
 
 defineEmits(['createShare'])
 
 const sharings = reactive({});
-const form = reactive({
-  comment: "",
-})
 
 
 function processData(data) {
@@ -22,7 +19,8 @@ function processData(data) {
     sharing.comments.sort((a,b)=>new Date(b.time) - new Date(a.time))
     // add blank comment area
     sharing.newComment = "";
-    sharing.showCommentArea = false;
+    sharing.showComment = false;
+    sharing.showWriteCommentArea = false;
     // process imgList
     sharing.imgList = Array.from(sharing.imgList, ({ img })=>baseurl+img)
   });
@@ -63,73 +61,82 @@ onMounted(()=>{
   <el-row class="sharing-container">
     <el-col :span="12" :offset="6">
       <el-card shadow="never" v-for="sharing in sharings.data">
-        <template #header>
-          <el-row align="bottom">
+        <div slot="header">
+          <el-row align="top">
             <el-col :span="2">
-              <el-icon :size="25"><UserFilled/></el-icon>
+              <el-icon :size="35"><UserFilled/></el-icon>
             </el-col>
-            <el-col :span="4">
-              {{ sharing.userName }}
-            </el-col>
-            <el-col :span="8" :offset="10">
-              <el-text type="info" size="small">|{{ sharing.time }}</el-text>
+            <el-col :span="8">
+              <el-text>{{ sharing.userName }}</el-text><br/>
+              <el-text type="info" size="small">{{ sharing.time }}</el-text>
             </el-col>
           </el-row>
-        </template>
-        <p>
-          {{ sharing.content }}
-        </p>
-        <div v-for="url in sharing.imgList" style="display: inline-block">
-          <el-image
-              style="width: 100px; height: 100px; margin: 1px"
-              :src="url"
-              fit="cover"
-              :preview-src-list="sharing.imgList"
-          />
         </div>
-        <template #footer>
-          <el-row justify="space-between">
-            <el-text tag="b">评论：</el-text>
-            <el-button :icon="Edit" link @click="sharing.showCommentArea=true">写评论</el-button>
+
+        <el-row>
+          <el-col :offset="2">
+            <p>
+              {{ sharing.content }}
+            </p>
+            <div v-for="url in sharing.imgList" style="display: inline-block">
+              <el-image
+                  style="width: 100px; height: 100px; margin: 1px"
+                  :src="url"
+                  fit="cover"
+                  :preview-src-list="sharing.imgList"
+              />
+            </div>
+          </el-col>
+        </el-row>
+        <el-row justify="space-around">
+          <el-col :span="1">
+            <el-button type="info" link @click="sharing.showComment=!sharing.showComment">
+              <el-icon :size="20"><ChatDotRound/></el-icon>
+            </el-button>
+          </el-col>
+          <el-col :span="1">
+            <el-button type="info" link>
+              <el-icon :size="20"><Star/></el-icon>
+            </el-button>
+          </el-col>
+        </el-row>
+
+        <div slot="footer" v-show="sharing.showComment" style="margin-top: 10px">
+          <el-row>
+            <el-text tag="b" size="large">评论：</el-text>
           </el-row>
-          <div v-show="sharing.showCommentArea">
+          <el-row style="margin-top: 10px;" justify="end">
             <el-input v-model="sharing.newComment" type="textarea" placeholder="说说你的想法："/>
             <el-button type="primary" @click="addComment(sharing.postId, sharing.newComment)">发布</el-button>
-            <el-button @click="sharing.showCommentArea=false">取消</el-button>
-          </div>
-
-          <el-form :model="form">
-            <el-form-item>
-
-            </el-form-item>
-            <el-form-item>
-
-            </el-form-item>
-          </el-form>
-
+          </el-row>
           <el-row>
             <el-col :span="20" :offset="2">
               <el-card shadow="never" v-for="comment in sharing.comments">
-                <template #header>
-                  <el-row align="bottom">
+                <div slot="header">
+                  <el-row align="top">
                     <el-col :span="2">
-                      <el-icon :size="25"><UserFilled/></el-icon>
+                      <el-icon :size="35"><UserFilled/></el-icon>
                     </el-col>
-                    <el-col :span="4">
-                      {{ comment.userName }}
-                    </el-col>
-                    <el-col :span="8" :offset="10">
-                      <el-text type="info" size="small">|{{ comment.time }}</el-text>
+                    <el-col :span="10">
+                      <el-text>{{ comment.userName }}</el-text><br/>
+                      <el-text type="info" size="small">{{ comment.time }}</el-text>
                     </el-col>
                   </el-row>
-                </template>
-                <p>
-                  {{ comment.comment }}
-                </p>
+                </div>
+                <el-row align="bottom">
+                  <el-col :offset="2" :span="20">
+                    <span>{{ comment.comment }}</span>
+                  </el-col>
+                  <el-col :span="2">
+                    <el-button type="info" link>
+                      <el-icon :size="20"><Star/></el-icon>
+                    </el-button>
+                  </el-col>
+                </el-row>
               </el-card>
             </el-col>
           </el-row>
-        </template>
+        </div>
       </el-card>
     </el-col>
   </el-row>
