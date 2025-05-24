@@ -240,3 +240,14 @@ class PostImage(Base):
     url = Column(String(255), nullable=False)
 
     post = relationship("Post", back_populates="images")
+
+class CommentLike(Base):
+    __tablename__ = "comment_likes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    comment_id = Column(Integer, ForeignKey("comments.id", ondelete="CASCADE"), nullable=False)
+    created_at = Column(DateTime, server_default=func.now())
+
+    user = relationship("User", backref="comment_likes")
+    comment = relationship("Comment", backref="likes")

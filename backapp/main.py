@@ -1001,7 +1001,8 @@ class CommentResponse(DTO):
     user_name: str
     comment: str
     time: datetime
-
+    like_count: int = 0
+    like_list: List[int] = []
 
 class PostResponse(DTO):
     post_id: int
@@ -1009,6 +1010,8 @@ class PostResponse(DTO):
     user_name: str
     content: str
     time: datetime
+    like_count: int = 0 
+    like_list: List[int] = []
     img_list: Optional[List[dict]] = []  # [{"img": "http://..."}, ...]
     comments: List[CommentResponse] = []
 
@@ -1030,8 +1033,9 @@ def _serialize_comment(c: models.Comment) -> CommentResponse:
         user_name=c.user.username,
         comment=c.content,
         time=c.created_at,
+        like_count=len(c.likes),
+        like_list=[like.user_id for like in c.likes]  # 👍 新增
     )
-
 
 def _serialize_post(p: models.Post) -> PostResponse:
     return PostResponse(
@@ -1040,7 +1044,9 @@ def _serialize_post(p: models.Post) -> PostResponse:
         user_name=p.user.username,
         content=p.content,
         time=p.created_at,
-        img_list=[{"img": img.url} for img in p.images],  # 使用 PostImage.url
+        like_count=len(p.likes),
+        like_list=[like.user_id for like in p.likes],  # 👍 新增
+        img_list=[{"img": img.url} for img in p.images],
         comments=[
             _serialize_comment(c)
             for c in sorted(p.comments, key=lambda x: x.created_at, reverse=True)
@@ -1052,8 +1058,9 @@ def _get_post_full(db: Session, post_id: int) -> models.Post:
         db.query(models.Post)
         .options(
             joinedload(models.Post.comments).joinedload(models.Comment.user),
-            joinedload(models.Post.user),
-            joinedload(models.Post.images),  # 加载 PostImage 列表
+            joinedload(models.Post.user),joinedload(models.Comment.likes),
+            joinedload(models.Post.images), 
+            joinedload(models.Post.likes),
         )
         .filter(models.Post.id == post_id)
         .first()
@@ -1068,7 +1075,6 @@ def _get_post_full(db: Session, post_id: int) -> models.Post:
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 UPLOAD_DIR = os.path.join(STATIC_DIR, "uploads")
-BASE_URL = "http://10.12.184.92:8000"  # 部署时替换成你的域名或IP
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 @app.post("/posts", response_model=PostResponse)
@@ -1129,6 +1135,21 @@ def list_comments_api(post_id: int, skip: int = 0, limit: int = 50, db: Session 
     cmts = sorted(post.comments, key=lambda x: x.created_at, reverse=True)[skip : skip + limit]
     return [_serialize_comment(c) for c in cmts]
 
+
+class LikeRequest(BaseModel):
+    user_id: int
+
+@app.post("/comments/{comment_id}/like")
+def like_comment_api(comment_id: int, req: LikeRequest, db: Session = Depends(get_db)):
+    like = crud.like_comment(db, user_id=req.user_id, comment_id=comment_id)
+    return {"message": "点赞成功", "comment_id": comment_id}
+
+@app.post("/comments/{comment_id}/unlike")
+def unlike_comment_api(comment_id: int, req: LikeRequest, db: Session = Depends(get_db)):
+    success = crud.unlike_comment(db, user_id=req.user_id, comment_id=comment_id)
+    if success:
+        return {"message": "取消点赞成功", "comment_id": comment_id}
+    raise HTTPException(status_code=404, detail="未找到点赞记录")
 
 @app.post("/challenges", response_model=ChallengeResponse)
 def create_challenge(challenge: ChallengeCreate, db: Session = Depends(get_db)):

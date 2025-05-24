@@ -465,3 +465,26 @@ def delete_comment(db: Session, comment_id: int):
 def count_post_comments(db: Session, post_id: int) -> int:
     """统计评论数"""
     return db.query(models.Comment).filter(models.Comment.post_id == post_id).count()
+
+# like
+
+def like_comment(db: Session, user_id: int, comment_id: int):
+    existing = db.query(models.CommentLike).filter_by(user_id=user_id, comment_id=comment_id).first()
+    if existing:
+        return existing
+    like = models.CommentLike(user_id=user_id, comment_id=comment_id)
+    db.add(like)
+    db.commit()
+    db.refresh(like)
+    return like
+
+def unlike_comment(db: Session, user_id: int, comment_id: int):
+    like = db.query(models.CommentLike).filter_by(user_id=user_id, comment_id=comment_id).first()
+    if like:
+        db.delete(like)
+        db.commit()
+        return True
+    return False
+
+def count_comment_likes(db: Session, comment_id: int) -> int:
+    return db.query(models.CommentLike).filter_by(comment_id=comment_id).count()
