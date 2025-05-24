@@ -466,7 +466,7 @@ def count_post_comments(db: Session, post_id: int) -> int:
     """统计评论数"""
     return db.query(models.Comment).filter(models.Comment.post_id == post_id).count()
 
-# like
+# like comment
 
 def like_comment(db: Session, user_id: int, comment_id: int):
     existing = db.query(models.CommentLike).filter_by(user_id=user_id, comment_id=comment_id).first()

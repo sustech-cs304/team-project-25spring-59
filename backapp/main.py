@@ -1151,6 +1151,18 @@ def unlike_comment_api(comment_id: int, req: LikeRequest, db: Session = Depends(
         return {"message": "取消点赞成功", "comment_id": comment_id}
     raise HTTPException(status_code=404, detail="未找到点赞记录")
 
+@app.post("/posts/{post_id}/unlike")
+def unlike_post_api(post_id: int, req: LikeRequest, db: Session = Depends(get_db)):
+    success = crud.unlike_post(db, user_id=req.user_id, post_id=post_id)
+    if success:
+        return {"message": "取消点赞成功", "post_id": post_id}
+    raise HTTPException(status_code=404, detail="未找到点赞记录")
+
+@app.post("/posts/{post_id}/like")
+def like_post_api(post_id: int, req: LikeRequest, db: Session = Depends(get_db)):
+    like = crud.like_post(db, user_id=req.user_id, post_id=post_id)
+    return {"message": "点赞成功", "post_id": post_id}
+
 @app.post("/challenges", response_model=ChallengeResponse)
 def create_challenge(challenge: ChallengeCreate, db: Session = Depends(get_db)):
     """创建新挑战"""
