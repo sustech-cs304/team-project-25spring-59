@@ -997,6 +997,7 @@ def get_daily_plan(request: DailyPlanRequest, db: Session = Depends(get_db)):
 
 
 class CommentResponse(DTO):
+    comment_id: int
     user_id: int
     user_name: str
     comment: str
@@ -1029,12 +1030,13 @@ class CommentCreateRequest(DTO):
 
 def _serialize_comment(c: models.Comment) -> CommentResponse:
     return CommentResponse(
+        comment_id=c.id,
         user_id=c.user_id,
         user_name=c.user.username,
         comment=c.content,
         time=c.created_at,
         like_count=len(c.likes),
-        like_list=[like.user_id for like in c.likes]  # 👍 新增
+        like_list=[like.user_id for like in c.likes]  # 
     )
 
 def _serialize_post(p: models.Post) -> PostResponse:
@@ -1045,7 +1047,7 @@ def _serialize_post(p: models.Post) -> PostResponse:
         content=p.content,
         time=p.created_at,
         like_count=len(p.likes),
-        like_list=[like.user_id for like in p.likes],  # 👍 新增
+        like_list=[like.user_id for like in p.likes],  #
         img_list=[{"img": img.url} for img in p.images],
         comments=[
             _serialize_comment(c)
