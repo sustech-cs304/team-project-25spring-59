@@ -595,7 +595,7 @@ class CancelCourseReservationRequest(DTO):
 async def get_gym_courses(
     gym_id: int,
     skip: int = 0,
-    limit: int = 100,
+    limit: int = 200,
     # current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -1116,7 +1116,7 @@ def list_posts_api(skip: int = 0, limit: int = 20, db: Session = Depends(get_db)
         )
         .order_by(models.Post.created_at.desc())
         .offset(skip)
-        .limit(limit)
+        # .limit(limit)
         .all()
     )
     return [_serialize_post(p) for p in posts]
