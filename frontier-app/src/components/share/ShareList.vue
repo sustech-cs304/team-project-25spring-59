@@ -1,14 +1,25 @@
 <script setup>
 
 import {onMounted, reactive, watch, ref} from "vue";
-import {Plus, UserFilled, ChatDotRound, Star} from "@element-plus/icons-vue";
+import {Plus, UserFilled, ChatDotRound, Star, StarFilled} from "@element-plus/icons-vue";
 import request, {baseurl} from "../../utils/request.js";
 import {ElMessage} from "element-plus";
 
 defineEmits(['createShare'])
 
-const sharings = reactive({});
+const sharings = reactive({data: []});
+const userId = Number(localStorage.getItem('user_id'))
 
+const changeLikeIcon = (icon)=>{
+
+}
+
+// watch(
+//     () => sharings.data.map((sharing)=>[sharing.postId, sharing.likeIcon]),
+//     (newValue, oldValue) => {
+//       console.log(newValue)
+//     }
+// )
 
 function processData(data) {
   sharings.data = data;
@@ -17,12 +28,18 @@ function processData(data) {
   sharings.data.forEach((sharing)=>{
     // sort the sharings.comment by time from large to small
     sharing.comments.sort((a,b)=>new Date(b.time) - new Date(a.time))
-    // add blank comment area
+    sharing.commentCount = sharing.comments.length;
+    // add comment attribute
     sharing.newComment = "";
     sharing.showComment = false;
     sharing.showWriteCommentArea = false;
     // process imgList
     sharing.imgList = Array.from(sharing.imgList, ({ img })=>baseurl+img)
+    // add like identifier
+    sharing.likeIcon = sharing.likeList.indexOf(userId) !== -1 ? ref(StarFilled) : ref(Star)
+    sharing.comments.forEach((comment)=>{
+      comment.likeIcon = comment.likeList.indexOf(userId) !== -1 ? ref(StarFilled) : ref(Star)
+    })
   });
 }
 
@@ -39,6 +56,57 @@ function addComment(postId, comment) {
     console.log(response)
     ElMessage({message: '评论成功', type: 'success',})
     window.location.reload()
+  }).catch((error)=>{
+    console.log(error)
+  })
+}
+
+function clickLike(postId, icon) {
+  const sharing = sharings.data.find((sharing)=>sharing.postId === postId)
+  console.log(sharing)
+  const url = ref('')
+  if(icon === ref(Star).value) {
+    sharing.likeIcon = ref(StarFilled);
+    sharing.likeCount += 1;
+    url.value = `/posts/${postId}/like`
+  }
+  else {
+    sharing.likeIcon = ref(Star);
+    sharing.likeCount -= 1;
+    url.value = `/posts/${postId}/unlike`
+  }
+  request({
+    method: "POST",
+    url: url.value,
+    data: {user_id: userId,},
+  }).then((response)=>{
+    console.log(response)
+  }).catch((error)=>{
+    console.log(error)
+  })
+}
+
+function clickCommentLike(postId, commentId, icon) {
+  const sharing = sharings.data.find((sharing)=>sharing.postId === postId)
+  const comment = sharing.comments.find((comment)=>comment.commentId === commentId)
+  console.log(comment)
+  const url = ref('')
+  if(icon === ref(Star).value) {
+    comment.likeIcon = ref(StarFilled);
+    comment.likeCount += 1;
+    url.value = `/comments/${commentId}/like`
+  }
+  else {
+    comment.likeIcon = ref(Star);
+    comment.likeCount -= 1;
+    url.value = `/comments/${commentId}/unlike`
+  }
+  request({
+    method: "POST",
+    url: url.value,
+    data: {user_id: userId,},
+  }).then((response)=>{
+    console.log(response)
   }).catch((error)=>{
     console.log(error)
   })
@@ -92,11 +160,15 @@ onMounted(()=>{
           <el-col :span="1">
             <el-button type="info" link @click="sharing.showComment=!sharing.showComment">
               <el-icon :size="20"><ChatDotRound/></el-icon>
+              <el-text size="small">{{ sharing.commentCount }}</el-text>
             </el-button>
           </el-col>
           <el-col :span="1">
-            <el-button type="info" link>
-              <el-icon :size="20"><Star/></el-icon>
+            <el-button type="info" link @click="clickLike(sharing.postId, sharing.likeIcon)">
+              <el-icon :size="20">
+                <Component :is="sharing.likeIcon"/>
+              </el-icon>
+              <el-text size="small">{{ sharing.likeCount }}</el-text>
             </el-button>
           </el-col>
         </el-row>
@@ -128,8 +200,11 @@ onMounted(()=>{
                     <span>{{ comment.comment }}</span>
                   </el-col>
                   <el-col :span="2">
-                    <el-button type="info" link>
-                      <el-icon :size="20"><Star/></el-icon>
+                    <el-button type="info" link>  <!--TODO: 记得添加clickCommentLike方法-->
+                      <el-icon :size="20">
+                        <component :is="comment.likeIcon"/>
+                      </el-icon>
+                      <el-text size="small">{{ comment.likeCount }}</el-text>
                     </el-button>
                   </el-col>
                 </el-row>

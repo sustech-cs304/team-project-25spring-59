@@ -1058,7 +1058,8 @@ def _get_post_full(db: Session, post_id: int) -> models.Post:
         db.query(models.Post)
         .options(
             joinedload(models.Post.comments).joinedload(models.Comment.user),
-            joinedload(models.Post.user),joinedload(models.Comment.likes),
+            joinedload(models.Post.user),
+            joinedload(models.Post.comments).joinedload(models.Comment.likes),
             joinedload(models.Post.images), 
             joinedload(models.Post.likes),
         )
