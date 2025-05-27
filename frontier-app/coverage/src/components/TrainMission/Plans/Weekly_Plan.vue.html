@@ -591,7 +591,7 @@ const updateDailyTasks = async () =&gt; {
     try {
       console.log("当前调用的命令："+userId+" "+ dateStr)
       // 发送 API 请求，获取当天的训练记录
-      const response = await axios.post('http://10.12.184.92:8000/get-daily-plan', {
+      const response = await axios.post('http://127.0.0.1:8000/get-daily-plan', {
         user_id: String(userId),
         date_str: dateStr
       })

@@ -100,7 +100,7 @@ const summary = ref<null | {
 const fetchSummary = async () => {
   if (!userId.value) return
   try {
-    const res = await axios.post('http://10.12.184.92:8000/stats/summary', {
+    const res = await axios.post('http://127.0.0.1:8000/stats/summary', {
       user_id: Number(userId.value)
     })
     summary.value = res.data

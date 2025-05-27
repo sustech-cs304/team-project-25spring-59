@@ -1133,7 +1133,7 @@ const summary = ref&lt;null | {
 const fetchSummary = async () =&gt; {
   if (!userId.value) <span class="branch-0 cbranch-no" title="branch not covered" >return</span>
   try {
-    const res = await axios.post('http://10.12.184.92:8000/stats/summary', {
+    const res = await axios.post('http://127.0.0.1:8000/stats/summary', {
       user_id: Number(userId.value)
     })
     summary.value = res.data

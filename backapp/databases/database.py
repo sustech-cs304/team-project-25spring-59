@@ -1,26 +1,30 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+import os
 
 """
-AI-generated-content 
-tool: ChatGPT 
-version: 4o
-usage: I used the prompt "pymysql如何连接mysql数据库，设定账号和密码”", and 
-directly copy the code from its response 
+数据库连接配置
 """
-# SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:shiyansong123@10.12.184.92:3306/health_assistant"
-# SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:123456@10.26.63.155:3306/health_assistant"
-SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:708611@localhost:3306/health_assistant"
+# SQLite数据库路径设置
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SQLITE_DB_PATH = os.path.join(BASE_DIR, "sqlite_health_assistant.db")
+
+# 构建SQLite数据库URL
+SQLALCHEMY_DATABASE_URL = f"sqlite:///{SQLITE_DB_PATH}"
+
+# 原始MySQL连接字符串（保留作为参考）
+# DB_HOST = os.environ.get("DB_HOST", "127.0.0.1")
+# DB_USER = os.environ.get("DB_USER", "root")
+# DB_PASSWORD = os.environ.get("DB_PASSWORD", "123456")
+# DB_NAME = os.environ.get("DB_NAME", "health_assistant")
+# SQLALCHEMY_DATABASE_URL = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:3306/{DB_NAME}"
 
 # 创建同步引擎
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
-    # 可以添加MySQL特有的参数
-    pool_size=5,  # 连接池大小
-    max_overflow=10,  # 超过连接池大小时，最多可创建的连接数
-    pool_timeout=30,  # 等待获取连接的超时时间
-    pool_recycle=1800  # 连接在池中保持时间（秒）
+    # SQLite特定设置
+    connect_args={"check_same_thread": False}  # 允许多线程访问
 )
 
 # 创建会话工厂

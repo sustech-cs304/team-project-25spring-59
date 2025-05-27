@@ -2999,7 +2999,7 @@ const analyzeDataWithModel = <span class="fstat-no" title="function not covered"
 &nbsp;
     // Step 1: 获取训练数据
 <span class="cstat-no" title="statement not covered" >    const apiResp = await fetch(</span>
-<span class="cstat-no" title="statement not covered" >      `http://10.12.184.92:8000/stats/weekly-trend?start_date=${dateRange.start_date}&amp;end_date=${dateRange.end_date}`,</span>
+<span class="cstat-no" title="statement not covered" >      `http://127.0.0.1:8000/stats/weekly-trend?start_date=${dateRange.start_date}&amp;end_date=${dateRange.end_date}`,</span>
 <span class="cstat-no" title="statement not covered" >      {</span>
 <span class="cstat-no" title="statement not covered" >        method: 'POST',</span>
 <span class="cstat-no" title="statement not covered" >        headers: { 'Content-Type': 'application/json' },</span>
@@ -3081,7 +3081,7 @@ const analyzePlanWithModel = <span class="fstat-no" title="function not covered"
 <span class="cstat-no" title="statement not covered" >  for (let d = start; d.isSameOrBefore(end); d = d.add(1, 'day')) {</span>
 <span class="cstat-no" title="statement not covered" >    const dateStr = d.format('YYYY年M月D日') // 修改为带年份格式</span>
 <span class="cstat-no" title="statement not covered" >    try {</span>
-<span class="cstat-no" title="statement not covered" >      const res = await fetch('http://10.12.184.92:8000/get-daily-plan', {</span>
+<span class="cstat-no" title="statement not covered" >      const res = await fetch('http://127.0.0.1:8000/get-daily-plan', {</span>
 <span class="cstat-no" title="statement not covered" >        method: 'POST',</span>
 <span class="cstat-no" title="statement not covered" >        headers: { 'Content-Type': 'application/json' },</span>
 <span class="cstat-no" title="statement not covered" >        body: JSON.stringify({</span>

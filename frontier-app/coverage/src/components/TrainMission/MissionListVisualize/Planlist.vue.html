@@ -1798,7 +1798,7 @@ const handleDelete = async () =&gt; {
 <span class="cstat-no" title="statement not covered" >  isLoading.value = true</span>
 <span class="cstat-no" title="statement not covered" >  try {</span>
 <span class="cstat-no" title="statement not covered" >    for (const id of selectedIds.value) {</span>
-<span class="cstat-no" title="statement not covered" >      await axios.post('http://10.12.184.92:8000/delete-record', {</span>
+<span class="cstat-no" title="statement not covered" >      await axios.post('http://127.0.0.1:8000/delete-record', {</span>
 <span class="cstat-no" title="statement not covered" >        record_id: id</span>
 <span class="cstat-no" title="statement not covered" >      })</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
@@ -1825,7 +1825,7 @@ const handleToggleType = <span class="fstat-no" title="function not covered" >as
 <span class="cstat-no" title="statement not covered" >  isLoading.value = true</span>
 <span class="cstat-no" title="statement not covered" >  try {</span>
 <span class="cstat-no" title="statement not covered" >    for (const id of selectedIds.value) {</span>
-<span class="cstat-no" title="statement not covered" >      await axios.post('http://10.12.184.92:8000/toggle-record-status', {</span>
+<span class="cstat-no" title="statement not covered" >      await axios.post('http://127.0.0.1:8000/toggle-record-status', {</span>
 <span class="cstat-no" title="statement not covered" >        record_id: id</span>
 <span class="cstat-no" title="statement not covered" >      })</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
@@ -1890,7 +1890,7 @@ const submitNewPlan = <span class="fstat-no" title="function not covered" >async
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  isLoading.value = true</span>
 <span class="cstat-no" title="statement not covered" >  try {</span>
-<span class="cstat-no" title="statement not covered" >    await axios.post('http://10.12.184.92:8000/saveMission', {</span>
+<span class="cstat-no" title="statement not covered" >    await axios.post('http://127.0.0.1:8000/saveMission', {</span>
 <span class="cstat-no" title="statement not covered" >      user_id: Number(userId.value),</span>
 <span class="cstat-no" title="statement not covered" >      ...newPlan.value</span>
 <span class="cstat-no" title="statement not covered" >    })</span>
@@ -1923,7 +1923,7 @@ const submitNewPlan = <span class="fstat-no" title="function not covered" >async
 //
 //   isLoading.value = true
 //   try {
-//     const response = await axios.post('http://10.12.184.92:8000/generate-user-records', {
+//     const response = await axios.post('http://127.0.0.1:8000/generate-user-records', {
 //       user_id: Number(userId.value)
 //     })
 //
@@ -1949,7 +1949,7 @@ const submitNewPlan = <span class="fstat-no" title="function not covered" >async
 const fetchCompletedPlans = async () =&gt; {
   if (!userId.value) <span class="branch-0 cbranch-no" title="branch not covered" >return</span>
   try {
-    const res = await axios.post('http://10.12.184.92:8000/generate-user-records/completed', {
+    const res = await axios.post('http://127.0.0.1:8000/generate-user-records/completed', {
       user_id: Number(userId.value)
     })
     completedPlans.value = res.data.records.map(formatRecord)
@@ -1961,7 +1961,7 @@ const fetchCompletedPlans = async () =&gt; {
 const fetchMissedPlans = async () =&gt; {
   if (!userId.value) <span class="branch-0 cbranch-no" title="branch not covered" >return</span>
   try {
-    const res = await axios.post('http://10.12.184.92:8000/generate-user-records/missed-plans', {
+    const res = await axios.post('http://127.0.0.1:8000/generate-user-records/missed-plans', {
       user_id: Number(userId.value)
     })
     missedPlans.value = res.data.records.map(formatRecord)
@@ -1973,7 +1973,7 @@ const fetchMissedPlans = async () =&gt; {
 const fetchUpcomingPlans = async () =&gt; {
   if (!userId.value) <span class="branch-0 cbranch-no" title="branch not covered" >return</span>
   try {
-    const res = await axios.post('http://10.12.184.92:8000/generate-user-records/upcoming-plans', {
+    const res = await axios.post('http://127.0.0.1:8000/generate-user-records/upcoming-plans', {
       user_id: Number(userId.value)
     })
     upcomingPlans.value = res.data.records.map(formatRecord)

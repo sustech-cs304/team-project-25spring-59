@@ -55,7 +55,7 @@ onMounted(() => {
 
   // if (redirectPath === '/trainMission') {
   //   // 目标是 /trainMission，跳转到 3000 端口
-  //   window.location.href = 'http://10.12.184.92:3000/';
+  //   window.location.href = 'http://127.0.0.1:3000/';
   // } else {
   //   // 其他路径正常跳转
   //   router.push(redirectPath);

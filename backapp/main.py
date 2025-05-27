@@ -36,57 +36,158 @@ print("保存路径为：", SAVE_DIR)
 @app.on_event("startup")
 def startup_db_client():
     init_db()
-    # insert_mock_data()  # 👈 启动时自动插入数据
-    # 执行 test.sql 文件
-    from sqlalchemy import text
-    from databases.database import SessionLocal
     
     try:
-        db = SessionLocal()
-        with open('test.sql', 'r', encoding='utf-8') as f:
+        # 检查SQL文件路径
+        sql_file_path = 'test.sql'
+        if not os.path.exists(sql_file_path):
+            # 尝试在/app目录下查找
+            sql_file_path = '/app/test.sql'
+            if not os.path.exists(sql_file_path):
+                print(f"警告: 未找到SQL文件 {sql_file_path}")
+                return
+        
+        # 为SQLite执行SQL脚本
+        from sqlalchemy import text
+        from databases.database import SessionLocal
+        import re
+
+        # 读取SQL文件
+        with open(sql_file_path, 'r', encoding='utf-8') as f:
             sql_script = f.read()
         
-        # 按分号分割执行多条SQL语句
-        statements = [stmt.strip() for stmt in sql_script.split(';') if stmt.strip()]
-        for stmt in statements:
-            db.execute(text(stmt))
+        # 连接SQLite数据库
+        db = SessionLocal()
         
-        db.commit()
-        print("成功执行 test.sql 文件")
+        # 将MySQL特定语法转换为SQLite兼容语法
+        # 替换AUTO_INCREMENT为AUTOINCREMENT
+        sql_script = sql_script.replace('AUTO_INCREMENT', 'AUTOINCREMENT')
+        # 替换其他MySQL特定语法
+        sql_script = sql_script.replace('ENGINE=InnoDB', '')
+        sql_script = sql_script.replace('DEFAULT CHARSET=utf8mb4', '')
+        sql_script = sql_script.replace('COLLATE=utf8mb4_unicode_ci', '')
         
-        # 更新training_records表的is_completed和record_type字段
-        try:
-            # 获取当前时间
-            now = datetime.now()
+        # 替换MySQL日期函数
+        # 替换NOW()函数
+        sql_script = sql_script.replace('NOW()', "datetime('now')")
+        
+        # 定义更全面的DATE_ADD和INTERVAL转换函数
+        def convert_mysql_date_functions(sql):
+            # 基本的DATE_ADD替换
+            sql = re.sub(r"DATE_ADD\s*\(\s*NOW\(\s*\)\s*,\s*INTERVAL\s+(-?\d+)\s+DAY\s*\)", 
+                        r"datetime('now', '\1 days')", sql)
+            sql = re.sub(r"DATE_ADD\s*\(\s*NOW\(\s*\)\s*,\s*INTERVAL\s+(-?\d+)\s+HOUR\s*\)", 
+                        r"datetime('now', '\1 hours')", sql)
             
-            # 查询所有training_records记录
-            records = db.query(models.TrainingRecord).all()
-            updated_count = 0
+            # 替换datetime('now')形式的DATE_ADD
+            sql = re.sub(r"DATE_ADD\s*\(\s*datetime\('now'\)\s*,\s*INTERVAL\s+(-?\d+)\s+DAY\s*\)", 
+                        r"datetime('now', '\1 days')", sql)
+            sql = re.sub(r"DATE_ADD\s*\(\s*datetime\('now'\)\s*,\s*INTERVAL\s+(-?\d+)\s+HOUR\s*\)", 
+                        r"datetime('now', '\1 hours')", sql)
             
-            for record in records:
-                # 确保datetime对象是naive的(不带时区)
-                record_start_time = record.start_time
-                if record_start_time.tzinfo is not None:
-                    record_start_time = record_start_time.replace(tzinfo=None)
+            # 处理连续的时间计算 (如 DATE_ADD(...) + INTERVAL)
+            # 首先替换 DATE_ADD(...) + INTERVAL x HOUR
+            def replace_date_add_plus_interval(match):
+                base_date = match.group(1)  # datetime('now', 'x days')
+                interval_value = match.group(2)  # 1, 2 等
+                interval_unit = match.group(3).lower()  # hour, day 等
                 
-                # 根据start_time与当前时间比较设置字段
-                if record.end_time < now:
-                    record.is_completed = True
-                    record.record_type = "record"
+                if interval_unit == 'hour':
+                    return f"datetime({base_date}, '+{interval_value} hours')"
+                elif interval_unit == 'day':
+                    return f"datetime({base_date}, '+{interval_value} days')"
                 else:
-                    record.is_completed = False
-                    record.record_type = "plan"
-                updated_count += 1
-                
-            db.commit()
-            print(f"成功更新 {updated_count} 条训练记录的状态")
-        except Exception as e:
-            print(f"更新训练记录失败: {e}")
+                    return base_date  # 如果不认识的单位，保持原样
+            
+            # 处理 datetime('now', 'x days') + INTERVAL y HOUR 模式
+            sql = re.sub(r"(datetime\('now',\s*[^)]+\))\s*\+\s*INTERVAL\s+(\d+)\s+([A-Za-z]+)", 
+                       replace_date_add_plus_interval, sql)
+            
+            return sql
         
+        # 应用转换函数
+        sql_script = convert_mysql_date_functions(sql_script)
+        
+        # 处理日期比较
+        sql_script = re.sub(r"(\w+\.start_time)\s+<\s+(\w+\.end_time)", 
+                           r"\1 < \2", sql_script)
+        
+        try:
+            # 按分号分割执行多条SQL语句
+            statements = [stmt.strip() for stmt in sql_script.split(';') if stmt.strip()]
+            success_count = 0
+            failed_count = 0
+            for stmt in statements:
+                try:
+                    # 跳过MySQL特定的命令
+                    if any(keyword in stmt.upper() for keyword in [
+                        'USE ', 'CREATE DATABASE', 'ALTER DATABASE', 
+                        'DROP DATABASE', 'SET NAMES', 'INTERVAL'
+                    ]):
+                        print(f"跳过不兼容的MySQL语句: {stmt[:50]}...")
+                        continue
+                    
+                    # 如果语句中包含DATE_ADD但转换失败，跳过该语句
+                    if 'DATE_ADD' in stmt:
+                        print(f"跳过包含未转换DATE_ADD的语句: {stmt[:50]}...")
+                        continue
+                    
+                    # 如果语句中包含INSERT语句，打印前100个字符进行调试
+                    if 'INSERT' in stmt.upper():
+                        print(f"执行SQL INSERT语句: {stmt[:100]}...")
+                    
+                    db.execute(text(stmt))
+                    success_count += 1
+                except Exception as e:
+                    failed_count += 1
+                    print(f"执行SQL语句时出错: {e}")
+                    print(f"问题语句: {stmt[:100]}...")
+                    # 继续执行下一条语句，而不是完全中断
+            
+            db.commit()
+            print(f"成功执行 {success_count} 条SQL语句，跳过或失败 {failed_count} 条语句")
+            
+            # 更新训练记录的状态
+            now = datetime.now()
+            records = db.query(models.TrainingRecord).all()
+            for record in records:
+                # 使用安全的方法更新记录，避免SQLAlchemy的布尔比较
+                if isinstance(record, models.TrainingRecord):  # 确保是ORM对象
+                    # 安全地比较日期 - 转换为Python datetime对象进行比较
+                    record_end_time = record.end_time
+                    if isinstance(record_end_time, str):
+                        record_end_time = datetime.fromisoformat(record_end_time.replace('Z', '+00:00'))
+                    
+                    is_past = record_end_time < now if record_end_time else False
+                    
+                    if is_past:
+                        setattr(record, 'is_completed', True)
+                        setattr(record, 'record_type', "record")
+                    else:
+                        setattr(record, 'is_completed', False)
+                        setattr(record, 'record_type', "plan")
+            
+            db.commit()
+            print("成功更新训练记录状态")
+            
+            # 如果有失败的INSERT语句，使用Python脚本生成示例数据
+            if failed_count > 0:
+                print("生成一些基本的测试数据来替代失败的SQL导入...")
+                try:
+                    from databases.sample_data import generate_sample_data
+                    generate_sample_data(db)
+                    db.commit()
+                    print("成功生成基本测试数据")
+                except Exception as e:
+                    print(f"生成测试数据时出错: {e}")
+            
+        except Exception as e:
+            print(f"数据导入过程中发生错误: {e}")
+        finally:
+            db.close()
+    
     except Exception as e:
-        print(f"执行 SQL 脚本出错: {e}")
-    finally:
-        db.close()
+        print(f"数据库初始化错误: {e}")
 
 # 允许跨域请求，方便前端访问
 app.add_middleware(
@@ -734,7 +835,7 @@ async def get_gyms(
 
 if __name__ == '__main__':
     import uvicorn
-    uvicorn.run("main:app", host="10.12.184.92", port=8000, reload=True)
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
 
 
 @app.post("/delete-record")

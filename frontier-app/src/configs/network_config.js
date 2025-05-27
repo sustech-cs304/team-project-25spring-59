@@ -2,5 +2,5 @@
 
 
 // API 基础地址
-export const API_BASE_URL = "http://10.12.184.92:8000";
-export const API_LOGIN_URL = "http://10.12.184.92:8000/login";
+export const API_BASE_URL = "http://127.0.0.1:8000";
+export const API_LOGIN_URL = "http://127.0.0.1:8000/login";
