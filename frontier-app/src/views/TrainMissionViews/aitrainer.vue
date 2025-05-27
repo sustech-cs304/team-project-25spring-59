@@ -54,7 +54,11 @@
 
 </template>
 
+
+
+
 <script setup lang="ts">
+import {API_BASE_URL} from '../../configs/network_config'
 import { ref, nextTick, defineProps, defineEmits } from 'vue'
 import {SILICON_API} from "../../configs/aiAdvisor_config.js"
 import yaml from 'js-yaml'
@@ -696,7 +700,7 @@ const analyzeDataWithModel = async (
 
     // Step 1: 获取训练数据
     const apiResp = await fetch(
-      `http://10.12.184.92:8000/stats/weekly-trend?start_date=${dateRange.start_date}&end_date=${dateRange.end_date}`,
+      `${API_BASE_URL}/stats/weekly-trend?start_date=${dateRange.start_date}&end_date=${dateRange.end_date}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -778,7 +782,7 @@ const analyzePlanWithModel = async (
   for (let d = start; d.isSameOrBefore(end); d = d.add(1, 'day')) {
     const dateStr = d.format('YYYY年M月D日') // 修改为带年份格式
     try {
-      const res = await fetch('http://10.12.184.92:8000/get-daily-plan', {
+      const res = await fetch(`${API_BASE_URL}/get-daily-plan`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -922,7 +926,7 @@ const confirmAddPlan = async () => {
   if (!pendingPlan.value) return
 
   for (const item of pendingPlan.value) {
-    await fetch('http://10.12.184.92:8000/saveMission', {
+    await fetch(`${API_BASE_URL}/saveMission`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

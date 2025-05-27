@@ -66,6 +66,7 @@ import Weekly_Plan from "../../components/TrainMission/Plans/Weekly_Plan.vue";
 import axios from "axios";
 import SpinePlayer from "../../components/Spine-Player-Dashboard/index.vue";
 import AITrainerAssistant from './aitrainer.vue'
+import { API_BASE_URL } from '../../configs/network_config'
 
 const routeBase = ref('/')
 const userId = ref<string | null>(null)
@@ -100,7 +101,7 @@ const summary = ref<null | {
 const fetchSummary = async () => {
   if (!userId.value) return
   try {
-    const res = await axios.post('http://10.12.184.92:8000/stats/summary', {
+    const res = await axios.post(`${API_BASE_URL}/stats/summary`, {
       user_id: Number(userId.value)
     })
     summary.value = res.data

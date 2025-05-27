@@ -25,6 +25,7 @@
 <script>
 import * as echarts from 'echarts'
 import dayjs from 'dayjs'
+import {API_BASE_URL} from "../../../configs/network_config.js";
 
 export default {
   name: 'roll-arcline',
@@ -61,7 +62,7 @@ export default {
       if (!userId) return
 
       try {
-        const response = await fetch(`http://10.12.184.92:8000/stats/weekly-trend?start_date=${startStr}&end_date=${endStr}`, {
+        const response = await fetch(`${API_BASE_URL}/stats/weekly-trend?start_date=${startStr}&end_date=${endStr}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ user_id: parseInt(userId) })

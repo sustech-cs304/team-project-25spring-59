@@ -44,6 +44,7 @@ import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import axios from "axios";
 import MouseTrail from "../components/MouseTrail.vue"; // 引入 axios 用于发送 HTTP 请求
+import {API_BASE_URL} from "../configs/network_config.js"
 
 const router = useRouter();
 const username = ref("");
@@ -66,7 +67,7 @@ const register = async () => {
 
   try {
     console.log("发送注册请求", username.value, email.value, password.value);
-    const response = await axios.post("http://10.12.184.92:8000/register", {
+    const response = await axios.post(`${API_BASE_URL}/register`, {
       username: username.value,
       email: email.value,
       password: password.value,

@@ -30,6 +30,7 @@ import { ref, computed, watch } from 'vue'
 import dayjs from 'dayjs'
 import { onMounted } from "vue";
 import axios from "axios";
+import { API_BASE_URL } from '../../../configs/network_config'
 
 const currentDate = ref(dayjs())
 
@@ -91,7 +92,7 @@ const updateDailyTasks = async () => {
     try {
       console.log("当前调用的命令："+userId+" "+ dateStr)
       // 发送 API 请求，获取当天的训练记录
-      const response = await axios.post('http://10.12.184.92:8000/get-daily-plan', {
+      const response = await axios.post(`${API_BASE_URL}/get-daily-plan`, {
         user_id: String(userId),
         date_str: dateStr
       })
