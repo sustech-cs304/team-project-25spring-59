@@ -1,0 +1,32 @@
+version: '3'
+
+services:
+  frontend:
+    build: 
+      context: ./frontier-app
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  backend:
+    build:
+      context: .
+      dockerfile: backapp/Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./test.sql:/app/test.sql
+      - sqlite_data:/app/backapp
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  sqlite_data:
