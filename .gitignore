@@ -32,3 +32,4 @@ backapp/static/vite.svg
 /venv
 /backapp/build
 /backapp/personal_health_assistant.egg-info
+/backapp/dist

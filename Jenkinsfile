@@ -59,16 +59,7 @@ pipeline {
                             pip install -r requirements.txt --no-cache-dir
                         '''
                         
-                        // 生成wheel包
-                        bat '''
-                            call %VENV_NAME%\\Scripts\\activate.bat
-                            pip install wheel
-                            cd backapp
-                            python setup.py bdist_wheel
-                            cd ..
-                        '''
-                        
-                        echo "后端构建完成，wheel包已生成"
+                        echo "后端依赖安装完成"
                     }
                 }
             }
@@ -83,6 +74,33 @@ pipeline {
                 bat 'xcopy /E /Y frontier-app\\dist\\* backapp\\static\\'
                 
                 echo "前后端集成完成：前端静态文件已复制到后端静态目录"
+            }
+        }
+        
+        stage('Wheel Package Build') {
+            steps {
+                // 确保static目录有__init__.py文件
+                bat '''
+                    if not exist backapp\\static\\__init__.py echo # static package initialization > backapp\\static\\__init__.py
+                    if not exist backapp\\static\\uploads mkdir backapp\\static\\uploads
+                '''
+                
+                // 生成wheel包
+                bat '''
+                    call %VENV_NAME%\\Scripts\\activate.bat
+                    pip install wheel
+                    cd backapp
+                    
+                    REM 确保包含了必要的__init__.py文件
+                    if not exist auth\\__init__.py echo # auth package initialization > auth\\__init__.py
+                    if not exist databases\\__init__.py echo # databases package initialization > databases\\__init__.py
+                    if not exist __init__.py echo # backapp package initialization > __init__.py
+                    
+                    python setup.py sdist bdist_wheel
+                    cd ..
+                '''
+                
+                echo "wheel包构建完成，包含所有静态文件"
             }
         }
         
@@ -181,7 +199,7 @@ pipeline {
                 bat '''
                     if not exist deploy_env python -m venv deploy_env
                     call deploy_env\\Scripts\\activate.bat
-                    pip install --find-links=backapp\\dist\\ personal-health-assistant --no-index
+                    pip install --find-links=backapp\\dist\\ personal-health-assistant
                 '''
                 
                 echo "启动生产服务器..."
