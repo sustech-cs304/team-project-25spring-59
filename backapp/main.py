@@ -16,6 +16,8 @@ from typing import Optional
 from fastapi import UploadFile, File, Form
 import os, uuid, shutil
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+from starlette.types import Scope, Receive, Send
 
 # 添加当前目录到路径
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -230,11 +232,6 @@ class RecordIdRequest(BaseModel):
 class PlanTimeRequest(BaseModel):
     user_id: int
     minutes: int
-
-@app.get("/")
-def read_root():
-    return {"message": "FastAPI 服务器运行成功！"}
-
 
 @app.post("/login")
 def login(user: LoginRequest, db: Session = Depends(get_db)):
@@ -1078,7 +1075,122 @@ def _get_post_full(db: Session, post_id: int) -> models.Post:
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 UPLOAD_DIR = os.path.join(STATIC_DIR, "uploads")
+
+# 只挂载"/static"路径，不挂载根路径
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+# 使用自定义的HTML处理来支持Vue Router的HTML5历史模式
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+from starlette.types import Scope, Receive, Send
+
+class SPAStaticFiles(StaticFiles):
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        """重写StaticFiles的调用方法，使其支持SPA应用的客户端路由"""
+        assert scope["type"] == "http"
+        
+        path = scope["path"]
+        print(f"[SPAStaticFiles] 收到请求路径: {path}")
+        
+        # 定义API路由前缀和确切路径
+        api_prefixes = [
+            "/login", "/register", "/saveMission", "/training-tasks", 
+            "/delete-record", "/edit-record", "/get-weekly-plan", 
+            "/stats", "/get-daily-plan", "/posts", "/comments", 
+            "/challenges", "/toggle-record-status", "/get-user-details", 
+            "/leaderboard", "/gym", "/course", "/api", "/docs", 
+            "/redoc", "/openapi.json"
+        ]
+        
+        # 添加特定API路由
+        exact_api_paths = [
+            "/generate-user-records",
+            "/generate-user-records/",
+            "/generate-user-records/in-progress",
+            "/generate-user-records/missed-plans",
+            "/generate-user-records/upcoming-plans",
+            "/generate-user-records/completed",
+            "/generate-user-records/starting-soon"
+        ]
+        
+        # 处理静态资源请求 - 如果是以assets开头的请求，但URL格式不正确，则进行修复
+        if "/assets/" in path and not path.startswith("/assets/") and not path.startswith("/static/"):
+            # 针对多级路由下的资源请求，修复路径
+            corrected_path = path[path.find("/assets/"):]
+            print(f"[SPAStaticFiles] 修复资源路径从 {path} 到 {corrected_path}")
+            
+            # 更新scope路径
+            scope["path"] = corrected_path
+            path = corrected_path
+        
+        # 检查是否是API路由
+        is_api_path = False
+        
+        # 首先检查是否完全匹配任何API路径
+        if path in exact_api_paths:
+            is_api_path = True
+            print(f"[SPAStaticFiles] 精确匹配API路径: {path}")
+        
+        # 再检查是否以API前缀开头
+        if not is_api_path:
+            for prefix in api_prefixes:
+                if path.startswith(prefix):
+                    is_api_path = True
+                    print(f"[SPAStaticFiles] 前缀匹配API路径: {path} 使用前缀 {prefix}")
+                    break
+        
+        # 如果是API路由，返回404让FastAPI处理
+        if is_api_path:
+            print(f"[SPAStaticFiles] 返回404让FastAPI处理API路径: {path}")
+            from starlette.responses import PlainTextResponse
+            response = PlainTextResponse("Not Found", status_code=404)
+            await response(scope, receive, send)
+            return
+        
+        # 检查是否是具体的静态资源文件请求 (assets, js, css, 图片等)
+        is_static_file = False
+        static_extensions = ['.js', '.css', '.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico', '.woff', '.woff2', '.ttf', '.eot']
+        for ext in static_extensions:
+            if path.endswith(ext):
+                is_static_file = True
+                break
+        
+        # 如果是静态资源但不是以/static/开头，尝试从static目录提供
+        if is_static_file and not path.startswith('/static/'):
+            # 去掉前导斜杠以匹配相对路径
+            relative_path = path.lstrip('/')
+            new_path = f"/static/{relative_path}"
+            print(f"[SPAStaticFiles] 尝试从static目录提供静态资源: {new_path}")
+            try:
+                # 修改路径以指向static目录
+                modified_scope = dict(scope)
+                modified_scope["path"] = new_path
+                response = FileResponse(os.path.join(STATIC_DIR, relative_path))
+                await response(scope, receive, send)
+                return
+            except Exception as e:
+                print(f"[SPAStaticFiles] 从static目录提供资源失败: {str(e)}")
+                # 失败后继续尝试正常流程
+                pass
+        
+        # 处理多级路径的前端路由 - 如果路径包含多级目录且不是静态资源，直接返回index.html
+        if '/' in path[1:] and not is_static_file and not path.startswith('/static/'):
+            print(f"[SPAStaticFiles] 检测到多级前端路由: {path}，返回index.html")
+            response = FileResponse(os.path.join(STATIC_DIR, "index.html"))
+            await response(scope, receive, send)
+            return
+        
+        # 否则尝试提供静态文件
+        try:
+            print(f"[SPAStaticFiles] 尝试提供静态文件: {path}")
+            await super().__call__(scope, receive, send)
+        except Exception as e:
+            # 如果没有找到静态文件，返回index.html（SPA客户端路由处理）
+            print(f"[SPAStaticFiles] 未找到静态文件，返回index.html。错误: {str(e)}")
+            response = FileResponse(os.path.join(STATIC_DIR, "index.html"))
+            await response(scope, receive, send)
+
+
 
 @app.post("/posts", response_model=PostResponse)
 def create_post_api(
@@ -1784,3 +1896,6 @@ def get_plans_in_progress(request: UserIdRequest, db: Session = Depends(get_db))
         raise HTTPException(status_code=500, detail=f"获取正在进行中的计划失败: {str(e)}")
 
 
+# 确保这是文件中的最后一行代码，所有API路由都在此之前定义
+# 挂载根路径，使用自定义的StaticFiles类
+app.mount("/", SPAStaticFiles(directory=STATIC_DIR, html=True), name="root")
