@@ -1,0 +1,8 @@
+include requirements.txt
+include README.md
+include LICENSE
+recursive-include static *
+recursive-include databases/migrations *
+recursive-include databases/schemas *
+recursive-include auth *
+recursive-include tests * 

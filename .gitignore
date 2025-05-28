@@ -29,3 +29,7 @@ backapp/static/shitim/Tran_Shitim_Icon.png
 backapp/static/task.png
 backapp/static/transfrom.webm
 backapp/static/vite.svg
+/venv
+/backapp/build
+/backapp/personal_health_assistant.egg-info
+/backapp/dist

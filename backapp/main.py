@@ -686,27 +686,27 @@ def cancel_course_reservation(
 
     return {"message": "取消预约成功", "course_id": request.course_id}
 
-@app.post("/gym/reserveGym", summary="预约健身房", response_model=GymReservationResponse)
-async def reserve_gym(
-    reservation: GymReservationCreate,
-    db: Session = Depends(get_db),
-):
-    """预约健身房"""
+# @app.post("/gym/reserveGym", summary="预约健身房", response_model=GymReservationResponse)
+# async def reserve_gym(
+#     reservation: GymReservationCreate,
+#     db: Session = Depends(get_db),
+# ):
+#     """预约健身房"""
     
-    # 创建健身房预约
-    db_reservation = crud.create_gym_reservation(
-        db=db,
-        user_id=reservation.user_id,
-        gym_id=reservation.gym_id,
-        reservation_date=reservation.reservation_date,
-        start_time=reservation.start_time,
-        end_time=reservation.end_time
-    )
+#     # 创建健身房预约
+#     db_reservation = crud.create_gym_reservation(
+#         db=db,
+#         user_id=reservation.user_id,
+#         gym_id=reservation.gym_id,
+#         reservation_date=reservation.reservation_date,
+#         start_time=reservation.start_time,
+#         end_time=reservation.end_time
+#     )
     
-    if db_reservation is None:
-        raise HTTPException(status_code=400, detail="健身房不存在或预约失败")
+#     if db_reservation is None:
+#         raise HTTPException(status_code=400, detail="健身房不存在或预约失败")
     
-    return db_reservation
+#     return db_reservation
 
 @app.get("/gym/getGyms", summary="获取健身房列表", response_model=list[GymResponse])
 async def get_gyms(
@@ -715,17 +715,6 @@ async def get_gyms(
     # current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    # 获取用户信息
-    # user_dict = current_user.__dict__
-    # user_id = user_dict["id"]
-    #
-    # # 调用推荐函数，获取个性化推荐的健身房列表
-    # gyms = crud.recommend_gyms_for_user(
-    #     db=db,
-    #     user_id=user_id,
-    #     skip=skip,
-    #     limit=limit
-    # )
     gyms = crud.get_gyms(db, skip, limit)
     return gyms
 
@@ -1899,3 +1888,8 @@ def get_plans_in_progress(request: UserIdRequest, db: Session = Depends(get_db))
 # 确保这是文件中的最后一行代码，所有API路由都在此之前定义
 # 挂载根路径，使用自定义的StaticFiles类
 app.mount("/", SPAStaticFiles(directory=STATIC_DIR, html=True), name="root")
+
+def start():
+    """Entry point for the package when installed via pip."""
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=8000)
