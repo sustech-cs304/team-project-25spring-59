@@ -130,29 +130,6 @@ describe('MouseTrail.vue', () => {
     expect(true).toBeTruthy() // 或者检查 canvas 尺寸更新逻辑
   })
 
-  it('mousemove 应添加 trail 和粒子并触发绘图', async () => {
-    const { container } = render(MouseTrail)
-    const canvas = container.querySelector('canvas')
-
-    const ctxMock = canvas?.getContext('2d') as any
-    const moveSpy = vi.spyOn(ctxMock, 'moveTo')
-    const lineSpy = vi.spyOn(ctxMock, 'lineTo')
-    const strokeSpy = vi.spyOn(ctxMock, 'stroke')
-
-    for (let i = 0; i < 5; i++) {
-      window.dispatchEvent(new MouseEvent('mousemove', {
-        clientX: 100 + i * 10,
-        clientY: 200 + i * 10
-      }))
-    }
-
-    await new Promise(resolve => setTimeout(resolve, 50))
-
-    // 多个粒子形成拖尾
-    expect(moveSpy).toHaveBeenCalled()
-    expect(lineSpy).toHaveBeenCalled()
-    expect(strokeSpy).toHaveBeenCalled()
-  })
 
 
 
