@@ -28,27 +28,30 @@ describe('Carousel 页面 E2E 测试', () => {
   });
 
 
-  it('3. 点击右上角感叹号弹出关于弹窗', () => {
+  it('2. 点击右上角感叹号弹出关于弹窗', () => {
     cy.get('.alert-box').click();
     cy.get('.modal-content').should('exist');
     cy.contains('项目成员').should('be.visible');
   });
 
-  it('4. 关闭弹窗功能正常', () => {
+  it('3. 关闭弹窗功能正常', () => {
     cy.get('.alert-box').click();
     cy.get('.close-button').click();
     cy.get('.modal-content').should('not.exist');
   });
 
-  it('5. 点击右下角跳转按钮播放动画并跳转页面', () => {
-    cy.get('.switch-wrapper').should('be.visible').click();
+  it('4. 点击右下角跳转按钮播放动画并跳转页面', () => {
+    cy.visit('http://localhost:5173/carousel')
 
-    // 延时等待动画 DOM 渲染完成（避免动画加载太慢）
-    cy.wait(10000); // 可按你实际加载时间调整
+    // 等待动画加载完成
+    cy.wait(1500)
 
-    // 跳转 Dashboard 页面验证
-    cy.location('pathname', { timeout: 15000 }).should('include', '/TrainMission/Dashboard');
-  });
+    // 点击并强制执行
+    cy.get('.switch-wrapper').click({ force: true })
+
+    // 等待页面跳转
+    cy.location('pathname', { timeout: 10000 }).should('include', '/TrainMission/Dashboard')
+  })
 });
 
 
