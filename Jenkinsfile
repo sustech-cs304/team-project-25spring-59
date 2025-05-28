@@ -158,6 +158,9 @@ pipeline {
                 archiveArtifacts artifacts: 'backapp/static/**/*', fingerprint: true
                 // 归档wheel包
                 archiveArtifacts artifacts: 'backapp/dist/*.whl', fingerprint: true
+                // 归档测试报告
+                archiveArtifacts artifacts: 'frontier-app/reports/**/*', fingerprint: true
+                archiveArtifacts artifacts: 'backapp/reports/**/*', fingerprint: true
                 
                 echo "构建产物已归档"
             }

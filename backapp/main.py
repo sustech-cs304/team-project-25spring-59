@@ -1903,4 +1903,4 @@ app.mount("/", SPAStaticFiles(directory=STATIC_DIR, html=True), name="root")
 def start():
     """Entry point for the package when installed via pip."""
     import uvicorn
-    uvicorn.run("backapp.main:app", host="0.0.0.0", port=8000)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000)

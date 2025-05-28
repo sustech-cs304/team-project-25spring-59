@@ -16,4 +16,6 @@ python-decouple>=3.8
 python-dateutil>=2.8.2
 python-jose>=3.3.0
 python-multipart>=0.0.5
+setuptools>=42.0.0
+wheel>=0.37.0
 
