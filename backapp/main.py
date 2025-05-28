@@ -51,7 +51,7 @@ def startup_db_client():
         from sqlalchemy import text
         from databases.database import SessionLocal
         import re
-
+    
         # 读取SQL文件
         with open(sql_file_path, 'r', encoding='utf-8') as f:
             sql_script = f.read()
@@ -59,64 +59,65 @@ def startup_db_client():
         # 连接SQLite数据库
         db = SessionLocal()
         
-        # 将MySQL特定语法转换为SQLite兼容语法
-        # 替换AUTO_INCREMENT为AUTOINCREMENT
-        sql_script = sql_script.replace('AUTO_INCREMENT', 'AUTOINCREMENT')
-        # 替换其他MySQL特定语法
-        sql_script = sql_script.replace('ENGINE=InnoDB', '')
-        sql_script = sql_script.replace('DEFAULT CHARSET=utf8mb4', '')
-        sql_script = sql_script.replace('COLLATE=utf8mb4_unicode_ci', '')
-        
-        # 替换MySQL日期函数
-        # 替换NOW()函数
-        sql_script = sql_script.replace('NOW()', "datetime('now')")
-        
-        # 定义更全面的DATE_ADD和INTERVAL转换函数
-        def convert_mysql_date_functions(sql):
-            # 基本的DATE_ADD替换
-            sql = re.sub(r"DATE_ADD\s*\(\s*NOW\(\s*\)\s*,\s*INTERVAL\s+(-?\d+)\s+DAY\s*\)", 
-                        r"datetime('now', '\1 days')", sql)
-            sql = re.sub(r"DATE_ADD\s*\(\s*NOW\(\s*\)\s*,\s*INTERVAL\s+(-?\d+)\s+HOUR\s*\)", 
-                        r"datetime('now', '\1 hours')", sql)
-            
-            # 替换datetime('now')形式的DATE_ADD
-            sql = re.sub(r"DATE_ADD\s*\(\s*datetime\('now'\)\s*,\s*INTERVAL\s+(-?\d+)\s+DAY\s*\)", 
-                        r"datetime('now', '\1 days')", sql)
-            sql = re.sub(r"DATE_ADD\s*\(\s*datetime\('now'\)\s*,\s*INTERVAL\s+(-?\d+)\s+HOUR\s*\)", 
-                        r"datetime('now', '\1 hours')", sql)
-            
-            # 处理连续的时间计算 (如 DATE_ADD(...) + INTERVAL)
-            # 首先替换 DATE_ADD(...) + INTERVAL x HOUR
-            def replace_date_add_plus_interval(match):
-                base_date = match.group(1)  # datetime('now', 'x days')
-                interval_value = match.group(2)  # 1, 2 等
-                interval_unit = match.group(3).lower()  # hour, day 等
-                
-                if interval_unit == 'hour':
-                    return f"datetime({base_date}, '+{interval_value} hours')"
-                elif interval_unit == 'day':
-                    return f"datetime({base_date}, '+{interval_value} days')"
-                else:
-                    return base_date  # 如果不认识的单位，保持原样
-            
-            # 处理 datetime('now', 'x days') + INTERVAL y HOUR 模式
-            sql = re.sub(r"(datetime\('now',\s*[^)]+\))\s*\+\s*INTERVAL\s+(\d+)\s+([A-Za-z]+)", 
-                       replace_date_add_plus_interval, sql)
-            
-            return sql
-        
-        # 应用转换函数
-        sql_script = convert_mysql_date_functions(sql_script)
-        
-        # 处理日期比较
-        sql_script = re.sub(r"(\w+\.start_time)\s+<\s+(\w+\.end_time)", 
-                           r"\1 < \2", sql_script)
-        
         try:
+            # 将MySQL特定语法转换为SQLite兼容语法
+            # 替换AUTO_INCREMENT为AUTOINCREMENT
+            sql_script = sql_script.replace('AUTO_INCREMENT', 'AUTOINCREMENT')
+            # 替换其他MySQL特定语法
+            sql_script = sql_script.replace('ENGINE=InnoDB', '')
+            sql_script = sql_script.replace('DEFAULT CHARSET=utf8mb4', '')
+            sql_script = sql_script.replace('COLLATE=utf8mb4_unicode_ci', '')
+            
+            # 替换MySQL日期函数
+            # 替换NOW()函数
+            sql_script = sql_script.replace('NOW()', "datetime('now')")
+            
+            # 定义更全面的DATE_ADD和INTERVAL转换函数
+            def convert_mysql_date_functions(sql):
+                # 基本的DATE_ADD替换
+                sql = re.sub(r"DATE_ADD\s*\(\s*NOW\(\s*\)\s*,\s*INTERVAL\s+(-?\d+)\s+DAY\s*\)", 
+                            r"datetime('now', '\1 days')", sql)
+                sql = re.sub(r"DATE_ADD\s*\(\s*NOW\(\s*\)\s*,\s*INTERVAL\s+(-?\d+)\s+HOUR\s*\)", 
+                            r"datetime('now', '\1 hours')", sql)
+                
+                # 替换datetime('now')形式的DATE_ADD
+                sql = re.sub(r"DATE_ADD\s*\(\s*datetime\('now'\)\s*,\s*INTERVAL\s+(-?\d+)\s+DAY\s*\)", 
+                            r"datetime('now', '\1 days')", sql)
+                sql = re.sub(r"DATE_ADD\s*\(\s*datetime\('now'\)\s*,\s*INTERVAL\s+(-?\d+)\s+HOUR\s*\)", 
+                            r"datetime('now', '\1 hours')", sql)
+                
+                # 处理连续的时间计算 (如 DATE_ADD(...) + INTERVAL)
+                # 首先替换 DATE_ADD(...) + INTERVAL x HOUR
+                def replace_date_add_plus_interval(match):
+                    base_date = match.group(1)  # datetime('now', 'x days')
+                    interval_value = match.group(2)  # 1, 2 等
+                    interval_unit = match.group(3).lower()  # hour, day 等
+                    
+                    if interval_unit == 'hour':
+                        return f"datetime({base_date}, '+{interval_value} hours')"
+                    elif interval_unit == 'day':
+                        return f"datetime({base_date}, '+{interval_value} days')"
+                    else:
+                        return base_date  # 如果不认识的单位，保持原样
+                
+                # 处理 datetime('now', 'x days') + INTERVAL y HOUR 模式
+                sql = re.sub(r"(datetime\('now',\s*[^)]+\))\s*\+\s*INTERVAL\s+(\d+)\s+([A-Za-z]+)", 
+                           replace_date_add_plus_interval, sql)
+                
+                return sql
+            
+            # 应用转换函数
+            sql_script = convert_mysql_date_functions(sql_script)
+            
+            # 处理日期比较
+            sql_script = re.sub(r"(\w+\.start_time)\s+<\s+(\w+\.end_time)", 
+                               r"\1 < \2", sql_script)
+            
             # 按分号分割执行多条SQL语句
             statements = [stmt.strip() for stmt in sql_script.split(';') if stmt.strip()]
             success_count = 0
             failed_count = 0
+            
             for stmt in statements:
                 try:
                     # 跳过MySQL特定的命令
@@ -180,12 +181,12 @@ def startup_db_client():
                     print("成功生成基本测试数据")
                 except Exception as e:
                     print(f"生成测试数据时出错: {e}")
-            
+                    
         except Exception as e:
             print(f"数据导入过程中发生错误: {e}")
         finally:
             db.close()
-    
+            
     except Exception as e:
         print(f"数据库初始化错误: {e}")
 

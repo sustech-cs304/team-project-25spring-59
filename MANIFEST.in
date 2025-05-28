@@ -1,0 +1,5 @@
+include backapp/requirements.txt
+recursive-include backapp/static *
+recursive-include backapp/databases *
+recursive-include backapp/auth *
+include test.sql 

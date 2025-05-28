@@ -1,51 +1,51 @@
-# 版本控制
-.git
-.gitignore
-.gitattributes
+# # 版本控制
+# .git
+# .gitignore
+# .gitattributes
 
-# 构建目录
-frontier-app/dist
+# # 构建目录
+# frontier-app/dist
 frontier-app/node_modules
-frontier-app/coverage
-__pycache__
-.pytest_cache
-htmlcov
-*.pyc
+# frontier-app/coverage
+# __pycache__
+# .pytest_cache
+# htmlcov
+# *.pyc
 
-# 日志
-*.log
+# # 日志
+# *.log
 
-# 数据库
-*.db
-*.sqlite
-*.sqlite3
-*.sql
+# # 数据库
+# *.db
+# *.sqlite
+# *.sqlite3
+# *.sql
 
-# 开发环境
-.env
-.venv
-env/
-venv/
-ENV/
+# # 开发环境
+# .env
+# .venv
+# env/
+# venv/
+# ENV/
 
-# IDE配置
-.vscode
-.idea
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+# # IDE配置
+# .vscode
+# .idea
+# *.suo
+# *.ntvs*
+# *.njsproj
+# *.sln
+# *.sw?
 
-# 大型文件
-*.zip
-*.tar.gz
-*.tgz
-*.rar
-*.7z
+# # 大型文件
+# *.zip
+# *.tar.gz
+# *.tgz
+# *.rar
+# *.7z
 
-# 特定路径
+# # 特定路径
 node_modules/
-data/
-软件工程Spring1设计/
-test.sql 
+# data/
+# 软件工程Spring1设计/
+# # test.sql 

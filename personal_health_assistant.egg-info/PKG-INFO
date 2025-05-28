@@ -1,0 +1,32 @@
+Metadata-Version: 2.2
+Name: personal_health_assistant
+Version: 0.1.0
+Summary: 个人健康助手后端服务
+Author: Team-25Spring-59
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.11
+Requires-Python: >=3.8
+Requires-Dist: fastapi>=0.68.0
+Requires-Dist: uvicorn>=0.15.0
+Requires-Dist: sqlalchemy>=1.4.23
+Requires-Dist: pydantic>=1.8.2
+Requires-Dist: python-jose>=3.3.0
+Requires-Dist: passlib>=1.7.4
+Requires-Dist: python-multipart>=0.0.5
+Requires-Dist: bcrypt>=3.2.0
+Requires-Dist: pytest>=6.2.5
+Requires-Dist: pytest-cov>=2.12.1
+Requires-Dist: pymysql>=1.1.1
+Requires-Dist: aiofiles>=0.7.0
+Requires-Dist: alembic>=1.7.7
+Requires-Dist: python-dotenv>=1.0.1
+Requires-Dist: python-decouple>=3.8
+Requires-Dist: python-dateutil>=2.8.2
+Requires-Dist: python-jose>=3.3.0
+Requires-Dist: python-multipart>=0.0.5
+Dynamic: author
+Dynamic: classifier
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary

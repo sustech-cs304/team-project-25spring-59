@@ -1,7 +1,7 @@
 #!/bin/bash
 
-echo "========== 个人健康助手项目部署脚本（SQLite版）=========="
-echo "此脚本将帮助您部署完整的应用程序，包括前端和后端（使用SQLite数据库）"
+echo "========== 个人健康助手项目部署脚本（SQLite版，使用Wheel包）=========="
+echo "此脚本将帮助您部署完整的应用程序，包括前端和后端（使用SQLite数据库和Wheel包）"
 
 # 检查Docker是否已安装
 if ! command -v docker &> /dev/null || ! command -v docker-compose &> /dev/null; then
