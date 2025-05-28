@@ -9,6 +9,7 @@ pipeline {
         // 环境变量
         DOCKER_COMPOSE_VERSION = '1.29.2'
         PROJECT_NAME = 'personal-health-assistant'
+        VENV_NAME = 'venv'  // 虚拟环境名称
     }
     
     stages {
@@ -27,16 +28,16 @@ pipeline {
             }
         }
         
-        stage('Compilation and Packaging') {
+        stage('Build Application') {
             parallel {
                 stage('Frontend Build') {
                     steps {
                         dir('frontier-app') {
                             // 安装前端依赖
-                            sh 'npm install'
+                            bat 'npm ci'
                             
                             // 构建前端项目
-                            sh 'npm run build'
+                            bat 'npm run build'
                             
                             echo "前端构建完成"
                         }
@@ -45,24 +46,45 @@ pipeline {
                 
                 stage('Backend Build') {
                     steps {
-                        dir('backapp') {
-                            // 创建虚拟环境
-                            sh 'python3 -m venv venv || true'
-                            
-                            // 激活虚拟环境并安装依赖
-                            sh '''
-                                . venv/bin/activate
-                                pip install --upgrade pip
-                                pip install -r requirements.txt
-                            '''
-                            
-                            echo "后端依赖安装完成"
-                        }
+                        // 创建并激活Python虚拟环境
+                        bat '''
+                            python -m venv %VENV_NAME%
+                            call %VENV_NAME%\\Scripts\\activate.bat
+                            python -m pip install --upgrade pip
+                        '''
+                        
+                        // 安装后端依赖
+                        bat '''
+                            call %VENV_NAME%\\Scripts\\activate.bat
+                            pip install -r requirements.txt --no-cache-dir
+                        '''
+                        
+                        // 生成wheel包
+                        bat '''
+                            call %VENV_NAME%\\Scripts\\activate.bat
+                            pip install wheel
+                            cd backapp
+                            python setup.py bdist_wheel
+                            cd ..
+                        '''
+                        
+                        echo "后端构建完成，wheel包已生成"
                     }
                 }
             }
         }
         
+        stage('Integration') {
+            steps {
+                // 创建静态文件目录（如果不存在）
+                bat 'if not exist backapp\\static mkdir backapp\\static'
+                
+                // 复制前端构建文件到后端静态目录 - 使用Windows xcopy命令
+                bat 'xcopy /E /Y frontier-app\\dist\\* backapp\\static\\'
+                
+                echo "前后端集成完成：前端静态文件已复制到后端静态目录"
+            }
+        }
         
         stage('Testing') {
             steps {
@@ -107,21 +129,20 @@ pipeline {
 
                     REM 2. 使用 radon 分析圈复杂度
                     cd backapp
-                    .\\.venv\\Scripts\\python.exe -m pip install radon
-                    radon cc . -s -a > reports\\python-complexity.txt
+                    ..\\%VENV_NAME%\\Scripts\\python.exe -m pip install radon
+                    ..\\%VENV_NAME%\\Scripts\\radon cc . -s -a > reports\\python-complexity.txt
                     cd ..
 
                     REM 3. 使用 pipdeptree 导出依赖结构
                     cd backapp
-                    .\\.venv\\Scripts\\python.exe -m pip install pipdeptree
-                    .\\.venv\\Scripts\\pipdeptree > reports\\python-dependencies.txt
+                    ..\\%VENV_NAME%\\Scripts\\python.exe -m pip install pipdeptree
+                    ..\\%VENV_NAME%\\Scripts\\pipdeptree > reports\\python-dependencies.txt
                     cd ..
                 '''
 
                 echo "✅ 所有测试报告已生成：frontier-app/reports 和 backapp/reports"
             }
         }
-
         
         stage('Documentation Generation') {
             steps {
@@ -134,11 +155,40 @@ pipeline {
             steps {
                 // 归档构建产物
                 archiveArtifacts artifacts: 'frontier-app/dist/**/*', fingerprint: true
-                
-                // 如果后端有构建产物，也可以归档
-                // archiveArtifacts artifacts: 'backapp/dist/**/*', fingerprint: true
+                archiveArtifacts artifacts: 'backapp/static/**/*', fingerprint: true
+                // 归档wheel包
+                archiveArtifacts artifacts: 'backapp/dist/*.whl', fingerprint: true
                 
                 echo "构建产物已归档"
+            }
+        }
+        
+        stage('Deployment') {
+            steps {
+                echo "终止可能运行中的服务..."
+                // 使用Windows任务管理器终止进程
+                bat '''
+                    taskkill /F /IM node.exe /T >nul 2>&1 || echo 没有Node进程在运行
+                    taskkill /F /FI "WINDOWTITLE eq frontend*" >nul 2>&1 || echo 没有前端窗口
+                    taskkill /F /FI "WINDOWTITLE eq backend*" >nul 2>&1 || echo 没有后端窗口
+                '''
+                
+                echo "安装wheel包到部署环境..."
+                // 创建部署环境并安装wheel包
+                bat '''
+                    if not exist deploy_env python -m venv deploy_env
+                    call deploy_env\\Scripts\\activate.bat
+                    pip install --find-links=backapp\\dist\\ personal-health-assistant --no-index
+                '''
+                
+                echo "启动生产服务器..."
+                // 使用Windows start命令启动后端服务器
+                bat '''
+                    call deploy_env\\Scripts\\activate.bat
+                    start "server" cmd /c "uvicorn backapp.main:app --host 0.0.0.0 --port 8000"
+                '''
+                
+                echo "应用已部署：前端访问地址 http://localhost:8000"
             }
         }
     }
