@@ -192,6 +192,17 @@ pipeline {
                     taskkill /F /IM node.exe /T >nul 2>&1 || echo 没有Node进程在运行
                     taskkill /F /FI "WINDOWTITLE eq frontend*" >nul 2>&1 || echo 没有前端窗口
                     taskkill /F /FI "WINDOWTITLE eq backend*" >nul 2>&1 || echo 没有后端窗口
+                    
+                    REM 尝试停止现有服务（如果有）
+                    sc query HealthAssistantService >nul 2>&1
+                    if not errorlevel 1 (
+                        sc stop HealthAssistantService
+                        sc delete HealthAssistantService
+                        echo 已停止并删除旧的服务
+                    )
+                    
+                    REM 杀死可能运行的Python进程
+                    taskkill /F /IM python.exe /FI "WINDOWTITLE eq HealthAssistant*" >nul 2>&1 || echo 没有相关Python进程
                 '''
                 
                 echo "安装wheel包到部署环境..."
@@ -202,22 +213,56 @@ pipeline {
                     pip install --find-links=backapp\\dist\\ personal-health-assistant
                 '''
                 
-                echo "启动生产服务器..."
-                // 使用Windows start命令启动后端服务器
+                echo "创建启动脚本..."
+                // 创建启动脚本，以便在Jenkins外部运行
                 bat '''
-                    call deploy_env\\Scripts\\activate.bat
-                    start "server" cmd /c "uvicorn backapp.main:app --host 0.0.0.0 --port 8000"
+                    echo @echo off > run_app.bat
+                    echo title HealthAssistant >> run_app.bat
+                    echo cd /d %CD% >> run_app.bat
+                    echo call deploy_env\\Scripts\\activate.bat >> run_app.bat
+                    echo uvicorn backapp.main:app --host 0.0.0.0 --port 8000 >> run_app.bat
+                    
+                    REM 创建PowerShell启动脚本
+                    echo $processPath = "%CD%\\run_app.bat" > start_app.ps1
+                    echo $workingDir = "%CD%" >> start_app.ps1
+                    echo Start-Process -FilePath $processPath -WorkingDirectory $workingDir -WindowStyle Normal >> start_app.ps1
                 '''
                 
-                echo "应用已部署：前端访问地址 http://localhost:8000"
+                echo "使用后台进程启动应用..."
+                // 使用PowerShell启动后台进程
+                bat '''
+                    REM 第一种方法：使用PowerShell后台启动
+                    powershell -ExecutionPolicy Bypass -File start_app.ps1
+                    
+                    REM 第二种方法：使用start命令（备用方法）
+                    start /min cmd /c run_app.bat
+                    
+                    REM 等待服务启动
+                    timeout /t 10
+                    
+                    REM 检查端口是否可访问
+                    powershell -Command "if((Test-NetConnection -ComputerName localhost -Port 8000).TcpTestSucceeded) { Write-Host '端口8000可访问，服务已启动' } else { Write-Host '端口8000不可访问，服务可能未启动' }"
+                '''
+                
+                echo "创建Windows启动项，确保系统重启后自动启动..."
+                // 创建Windows启动项
+                bat '''
+                    REM 创建启动文件夹快捷方式
+                    powershell -Command "$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('%APPDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\HealthAssistant.lnk'); $Shortcut.TargetPath = '%CD%\\run_app.bat'; $Shortcut.WorkingDirectory = '%CD%'; $Shortcut.Save()"
+                    echo 已创建Windows启动项，系统重启后应用将自动启动
+                '''
+                
+                echo "应用已部署并在后台运行：前端访问地址 http://localhost:8000"
+                echo "应用将在系统重启后自动启动"
             }
         }
     }
     
     post {
         always {
-            // 清理工作区
-            cleanWs()
+            // 不要清理工作区，因为部署依赖于这些文件
+            // cleanWs()
+            echo "保留工作区以维持服务运行"
         }
         success {
             echo "构建成功！"
