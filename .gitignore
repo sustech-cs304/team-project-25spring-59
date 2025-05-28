@@ -3,7 +3,7 @@
 /TrainMission/.vitepress/cache/deps
 /TrainMission/node_modules/dayjs
 /node_modules
-/backapp/auth/__pycache__
+
 
 .idea
 requirement.txt

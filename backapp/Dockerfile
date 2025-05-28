@@ -19,7 +19,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # 仅复制必要的代码文件，排除测试和缓存
 COPY backapp/*.py /app/backapp/
-COPY backapp/auth /app/backapp/auth/
 COPY backapp/databases /app/backapp/databases/
 COPY backapp/static /app/backapp/static/
 

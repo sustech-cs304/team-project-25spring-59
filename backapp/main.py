@@ -5,10 +5,6 @@ from fastapi.middleware.cors import CORSMiddleware
 import sys
 import os
 import re
-from backapp.auth.token import create_access_token
-from fastapi.security import OAuth2PasswordRequestForm
-from backapp.auth.dependencies import get_current_user
-
 from typing import List, Optional
 from sqlalchemy.orm import joinedload
 from typing import Optional 
@@ -467,62 +463,6 @@ def save_mission(data: SaveMissionRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail={"message": "保存失败", "error": str(e), "status": "failure"})
     
 
-@app.post("/training-tasks", response_model=TrainingTaskResponse)
-def create_task(task: TrainingTaskCreate, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
-    """创建新的训练任务"""
-    
-    user_dict = current_user.__dict__
-    user_id = user_dict["id"]
-        
-    return crud.create_training_task(
-        db=db,
-        user_id=user_id,
-        task_name=task.task_name,
-        start_time=task.start_time,
-        end_time=task.end_time
-    )
-@app.get("/training-tasks", response_model=list[TrainingTaskResponse])
-def read_tasks(skip: int = 0, limit: int = 100, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
-    """获取当前用户的所有训练任务"""
-    user_dict = current_user.__dict__
-    user_id = user_dict["id"]
-    tasks = crud.get_training_tasks(db=db, user_id=user_id, skip=skip, limit=limit)
-    return tasks
-
-@app.get("/training-tasks/{task_id}", response_model=TrainingTaskResponse)
-def read_task(task_id: int, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
-    """获取指定的训练任务"""
-    task = crud.get_training_task(db=db, task_id=task_id)
-    user_dict = current_user.__dict__
-    if task is None or task.__dict__["user_id"] != user_dict["id"]:
-        raise HTTPException(status_code=404, detail="训练任务不存在或无权访问")
-    return task
-
-@app.put("/training-tasks/{task_id}", response_model=TrainingTaskResponse)
-def update_task(task_id: int, task: TrainingTaskCreate, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
-    """更新训练任务"""
-    db_task = crud.get_training_task(db=db, task_id=task_id)
-    user_dict = current_user.__dict__
-    if db_task is None or db_task.__dict__["user_id"] != user_dict["id"]:
-        raise HTTPException(status_code=404, detail="训练任务不存在或无权访问")
-    
-    task_data = task.dict()
-    updated_task = crud.update_training_task(db=db, task_id=task_id, task_data=task_data)
-    return updated_task
-
-@app.delete("/training-tasks/{task_id}")
-def delete_task(task_id: int, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
-    """删除训练任务"""
-    db_task = crud.get_training_task(db=db, task_id=task_id)
-    user_dict = current_user.__dict__
-    if db_task is None or db_task.__dict__["user_id"] != user_dict["id"]:
-        raise HTTPException(status_code=404, detail="训练任务不存在或无权访问")
-    
-    success = crud.delete_training_task(db=db, task_id=task_id)
-    if success:
-        return {"message": "训练任务已成功删除"}
-    else:
-        raise HTTPException(status_code=500, detail="删除训练任务失败")
 
 from pydantic.alias_generators import to_camel
 class DTO(BaseModel):

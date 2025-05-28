@@ -32,7 +32,6 @@ pip install wheel
 cd backapp
 
 REM 确保包含了必要的__init__.py文件
-if not exist auth\__init__.py echo # auth package initialization > auth\__init__.py
 if not exist databases\__init__.py echo # databases package initialization > databases\__init__.py
 if not exist __init__.py echo # backapp package initialization > __init__.py
 

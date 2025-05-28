@@ -25,14 +25,13 @@ for root, dirs, files in os.walk('static'):
 setup(
     name="personal-health-assistant",
     version="0.1.0",
-    packages=['auth', 'databases', 'static'],  # 添加static作为包目录
+    packages=[ 'databases', 'static'],  # 添加static作为包目录
     py_modules=["main"],  # 包含主模块文件
     include_package_data=True,
     package_data={
         '': ['*.txt', '*.md', '*.jpg', '*.png', '*.svg', '*.ico', '*.webm', '*.jpeg'],
         'static': static_files,  # 使用动态生成的文件列表
         'databases': ['migrations/*', 'schemas/*'],
-        'auth': ['*'],
         'tests': ['*'],
     },
     # 使用zip_safe=False确保包不会被压缩，这样静态文件可以被正确访问
