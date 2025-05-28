@@ -1,6 +1,6 @@
 <script setup>
 
-import {onMounted, reactive, watch, ref} from "vue";
+import {onMounted, reactive, watch, ref, markRaw} from "vue";
 import {Plus, UserFilled, ChatDotRound, Star, StarFilled} from "@element-plus/icons-vue";
 import request, {baseurl} from "../../utils/request.js";
 import {ElMessage} from "element-plus";
@@ -10,16 +10,6 @@ defineEmits(['createShare'])
 const sharings = reactive({data: []});
 const userId = Number(localStorage.getItem('user_id'))
 
-const changeLikeIcon = (icon)=>{
-
-}
-
-// watch(
-//     () => sharings.data.map((sharing)=>[sharing.postId, sharing.likeIcon]),
-//     (newValue, oldValue) => {
-//       console.log(newValue)
-//     }
-// )
 
 function processData(data) {
   sharings.data = data;
@@ -36,9 +26,9 @@ function processData(data) {
     // process imgList
     sharing.imgList = Array.from(sharing.imgList, ({ img })=>baseurl+img)
     // add like identifier
-    sharing.likeIcon = sharing.likeList.indexOf(userId) !== -1 ? ref(StarFilled) : ref(Star)
+    sharing.likeIcon = sharing.likeList.indexOf(userId) !== -1 ? markRaw(StarFilled) : markRaw(Star)
     sharing.comments.forEach((comment)=>{
-      comment.likeIcon = comment.likeList.indexOf(userId) !== -1 ? ref(StarFilled) : ref(Star)
+      comment.likeIcon = comment.likeList.indexOf(userId) !== -1 ? markRaw(StarFilled) : markRaw(Star)
     })
   });
 }
@@ -63,15 +53,15 @@ function addComment(postId, comment) {
 
 function clickLike(postId, icon) {
   const sharing = sharings.data.find((sharing)=>sharing.postId === postId)
-  console.log(sharing)
+  console.log(sharing, markRaw(Star))
   const url = ref('')
-  if(icon === ref(Star).value) {
-    sharing.likeIcon = ref(StarFilled);
+  if(icon === markRaw(Star)) {
+    sharing.likeIcon = markRaw(StarFilled);
     sharing.likeCount += 1;
     url.value = `/posts/${postId}/like`
   }
   else {
-    sharing.likeIcon = ref(Star);
+    sharing.likeIcon = markRaw(Star);
     sharing.likeCount -= 1;
     url.value = `/posts/${postId}/unlike`
   }
@@ -91,13 +81,13 @@ function clickCommentLike(postId, commentId, icon) {
   const comment = sharing.comments.find((comment)=>comment.commentId === commentId)
   console.log(comment)
   const url = ref('')
-  if(icon === ref(Star).value) {
-    comment.likeIcon = ref(StarFilled);
+  if(icon === markRaw(Star)) {
+    comment.likeIcon = markRaw(StarFilled);
     comment.likeCount += 1;
     url.value = `/comments/${commentId}/like`
   }
   else {
-    comment.likeIcon = ref(Star);
+    comment.likeIcon = markRaw(Star);
     comment.likeCount -= 1;
     url.value = `/comments/${commentId}/unlike`
   }
@@ -200,7 +190,7 @@ onMounted(()=>{
                     <span>{{ comment.comment }}</span>
                   </el-col>
                   <el-col :span="2">
-                    <el-button type="info" link>  <!--TODO: 记得添加clickCommentLike方法-->
+                    <el-button type="info" link @click="clickCommentLike(sharing.postId, comment.commentId, comment.likeIcon)">
                       <el-icon :size="20">
                         <component :is="comment.likeIcon"/>
                       </el-icon>

@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/69</span>
+                <span class='fraction'>0/66</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/69</span>
+                <span class='fraction'>0/66</span>
             </div>
         
             
@@ -128,13 +128,7 @@
 <a name='L63'></a><a href='#L63'>63</a>
 <a name='L64'></a><a href='#L64'>64</a>
 <a name='L65'></a><a href='#L65'>65</a>
-<a name='L66'></a><a href='#L66'>66</a>
-<a name='L67'></a><a href='#L67'>67</a>
-<a name='L68'></a><a href='#L68'>68</a>
-<a name='L69'></a><a href='#L69'>69</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<a name='L66'></a><a href='#L66'>66</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -201,39 +195,39 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" >&lt;script setup&gt;</span></span></span>
 <span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >import {onMounted, reactive, ref, watch} from "vue";</span>
+<span class="cstat-no" title="statement not covered" >import {onMounted, reactive, ref} from "vue";</span>
 <span class="cstat-no" title="statement not covered" >import request from "../../utils/request.js";</span>
+<span class="cstat-no" title="statement not covered" >import {ElMessage} from "element-plus";</span>
 <span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >const userId = ref(1)</span>
+<span class="cstat-no" title="statement not covered" >const userId = localStorage.getItem('user_id')</span>
 <span class="cstat-no" title="statement not covered" >const personalCourses = reactive({})</span>
 <span class="cstat-no" title="statement not covered" ></span>
 <span class="cstat-no" title="statement not covered" >// sort the reservation records by reservation time from large to small</span>
-<span class="cstat-no" title="statement not covered" >watch(</span>
-<span class="cstat-no" title="statement not covered" >    personalCourses,</span>
-<span class="cstat-no" title="statement not covered" >    async (newValue, oldValue)=&gt;{</span>
-<span class="cstat-no" title="statement not covered" >      newValue.data.sort((a, b)=&gt;new Date(b.reservationTime) - new Date(a.reservationTime))</span>
-<span class="cstat-no" title="statement not covered" >    }</span>
-<span class="cstat-no" title="statement not covered" >)</span>
+<span class="cstat-no" title="statement not covered" >function processData(data) {</span>
+<span class="cstat-no" title="statement not covered" >  personalCourses.data = data;</span>
+<span class="cstat-no" title="statement not covered" >  personalCourses.data.sort((a, b)=&gt;new Date(b.reservationTime) - new Date(a.reservationTime))</span>
+<span class="cstat-no" title="statement not covered" >}</span>
 <span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >function denyReservation(courseId, gymId) {</span>
-<span class="cstat-no" title="statement not covered" >  console.log(courseId, gymId)</span>
+<span class="cstat-no" title="statement not covered" >function denyReservation(courseId) {</span>
+<span class="cstat-no" title="statement not covered" >  console.log(courseId)</span>
 <span class="cstat-no" title="statement not covered" >  request({</span>
 <span class="cstat-no" title="statement not covered" >    method: "POST",</span>
-<span class="cstat-no" title="statement not covered" >    url: '/gym/denyReservation',</span>
+<span class="cstat-no" title="statement not covered" >    url: '/gym/cancelCourseReservation',</span>
 <span class="cstat-no" title="statement not covered" >    data: {</span>
 <span class="cstat-no" title="statement not covered" >      userId: userId,</span>
 <span class="cstat-no" title="statement not covered" >      courseId: courseId,</span>
-<span class="cstat-no" title="statement not covered" >      gymId: gymId,</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >  }).then((response)=&gt;{</span>
 <span class="cstat-no" title="statement not covered" >    console.log(response)</span>
+<span class="cstat-no" title="statement not covered" >    ElMessage({message: '已取消课程', type: 'success',})</span>
+<span class="cstat-no" title="statement not covered" >    window.location.reload()</span>
 <span class="cstat-no" title="statement not covered" >  }).catch((error)=&gt;{</span>
 <span class="cstat-no" title="statement not covered" >    console.log(error)</span>
 <span class="cstat-no" title="statement not covered" >  })</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 <span class="cstat-no" title="statement not covered" ></span>
 <span class="cstat-no" title="statement not covered" >onMounted(()=&gt;{</span>
-<span class="cstat-no" title="statement not covered" >  request.get(`/gym/getPersonalCourses/${userId}`)</span>
+<span class="cstat-no" title="statement not covered" >  request.get(`/course/getReservedCourses/${userId}`)</span>
 <span class="cstat-no" title="statement not covered" >      .then((response) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >        console.log(response);</span>
 <span class="cstat-no" title="statement not covered" >        personalCourses.data = response.data;</span>
@@ -254,10 +248,7 @@
 <span class="cstat-no" title="statement not covered" >        &lt;el-table-column label="上课时间" prop="startTime"&gt;&lt;/el-table-column&gt;</span>
 <span class="cstat-no" title="statement not covered" >        &lt;el-table-column label="操作" :fixed="'right'"&gt;</span>
 <span class="cstat-no" title="statement not covered" >          &lt;template #default="scope"&gt;</span>
-<span class="cstat-no" title="statement not covered" >            &lt;el-button</span>
-<span class="cstat-no" title="statement not covered" >                type="danger"</span>
-<span class="cstat-no" title="statement not covered" >                @click="denyReservation(scope.row.courseId, scope.row.gymId)"</span>
-<span class="cstat-no" title="statement not covered" >            &gt;取消预定&lt;/el-button&gt;</span>
+<span class="cstat-no" title="statement not covered" >            &lt;el-button type="danger" @click="denyReservation(scope.row.courseId)"&gt;取消预定&lt;/el-button&gt;</span>
 <span class="cstat-no" title="statement not covered" >          &lt;/template&gt;</span>
 <span class="cstat-no" title="statement not covered" >        &lt;/el-table-column&gt;</span>
 <span class="cstat-no" title="statement not covered" >      &lt;/el-table&gt;</span>
@@ -274,7 +265,7 @@
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-05-20T09:13:43.796Z
+                at 2025-05-28T03:54:40.928Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

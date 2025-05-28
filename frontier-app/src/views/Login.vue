@@ -51,7 +51,7 @@ import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import axios from "axios";
 import MouseTrail from "../components/MouseTrail.vue";
-import {API_BASE_URL, API_LOGIN_URL} from "../configs/network_config.js";
+import {API_BASE_URL} from "../configs/network_config.js";
 
 const router = useRouter();
 const username = ref("");
@@ -67,7 +67,7 @@ const login = async () => {
 
   loading.value = true;
   try {
-    const response = await axios.post(API_LOGIN_URL, {
+    const response = await axios.post(`${API_BASE_URL}/login`, {
       username: username.value,
       password: password.value,
     });

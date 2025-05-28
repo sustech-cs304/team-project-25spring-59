@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/70</span>
+                <span class='fraction'>0/67</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/70</span>
+                <span class='fraction'>0/67</span>
             </div>
         
             
@@ -129,13 +129,7 @@
 <a name='L64'></a><a href='#L64'>64</a>
 <a name='L65'></a><a href='#L65'>65</a>
 <a name='L66'></a><a href='#L66'>66</a>
-<a name='L67'></a><a href='#L67'>67</a>
-<a name='L68'></a><a href='#L68'>68</a>
-<a name='L69'></a><a href='#L69'>69</a>
-<a name='L70'></a><a href='#L70'>70</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<a name='L67'></a><a href='#L67'>67</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -238,29 +232,26 @@
 <span class="cstat-no" title="statement not covered" >&lt;template&gt;</span>
 <span class="cstat-no" title="statement not covered" >  &lt;el-row class="challenge-container"&gt;</span>
 <span class="cstat-no" title="statement not covered" >    &lt;el-col :span="12" :offset="6"&gt;</span>
-<span class="cstat-no" title="statement not covered" >      &lt;el-card</span>
-<span class="cstat-no" title="statement not covered" >          shadow="hover"</span>
-<span class="cstat-no" title="statement not covered" >          v-for="challenge in challenges.data"</span>
-<span class="cstat-no" title="statement not covered" >          @click="$emit('clickChallenge', challenge.id)"&gt;</span>
-<span class="cstat-no" title="statement not covered" >        &lt;el-row align="middle"&gt;</span>
-<span class="cstat-no" title="statement not covered" >          &lt;el-col :span="12"&gt;</span>
+<span class="cstat-no" title="statement not covered" >      &lt;el-card shadow="never" v-for="challenge in challenges.data"&gt;</span>
+<span class="cstat-no" title="statement not covered" >        &lt;el-row align="top" justify="space-between"&gt;</span>
+<span class="cstat-no" title="statement not covered" >          &lt;el-col :span="6"&gt;</span>
 <span class="cstat-no" title="statement not covered" >            &lt;el-row&gt;</span>
 <span class="cstat-no" title="statement not covered" >              {{ challenge.title }}</span>
 <span class="cstat-no" title="statement not covered" >            &lt;/el-row&gt;</span>
-<span class="cstat-no" title="statement not covered" >            &lt;el-row&gt;</span>
-<span class="cstat-no" title="statement not covered" >              &lt;el-col :span="8"&gt;</span>
-<span class="cstat-no" title="statement not covered" >                &lt;el-tag type="primary"&gt;{{ challenge.challenge_type }}&lt;/el-tag&gt;</span>
-<span class="cstat-no" title="statement not covered" >              &lt;/el-col&gt;</span>
-<span class="cstat-no" title="statement not covered" >&lt;!--              &lt;el-col :span="8"&gt;--&gt;</span>
-<span class="cstat-no" title="statement not covered" >&lt;!--                &lt;el-tag type="primary"&gt;{{ challenge.status }}&lt;/el-tag&gt;--&gt;</span>
-<span class="cstat-no" title="statement not covered" >&lt;!--              &lt;/el-col&gt;--&gt;</span>
-<span class="cstat-no" title="statement not covered" >            &lt;/el-row&gt;</span>
+<span class="cstat-no" title="statement not covered" >            &lt;el-tag type="primary"&gt;{{ challenge.challenge_type }}&lt;/el-tag&gt;</span>
 <span class="cstat-no" title="statement not covered" >          &lt;/el-col&gt;</span>
-<span class="cstat-no" title="statement not covered" >          &lt;el-col :span="8" :offset="4"&gt;</span>
+<span class="cstat-no" title="statement not covered" >          &lt;el-col :span="9"&gt;</span>
 <span class="cstat-no" title="statement not covered" >            &lt;div&gt;</span>
 <span class="cstat-no" title="statement not covered" >              开始：&lt;el-text type="info" size="small"&gt;{{ challenge.start_date }}&lt;/el-text&gt;&lt;br/&gt;</span>
 <span class="cstat-no" title="statement not covered" >              结束：&lt;el-text type="info" size="small"&gt;{{ challenge.end_date }}&lt;/el-text&gt;</span>
 <span class="cstat-no" title="statement not covered" >            &lt;/div&gt;</span>
+<span class="cstat-no" title="statement not covered" >          &lt;/el-col&gt;</span>
+<span class="cstat-no" title="statement not covered" >          &lt;el-col :span="3"&gt;</span>
+<span class="cstat-no" title="statement not covered" >            &lt;el-button</span>
+<span class="cstat-no" title="statement not covered" >                link</span>
+<span class="cstat-no" title="statement not covered" >                type="primary"</span>
+<span class="cstat-no" title="statement not covered" >                @click="$emit('clickChallenge', challenge.id)"</span>
+<span class="cstat-no" title="statement not covered" >            &gt;查看详情&lt;/el-button&gt;</span>
 <span class="cstat-no" title="statement not covered" >          &lt;/el-col&gt;</span>
 <span class="cstat-no" title="statement not covered" >        &lt;/el-row&gt;</span>
 <span class="cstat-no" title="statement not covered" >      &lt;/el-card&gt;</span>
@@ -277,7 +268,7 @@
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-05-20T09:13:43.796Z
+                at 2025-05-28T03:54:40.928Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

@@ -32,13 +32,12 @@
             <td>{{ plan.completed ? '是' : '否' }}</td>
           </tr>
         </tbody>
-        <div class="pagination">
-          <button :disabled="completedCurrentPage === 1" @click="completedCurrentPage--">上一页</button>
-          <span>第 {{ completedCurrentPage }} 页 / 共 {{ completedTotalPages }} 页</span>
-          <button :disabled="completedCurrentPage === completedTotalPages" @click="completedCurrentPage++">下一页</button>
-        </div>
-
       </table>
+      <div class="pagination">
+        <button :disabled="completedCurrentPage === 1" @click="completedCurrentPage--">上一页</button>
+        <span>第 {{ completedCurrentPage }} 页 / 共 {{ completedTotalPages }} 页</span>
+        <button :disabled="completedCurrentPage === completedTotalPages" @click="completedCurrentPage++">下一页</button>
+      </div>
     </div>
 
     <!-- ⚠️ 错过的计划 -->
@@ -70,12 +69,12 @@
             <td>{{ plan.completed ? '是' : '否' }}</td>
           </tr>
         </tbody>
-        <div class="pagination">
-          <button :disabled="missedCurrentPage === 1" @click="missedCurrentPage--">上一页</button>
-          <span>第 {{ missedCurrentPage }} 页 / 共 {{ missedTotalPages }} 页</span>
-          <button :disabled="missedCurrentPage === missedTotalPages" @click="missedCurrentPage++">下一页</button>
-        </div>
       </table>
+      <div class="pagination">
+        <button :disabled="missedCurrentPage === 1" @click="missedCurrentPage--">上一页</button>
+        <span>第 {{ missedCurrentPage }} 页 / 共 {{ missedTotalPages }} 页</span>
+        <button :disabled="missedCurrentPage === missedTotalPages" @click="missedCurrentPage++">下一页</button>
+      </div>
     </div>
 
     <!-- ⏳ 未来的计划 -->
@@ -107,12 +106,12 @@
             <td>{{ plan.completed ? '是' : '否' }}</td>
           </tr>
         </tbody>
-        <div class="pagination">
-          <button :disabled="upcomingCurrentPage === 1" @click="upcomingCurrentPage--">上一页</button>
-          <span>第 {{ upcomingCurrentPage }} 页 / 共 {{ upcomingTotalPages }} 页</span>
-          <button :disabled="upcomingCurrentPage === upcomingTotalPages" @click="upcomingCurrentPage++">下一页</button>
-        </div>
       </table>
+      <div class="pagination">
+        <button :disabled="upcomingCurrentPage === 1" @click="upcomingCurrentPage--">上一页</button>
+        <span>第 {{ upcomingCurrentPage }} 页 / 共 {{ upcomingTotalPages }} 页</span>
+        <button :disabled="upcomingCurrentPage === upcomingTotalPages" @click="upcomingCurrentPage++">下一页</button>
+      </div>
     </div>
 
 
@@ -194,6 +193,7 @@ import axios from 'axios'
 import Loading from 'vue3-loading-overlay'
 import 'vue3-loading-overlay/dist/vue3-loading-overlay.css'
 import {computed} from "vue";
+import { API_BASE_URL } from '../../../configs/network_config'
 
 // 定义响应数据结构
 interface RecordItem {
@@ -303,7 +303,7 @@ const handleDelete = async () => {
   isLoading.value = true
   try {
     for (const id of selectedIds.value) {
-      await axios.post('http://10.12.184.92:8000/delete-record', {
+      await axios.post(`${API_BASE_URL}/delete-record`, {
         record_id: id
       })
     }
@@ -330,7 +330,7 @@ const handleToggleType = async () => {
   isLoading.value = true
   try {
     for (const id of selectedIds.value) {
-      await axios.post('http://10.12.184.92:8000/toggle-record-status', {
+      await axios.post(`${API_BASE_URL}/toggle-record-status`, {
         record_id: id
       })
     }
@@ -395,7 +395,7 @@ const submitNewPlan = async () => {
 
   isLoading.value = true
   try {
-    await axios.post('http://10.12.184.92:8000/saveMission', {
+    await axios.post(`${API_BASE_URL}/saveMission`, {
       user_id: Number(userId.value),
       ...newPlan.value
     })
@@ -428,7 +428,7 @@ const submitNewPlan = async () => {
 //
 //   isLoading.value = true
 //   try {
-//     const response = await axios.post('http://10.12.184.92:8000/generate-user-records', {
+//     const response = await axios.post(`${API_BASE_URL}/generate-user-records`, {
 //       user_id: Number(userId.value)
 //     })
 //
@@ -454,7 +454,7 @@ const submitNewPlan = async () => {
 const fetchCompletedPlans = async () => {
   if (!userId.value) return
   try {
-    const res = await axios.post('http://10.12.184.92:8000/generate-user-records/completed', {
+    const res = await axios.post(`${API_BASE_URL}/generate-user-records/completed`, {
       user_id: Number(userId.value)
     })
     completedPlans.value = res.data.records.map(formatRecord)
@@ -466,7 +466,7 @@ const fetchCompletedPlans = async () => {
 const fetchMissedPlans = async () => {
   if (!userId.value) return
   try {
-    const res = await axios.post('http://10.12.184.92:8000/generate-user-records/missed-plans', {
+    const res = await axios.post(`${API_BASE_URL}/generate-user-records/missed-plans`, {
       user_id: Number(userId.value)
     })
     missedPlans.value = res.data.records.map(formatRecord)
@@ -478,7 +478,7 @@ const fetchMissedPlans = async () => {
 const fetchUpcomingPlans = async () => {
   if (!userId.value) return
   try {
-    const res = await axios.post('http://10.12.184.92:8000/generate-user-records/upcoming-plans', {
+    const res = await axios.post(`${API_BASE_URL}/generate-user-records/upcoming-plans`, {
       user_id: Number(userId.value)
     })
     upcomingPlans.value = res.data.records.map(formatRecord)
