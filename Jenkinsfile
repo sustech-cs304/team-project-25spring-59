@@ -73,10 +73,55 @@ pipeline {
         
         stage('Test Report Generation') {
             steps {
-                echo "这里将生成测试报告"
-                // TODO: 实现测试报告生成（暂时留空）
+                echo "开始生成前端和后端的测试报告..."
+
+                // ---------- 前端报告 ----------
+                echo "生成前端报告..."
+                bat '''
+                    if not exist frontier-app\\reports mkdir frontier-app\\reports
+
+                    REM 1. 使用 cloc 统计前端代码行数
+                    cloc.exe frontier-app --exclude-dir=node_modules,dist,.venv,__pycache__ --out=frontier-app\\reports\\cloc_report.txt
+
+                    REM 2. 使用 Plato 分析圈复杂度
+                    cd frontier-app
+                    npx plato -r -d reports ./src
+                    cd ..
+
+                    REM 3. 使用 jq 统计依赖数量
+                    cd frontier-app
+                    echo 直接依赖数量: > reports\\dependency_summary.txt
+                    npm ls --depth=0 --json | ..\\jq.exe ".dependencies | keys | length" >> reports\\dependency_summary.txt
+                    echo 所有依赖数量（含 dev）: >> reports\\dependency_summary.txt
+                    npm ls --depth=0 --json | ..\\jq.exe "[.dependencies, .devDependencies] | map(keys | length) | add" >> reports\\dependency_summary.txt
+                    cd ..
+                '''
+
+                // ---------- 后端报告 ----------
+                echo "生成后端报告..."
+                bat '''
+                    if not exist backapp\\reports mkdir backapp\\reports
+
+                    REM 1. 使用 cloc 统计后端代码行数
+                    cloc.exe backapp --exclude-dir=__pycache__,.venv --out=backapp\\reports\\cloc_report.txt
+
+                    REM 2. 使用 radon 分析圈复杂度
+                    cd backapp
+                    .\\.venv\\Scripts\\python.exe -m pip install radon
+                    radon cc . -s -a > reports\\python-complexity.txt
+                    cd ..
+
+                    REM 3. 使用 pipdeptree 导出依赖结构
+                    cd backapp
+                    .\\.venv\\Scripts\\python.exe -m pip install pipdeptree
+                    .\\.venv\\Scripts\\pipdeptree > reports\\python-dependencies.txt
+                    cd ..
+                '''
+
+                echo "✅ 所有测试报告已生成：frontier-app/reports 和 backapp/reports"
             }
         }
+
         
         stage('Documentation Generation') {
             steps {
