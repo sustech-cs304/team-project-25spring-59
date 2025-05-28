@@ -1899,3 +1899,8 @@ def get_plans_in_progress(request: UserIdRequest, db: Session = Depends(get_db))
 # 确保这是文件中的最后一行代码，所有API路由都在此之前定义
 # 挂载根路径，使用自定义的StaticFiles类
 app.mount("/", SPAStaticFiles(directory=STATIC_DIR, html=True), name="root")
+
+def start():
+    """Entry point for the package when installed via pip."""
+    import uvicorn
+    uvicorn.run("backapp.main:app", host="0.0.0.0", port=8000)
