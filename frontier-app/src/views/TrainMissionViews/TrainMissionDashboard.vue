@@ -58,6 +58,12 @@
 
 
 <script setup lang="ts">
+//e2e测试用
+declare global {
+  interface Window {
+    setAISidebarVisible: (visible: boolean) => void;
+  }
+}
 import Header from '../../components/TrainMission/Header.vue'
 import TrainTimeChart from "../../components/TrainMission/Charts/TrainTimeChart.vue";
 import TimeBar from "../../components/TrainMission/Charts/TimeBar.vue";
@@ -74,6 +80,11 @@ onMounted(() => {
   routeBase.value = window.location.origin + '/'
   userId.value = localStorage.getItem('user_id')
   fetchSummary()
+
+   // 将控制函数挂到 window 上，供 Cypress 使用
+  window.setAISidebarVisible = (visible: boolean) => {
+    showAISidebar.value = visible
+  }
 })
 
 //这一部分是显示ai界面或者隐藏的方法
