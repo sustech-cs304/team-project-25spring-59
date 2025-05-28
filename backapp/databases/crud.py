@@ -267,12 +267,11 @@ def create_course_reservation(db: Session, user_id: int, course_id: int):
     # 检查是否已经预约过
     existing_reservation = db.query(models.CourseReservation).filter(
         models.CourseReservation.user_id == user_id,
-        models.CourseReservation.course_id == course_id,
-        models.CourseReservation.status == "confirmed"
+        models.CourseReservation.course_id == course_id
     ).first()
     
     if existing_reservation:
-        return existing_reservation
+        return None
     
     # 检查课程是否已满
     if course.current_reservations >= course.capacity:
