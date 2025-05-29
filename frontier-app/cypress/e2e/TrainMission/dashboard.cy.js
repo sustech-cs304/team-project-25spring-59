@@ -58,32 +58,77 @@ describe('Dashboard 页面 AI 助手面板显示/关闭测试', () => {
   });
 
   it('AI 训练助手面板可显示与关闭', () => {
-  cy.visit('http://localhost:5173/TrainMission/Dashboard', {
-    onBeforeLoad(win) {
-      win.localStorage.setItem('user_id', '1')
-    }
+    cy.visit('http://localhost:5173/TrainMission/Dashboard', {
+      onBeforeLoad(win) {
+        win.localStorage.setItem('user_id', '1')
+      }
+    })
+
+    // 等待 window 上挂载 setAISidebarVisible 函数（最多重试10秒）
+    cy.window().should((win) => {
+      expect(typeof win.setAISidebarVisible).to.equal('function')
+    })
+
+    // 然后再安全调用
+    cy.window().then((win) => {
+      win.setAISidebarVisible(true)
+    })
+
+    // 验证 AI 面板出现
+    cy.get('.ai-float-sidebar', { timeout: 5000 }).should('exist').and('be.visible')
+
+    // 点击关闭按钮
+    cy.get('.ai-header button').click()
+
+    // 验证面板消失
+    cy.get('.ai-float-sidebar').should('not.exist')
+  })
+});
+
+/// <reference types="cypress" />
+
+describe('AI 助手面板输入交互测试', () => {
+  beforeEach(() => {
+    cy.visit('http://localhost:5173/TrainMission/Dashboard', {
+      onBeforeLoad(win) {
+        win.localStorage.setItem('user_id', '1')
+      }
+    })
+
+    // 等待 setAISidebarVisible 可用
+    cy.window().should('have.property', 'setAISidebarVisible')
+
+    // 显示面板
+    cy.window().then((win) => {
+      win.setAISidebarVisible(true)
+    })
+
+    cy.get('.ai-float-sidebar', { timeout: 5000 }).should('exist').and('be.visible')
   })
 
-  // 等待 window 上挂载 setAISidebarVisible 函数（最多重试10秒）
-  cy.window().should((win) => {
-    expect(typeof win.setAISidebarVisible).to.equal('function')
+  it('在 AI 输入框中输入问题并接收到回复', () => {
+    const userInput = '请帮我生成下周训练计划'
+
+    // 输入用户问题
+    cy.get('.ai-input input')
+      .should('exist')
+      .type(userInput)
+
+    // 点击发送按钮
+    cy.get('.ai-input button').click()
+
+    // 验证用户输入是否展示在消息中
+    cy.contains('.chat-message.user .bubble', userInput).should('exist')
+
+    // 验证 assistant 回复出现（等待最长 20s）
+    cy.get('.chat-message.assistant .bubble', { timeout: 20000 })
+      .should('exist')
+      .and('not.contain', '[获取失败]')
+      .and('not.contain', 'AI 无响应')
+
+    // 可选：验证包含关键词（用于区分 task/chat）
+    // cy.get('.chat-message.assistant .bubble').should('contain.text', '训练计划')
   })
-
-  // 然后再安全调用
-  cy.window().then((win) => {
-    win.setAISidebarVisible(true)
-  })
-
-  // 验证 AI 面板出现
-  cy.get('.ai-float-sidebar', { timeout: 5000 }).should('exist').and('be.visible')
-
-  // 点击关闭按钮
-  cy.get('.ai-header button').click()
-
-  // 验证面板消失
-  cy.get('.ai-float-sidebar').should('not.exist')
 })
 
-
-});
 
