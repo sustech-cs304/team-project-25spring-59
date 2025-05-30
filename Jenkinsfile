@@ -106,7 +106,27 @@ pipeline {
         stage('Testing') {
             steps {
                 echo "这里将进行自动化测试"
-                // TODO: 实现自动化测试（暂时留空）
+                echo "启动 FastAPI 后端并执行自动化测试..."
+
+                bat '''
+                    @echo off
+                    chcp 65001 > nul
+
+                    REM 启动后端服务到后台
+                    start "FastAPI Backend" cmd /c "call venv\\Scripts\\activate.bat && uvicorn backapp.main:app --port 8000"
+
+                    REM 等待后端启动
+                    ping -n 8 127.0.0.1 > nul
+
+                    REM 安装测试工具（如果尚未安装）
+                    call venv\\Scripts\\activate.bat
+                    pip install pytest pytest-cov
+
+                    REM 执行测试并生成覆盖率报告
+                    pytest --cov=backapp --cov-report=term-missing --cov-report=html > backapp\\reports\\pytest_output.txt
+                '''
+
+                echo "测试完成，已生成覆盖率报告"
             }
         }
         
