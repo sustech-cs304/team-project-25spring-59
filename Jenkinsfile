@@ -123,7 +123,7 @@ pipeline {
                     pip install pytest pytest-cov
 
                     REM 执行测试并生成覆盖率报告
-                    pytest --cov=backapp --cov-report=term-missing --cov-report=html > backapp\\reports\\pytest_output.txt
+                    pytest test/ --cov=backapp --cov-report=term-missing --cov-report=html > backapp\\reports\\pytest_output.txt
                 '''
 
                 echo "测试完成，已生成覆盖率报告"
