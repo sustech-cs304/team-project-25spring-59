@@ -1042,16 +1042,6 @@ class SPAStaticFiles(StaticFiles):
             "/generate-user-records/starting-soon"
         ]
         
-        # 处理静态资源请求 - 如果是以assets开头的请求，但URL格式不正确，则进行修复
-        if "/assets/" in path and not path.startswith("/assets/") and not path.startswith("/static/"):
-            # 针对多级路由下的资源请求，修复路径
-            corrected_path = path[path.find("/assets/"):]
-            print(f"[SPAStaticFiles] 修复资源路径从 {path} 到 {corrected_path}")
-            
-            # 更新scope路径
-            scope["path"] = corrected_path
-            path = corrected_path
-        
         # 检查是否是API路由
         is_api_path = False
         
@@ -1084,39 +1074,41 @@ class SPAStaticFiles(StaticFiles):
                 is_static_file = True
                 break
         
-        # 如果是静态资源但不是以/static/开头，尝试从static目录提供
-        if is_static_file and not path.startswith('/static/'):
-            # 去掉前导斜杠以匹配相对路径
-            relative_path = path.lstrip('/')
-            new_path = f"/static/{relative_path}"
-            print(f"[SPAStaticFiles] 尝试从static目录提供静态资源: {new_path}")
+        # 处理静态资源请求
+        if is_static_file:
+            # 如果是以/assets/开头的请求
+            if path.startswith('/assets/'):
+                try:
+                    # 尝试找到静态资源
+                    await super().__call__(scope, receive, send)
+                except Exception as e:
+                    print(f"[SPAStaticFiles] 未找到静态资源 {path}，错误: {str(e)}")
+                    response = PlainTextResponse("Not Found", status_code=404)
+                    await response(scope, receive, send)
+                return
+            
+            # 如果不是以/开头的资源，尝试从/assets/目录查找
+            new_path = f"/assets{path}" if not path.startswith('/') else f"/assets{path}"
             try:
-                # 修改路径以指向static目录
                 modified_scope = dict(scope)
                 modified_scope["path"] = new_path
-                response = FileResponse(os.path.join(STATIC_DIR, relative_path))
-                await response(scope, receive, send)
+                print(f"[SPAStaticFiles] 尝试重定向到: {new_path}")
+                response = await super().__call__(modified_scope, receive, send)
                 return
             except Exception as e:
-                print(f"[SPAStaticFiles] 从static目录提供资源失败: {str(e)}")
-                # 失败后继续尝试正常流程
+                print(f"[SPAStaticFiles] 重定向失败: {str(e)}")
                 pass
-        
-        # 处理多级路径的前端路由 - 如果路径包含多级目录且不是静态资源，直接返回index.html
-        if '/' in path[1:] and not is_static_file and not path.startswith('/static/'):
-            print(f"[SPAStaticFiles] 检测到多级前端路由: {path}，返回index.html")
-            response = FileResponse(os.path.join(STATIC_DIR, "index.html"))
-            await response(scope, receive, send)
-            return
-        
-        # 否则尝试提供静态文件
+
+        # 处理HTML页面请求 - 对于所有非API和非静态资源的请求，返回index.html
+        print(f"[SPAStaticFiles] 返回index.html用于前端路由: {path}")
         try:
-            print(f"[SPAStaticFiles] 尝试提供静态文件: {path}")
-            await super().__call__(scope, receive, send)
+            from starlette.responses import FileResponse
+            index_path = os.path.join(self.directory, "index.html")
+            response = FileResponse(index_path)
+            await response(scope, receive, send)
         except Exception as e:
-            # 如果没有找到静态文件，返回index.html（SPA客户端路由处理）
-            print(f"[SPAStaticFiles] 未找到静态文件，返回index.html。错误: {str(e)}")
-            response = FileResponse(os.path.join(STATIC_DIR, "index.html"))
+            print(f"[SPAStaticFiles] 返回index.html失败: {str(e)}")
+            response = PlainTextResponse(f"Server Error: {str(e)}", status_code=500)
             await response(scope, receive, send)
 
 
