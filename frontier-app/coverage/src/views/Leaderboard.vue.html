@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/40</span>
+                <span class='fraction'>32/32</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/1</span>
+                <span class='fraction'>0/0</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/1</span>
+                <span class='fraction'>0/0</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/40</span>
+                <span class='fraction'>32/32</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -102,92 +102,92 @@
 <a name='L37'></a><a href='#L37'>37</a>
 <a name='L38'></a><a href='#L38'>38</a>
 <a name='L39'></a><a href='#L39'>39</a>
-<a name='L40'></a><a href='#L40'>40</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" >&lt;script setup&gt;</span></span></span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >import {onMounted, reactive, watch} from "vue";</span>
-<span class="cstat-no" title="statement not covered" >import request from "../utils/request.js";</span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >const leaderboard = reactive({})</span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >watch(</span>
-<span class="cstat-no" title="statement not covered" >    leaderboard,</span>
-<span class="cstat-no" title="statement not covered" >    async (newValue, oldValue)=&gt;{</span>
-<span class="cstat-no" title="statement not covered" >      // sort the leaderboard by score from large to small</span>
-<span class="cstat-no" title="statement not covered" >      newValue.data.sort((a,b)=&gt;b.total_score - a.total_score);</span>
-<span class="cstat-no" title="statement not covered" >    }</span>
-<span class="cstat-no" title="statement not covered" >)</span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >onMounted(()=&gt;{</span>
-<span class="cstat-no" title="statement not covered" >  request.post('/leaderboard')</span>
-<span class="cstat-no" title="statement not covered" >      .then((response)=&gt;{</span>
-<span class="cstat-no" title="statement not covered" >        console.log(response);</span>
-<span class="cstat-no" title="statement not covered" >        leaderboard.data = response.data;</span>
-<span class="cstat-no" title="statement not covered" >      })</span>
-<span class="cstat-no" title="statement not covered" >})</span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >&lt;/script&gt;</span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >&lt;template&gt;</span>
-<span class="cstat-no" title="statement not covered" >  &lt;el-row&gt;</span>
-<span class="cstat-no" title="statement not covered" >    &lt;el-col :span="12" :offset="6"&gt;</span>
-<span class="cstat-no" title="statement not covered" >      &lt;el-table :data="leaderboard.data"&gt;</span>
-<span class="cstat-no" title="statement not covered" >        &lt;el-table-column label="排名" type="index" width="150"&gt;&lt;/el-table-column&gt;</span>
-<span class="cstat-no" title="statement not covered" >        &lt;el-table-column label="昵称" prop="username"&gt;&lt;/el-table-column&gt;</span>
-<span class="cstat-no" title="statement not covered" >        &lt;el-table-column label="积分" prop="total_score"&gt;&lt;/el-table-column&gt;</span>
-<span class="cstat-no" title="statement not covered" >      &lt;/el-table&gt;</span>
-<span class="cstat-no" title="statement not covered" >    &lt;/el-col&gt;</span>
-<span class="cstat-no" title="statement not covered" >  &lt;/el-row&gt;</span>
-<span class="cstat-no" title="statement not covered" >&lt;/template&gt;</span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >&lt;style scoped&gt;</span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >&lt;/style&gt;</span></pre></td></tr></table></pre>
+<a name='L40'></a><a href='#L40'>40</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">&lt;script setup&gt;
+&nbsp;
+import {onMounted, reactive, watch} from "vue";
+import request from "../utils/request.js";
+&nbsp;
+const leaderboard = reactive({})
+&nbsp;
+watch(
+    leaderboard,
+    async (newValue, oldValue)=&gt;{
+      // sort the leaderboard by score from large to small
+      newValue.data.sort((a,b)=&gt;b.total_score - a.total_score);
+    }
+)
+&nbsp;
+onMounted(()=&gt;{
+  request.post('/leaderboard')
+      .then((response)=&gt;{
+        console.log(response);
+        leaderboard.data = response.data;
+      })
+})
+&nbsp;
+&lt;/script&gt;
+&nbsp;
+&lt;template&gt;
+  &lt;el-row&gt;
+    &lt;el-col :span="12" :offset="6"&gt;
+      &lt;el-table :data="leaderboard.data"&gt;
+        &lt;el-table-column label="排名" type="index" width="150"&gt;&lt;/el-table-column&gt;
+        &lt;el-table-column label="昵称" prop="username"&gt;&lt;/el-table-column&gt;
+        &lt;el-table-column label="积分" prop="total_score"&gt;&lt;/el-table-column&gt;
+      &lt;/el-table&gt;
+    &lt;/el-col&gt;
+  &lt;/el-row&gt;
+&lt;/template&gt;
+&nbsp;
+&lt;style scoped&gt;
+&nbsp;
+&lt;/style&gt;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
             </div><!-- /wrapper -->
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-05-28T03:54:40.928Z
+                at 2025-05-31T06:00:26.237Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
