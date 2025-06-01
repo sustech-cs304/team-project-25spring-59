@@ -27,7 +27,7 @@
 *   **激活虚拟环境**
 *   **Checkout** 
     *   从版本控制系统（如 Git）获取最新的源代码。
-*   **Frontend Build **:
+*   **Frontend Build**:
     1.  **依赖安装**: 执行 `npm install` (或 `npm ci` 在 CI 环境中)命令，根据[`package.json`](https://github.com/sustech-cs304/team-project-25spring-59/blob/main/frontier-app/package.json)下载并安装所有前端依赖。
     2.  **代码编译**: 执行 `npm run build` 命令，将 Vue.js 组件、JavaScript/TypeScript 代码和 CSS 等静态资源进行编译、代码分割、Tree Shaking、压缩和混淆。
 *   **Backend Build**:
@@ -70,20 +70,20 @@
 
 * [`package.json`](https://github.com/sustech-cs304/team-project-25spring-59/blob/main/frontier-app/package.json):
 
-  *   **用途**: 定义前端项目的构建命令。<img src="D:\Study\1SE\team-project-25spring-59\final_report_59\iamges\image-20250601195230937.png" alt="image-20250601195230937" style="zoom:33%;" />
+  *   **用途**: 定义前端项目的构建命令。<img src=".\iamges\image-20250601195230937.png" alt="image-20250601195230937" style="zoom:33%;" />
 
 *  [`requirements.txt`](https://github.com/sustech-cs304/team-project-25spring-59/blob/main/requirements.txt) 
-  * **用途**: 列出后端 Python 项目运行所需的所有依赖包。<img src="D:\Study\1SE\team-project-25spring-59\final_report_59\iamges\image-20250601195256035.png" alt="image-20250601195256035" style="zoom:33%;" />
+  * **用途**: 列出后端 Python 项目运行所需的所有依赖包。<img src=".\iamges\image-20250601195256035.png" alt="image-20250601195256035" style="zoom:33%;" />
 
     
 
 * [`Jenkinsfile`](https://github.com/sustech-cs304/team-project-25spring-59/blob/main/Jenkinsfile)
 
-  *   **用途**: 定义 Jenkins CI 流水线中的构建步骤。<img src="D:\Study\1SE\team-project-25spring-59\final_report_59\iamges\image-20250601195337242.png" alt="image-20250601195337242" style="zoom:33%;" />
+  *   **用途**: 定义 Jenkins CI 流水线中的构建步骤。<img src=".\iamges\image-20250601195337242.png" alt="image-20250601195337242" style="zoom:33%;" />
 
 ### 4.5 Jenkins成功运行的截图
 
-<img src="D:\Study\1SE\team-project-25spring-59\final_report_59\iamges\image-20250601200857252.png" alt="image-20250601200857252" style="zoom:33%;" />
+<img src=".\iamges\image-20250601200857252.png" alt="image-20250601200857252" style="zoom:33%;" />
 
 ---
 
@@ -106,19 +106,19 @@
     
     * **用途**: 部署前端
     
-      <img src="D:\Study\1SE\team-project-25spring-59\final_report_59\iamges\image-20250601195927071.png" alt="image-20250601195927071" style="zoom:33%;" />
+      <img src=".\iamges\image-20250601195927071.png" alt="image-20250601195927071" style="zoom:33%;" />
     
 *   **后端的[`backapp/Dockerfile`](https://github.com/sustech-cs304/team-project-25spring-59/blob/main/backapp/Dockerfile)**:
     
-    *   **用途**: 构建后端<img src="D:\Study\1SE\team-project-25spring-59\final_report_59\iamges\image-20250601200059848.png" alt="image-20250601200059848" style="zoom:33%;" />
+    *   **用途**: 构建后端<img src=".\iamges\image-20250601200059848.png" alt="image-20250601200059848" style="zoom:33%;" />
     
 *   **[nginx.conf](https://github.com/sustech-cs304/team-project-25spring-59/blob/main/frontier-app/nginx.conf) (Nginx 配置文件)**:
     
-    *   **用途**: 配置 Nginx 服务前端SPA，确保路由正确。<img src="D:\Study\1SE\team-project-25spring-59\final_report_59\iamges\image-20250601200219167.png" alt="image-20250601200219167" style="zoom:33%;" />
+    *   **用途**: 配置 Nginx 服务前端SPA，确保路由正确。<img src=".\iamges\image-20250601200219167.png" alt="image-20250601200219167" style="zoom:33%;" />
     
 *   **[docker-compose.yml](https://github.com/sustech-cs304/team-project-25spring-59/blob/main/docker-compose.yml)**:
     
-    *   **用途**: 定义和编排多容器应用（前端、后端、数据库）。<img src="D:\Study\1SE\team-project-25spring-59\final_report_59\iamges\image-20250601200352831.png" alt="image-20250601200352831" style="zoom:33%;" />
+    *   **用途**: 定义和编排多容器应用（前端、后端、数据库）。<img src=".\iamges\image-20250601200352831.png" alt="image-20250601200352831" style="zoom:33%;" />
     
     
     
@@ -127,7 +127,7 @@
 ### **5.3 成功容器化**
 
 1.  **`docker images` 命令显示新构建的镜像**:
-    执行 `docker ps` 命令,查看正在运行中的容器，前端和后端正常运行。![image-20250601200522340](D:\Study\1SE\team-project-25spring-59\final_report_59\iamges\image-20250601200522340.png)
+    执行 `docker ps` 命令,查看正在运行中的容器，前端和后端正常运行。![image-20250601200522340](.\iamges\image-20250601200522340.png)
 2.  **应用可访问和功能正常**:
     *   **前端**: 在浏览器中访问为前端服务映射的主机端口（ `http://localhost:80`），能看到应用界面并能与之交互。
     *   **后端**: 后端 API 端点能通过映射的端口（例如 `http://localhost:8000`）被访问，并且前端发起的 API 请求能得到正确响应。
