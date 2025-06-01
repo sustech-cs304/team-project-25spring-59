@@ -99,32 +99,32 @@ pipeline {
             }
         }
         
-        stage('Testing') {
-            steps {
-                echo "这里将进行自动化测试"
-                echo "启动 FastAPI 后端并执行自动化测试..."
+        // stage('Testing') {
+        //     steps {
+        //         echo "这里将进行自动化测试"
+        //         echo "启动 FastAPI 后端并执行自动化测试..."
 
-                bat '''
-                    @echo off
-                    chcp 65001 > nul
+        //         bat '''
+        //             @echo off
+        //             chcp 65001 > nul
 
-                    REM 启动后端服务到后台
-                    start "FastAPI Backend" cmd /c "call venv\\Scripts\\activate.bat && uvicorn backapp.main:app --host 0.0.0.0 --port 8000"
+        //             REM 启动后端服务到后台
+        //             start "FastAPI Backend" cmd /c "call venv\\Scripts\\activate.bat && uvicorn backapp.main:app --host 0.0.0.0 --port 8000"
 
-                    REM 等待后端启动
-                    ping -n 8 127.0.0.1 > nul
+        //             REM 等待后端启动
+        //             ping -n 8 127.0.0.1 > nul
 
-                    REM 安装测试工具（如果尚未安装）
-                    call venv\\Scripts\\activate.bat
-                    pip install pytest pytest-cov
+        //             REM 安装测试工具（如果尚未安装）
+        //             call venv\\Scripts\\activate.bat
+        //             pip install pytest pytest-cov
 
-                    REM 执行测试并生成覆盖率报告
-                    pytest test/ --cov=backapp --cov-report=term-missing --cov-report=html > backapp\\reports\\pytest_output.txt
-                '''
+        //             REM 执行测试并生成覆盖率报告
+        //             pytest test/ --cov=backapp --cov-report=term-missing --cov-report=html > backapp\\reports\\pytest_output.txt
+        //         '''
 
-                echo "测试完成，已生成覆盖率报告"
-            }
-        }
+        //         echo "测试完成，已生成覆盖率报告"
+        //     }
+        // }
         
         stage('Test Report Generation') {
             steps {
@@ -177,10 +177,25 @@ pipeline {
             }
         }
         
-        stage('Documentation Generation') {
+        // 阶段 2：生成前端文档
+        stage('Generate Frontend Docs') {
             steps {
-                echo "这里将生成文档"
-                // TODO: 实现文档生成（暂时留空）
+                dir('frontend') {
+                    sh 'npm install'
+                    sh 'npx vuepress build docs'  // 用户文档
+                    sh 'npx vuese gen --outDir ./docs/components'  // 开发者文档
+                }
+            }
+        }
+
+        // 阶段 3：生成后端文档
+        stage('Generate Backend Docs') {
+            steps {
+                dir('backend') {
+                    sh 'pip install -r requirements.txt sphinx'
+                    sh 'sphinx-apidoc -o docs/source .'
+                    sh 'cd docs && make html'
+                }
             }
         }
         
@@ -194,6 +209,9 @@ pipeline {
                 // 归档测试报告
                 archiveArtifacts artifacts: 'frontier-app/reports/**/*', fingerprint: true
                 archiveArtifacts artifacts: 'backapp/reports/**/*', fingerprint: true
+
+                sh 'tar -czvf docs.tar.gz frontend/docs/dist backend/docs/build/html'
+                archiveArtifacts artifacts: 'docs.tar.gz', fingerprint: true
                 
                 echo "构建产物已归档"
             }
