@@ -1,6 +1,7 @@
 <script setup>
 import {onMounted, reactive, watch} from "vue";
 import request from "../utils/request.js";
+import TopMenu from "../components/TopMenu.vue";
 
 const leaderboard = reactive({})
 const userId = Number(localStorage.getItem('user_id'))
@@ -23,6 +24,7 @@ onMounted(() => {
 </script>
 
 <template>
+  <TopMenu/>
   <div class="leaderboard-container">
     <el-row>
       <el-col :span="18" :offset="3">
