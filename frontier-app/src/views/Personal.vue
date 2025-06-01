@@ -1,6 +1,7 @@
 <script setup>
 
 import {ref} from "vue";
+import TopMenu from "../components/TopMenu.vue";
 import ReservationRecord from "../components/personal/ReservationRecord.vue";
 import ChallengeRecord from "../components/personal/ChallengeRecord.vue";
 
@@ -9,6 +10,7 @@ const activeName = ref('reservationRecord')
 </script>
 
 <template>
+  <TopMenu/>
   <el-tabs
       tab-position="left"
       v-model="activeName"

@@ -1,6 +1,7 @@
 <script setup>
 
 import {ref} from "vue";
+import TopMenu from "../components/TopMenu.vue";
 import ChallengeList from "../components/challenge/ChallengeList.vue";
 import ChallengeInfo from "../components/challenge/ChallengeInfo.vue";
 import ChallengeCreate from "../components/challenge/ChallengeCreate.vue";
@@ -27,6 +28,7 @@ function goToList() {
 </script>
 
 <template>
+  <TopMenu/>
   <component
       :is="currentCom"
       :challengeId="challengeId"
