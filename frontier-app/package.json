@@ -7,7 +7,14 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+
+    "docs:generate": "vue-docgen -c docgen.config.js",
+    "docs:serve": "npx serve docs/api",
+
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
   },
   "dependencies": {
     "@arco-design/web-vue": "^2.57.0",
@@ -44,6 +51,7 @@
     "less": "^4.2.2",
     "sass-embedded": "^1.86.3",
     "vitest": "^3.1.4",
-    "vue-styleguidist": "^4.72.4"
+    "vue-docgen-api": "^4.79.2",
+    "vue-docgen-cli": "^4.79.0"
   }
 }
