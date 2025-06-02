@@ -149,6 +149,9 @@ pipeline {
                     npm ls --depth=0 --json | ..\\jq.exe ".dependencies | keys | length" >> reports\\dependency_summary.txt
                     echo 所有依赖数量（含 dev）: >> reports\\dependency_summary.txt
                     npm ls --depth=0 --json | ..\\jq.exe "[.dependencies, .devDependencies] | map(keys | length) | add" >> reports\\dependency_summary.txt
+
+                    npx vitest run --coverage
+                    
                     cd ..
                 '''
 
