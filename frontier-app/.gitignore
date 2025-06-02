@@ -23,6 +23,8 @@ dist-ssr
 *.sln
 *.sw?
 
-docs/
+docs/*
+!docs/.vitepress
+docs/.vitepress/*
 !docs/.vitepress/config.js
 
