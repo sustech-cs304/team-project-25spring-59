@@ -212,6 +212,7 @@ pipeline {
                 // 归档测试报告
                 archiveArtifacts artifacts: 'frontier-app/reports/**/*', fingerprint: true
                 archiveArtifacts artifacts: 'backapp/reports/**/*', fingerprint: true
+                archiveArtifacts artifacts: 'frontier-app/output.txt', fingerprint: true
 
                 // sh 'tar -czvf docs.tar.gz frontend/docs/dist backend/docs/build/html'
                 // archiveArtifacts artifacts: 'docs.tar.gz', fingerprint: true
