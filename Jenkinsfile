@@ -180,27 +180,27 @@ pipeline {
             }
         }
         
-        // 阶段 2：生成前端文档
-        stage('Generate Frontend Docs') {
-            steps {
-                dir('frontend') {
-                    sh 'npm install'
-                    sh 'npx vuepress build docs'  // 用户文档
-                    sh 'npx vuese gen --outDir ./docs/components'  // 开发者文档
-                }
-            }
-        }
+        // // 阶段 2：生成前端文档
+        // stage('Generate Frontend Docs') {
+        //     steps {
+        //         dir('frontend') {
+        //             sh 'npm install'
+        //             sh 'npx vuepress build docs'  // 用户文档
+        //             sh 'npx vuese gen --outDir ./docs/components'  // 开发者文档
+        //         }
+        //     }
+        // }
 
-        // 阶段 3：生成后端文档
-        stage('Generate Backend Docs') {
-            steps {
-                dir('backend') {
-                    sh 'pip install -r requirements.txt sphinx'
-                    sh 'sphinx-apidoc -o docs/source .'
-                    sh 'cd docs && make html'
-                }
-            }
-        }
+        // // 阶段 3：生成后端文档
+        // stage('Generate Backend Docs') {
+        //     steps {
+        //         dir('backend') {
+        //             sh 'pip install -r requirements.txt sphinx'
+        //             sh 'sphinx-apidoc -o docs/source .'
+        //             sh 'cd docs && make html'
+        //         }
+        //     }
+        // }
         
         stage('Artifact Archiving') {
             steps {
@@ -213,8 +213,8 @@ pipeline {
                 archiveArtifacts artifacts: 'frontier-app/reports/**/*', fingerprint: true
                 archiveArtifacts artifacts: 'backapp/reports/**/*', fingerprint: true
 
-                sh 'tar -czvf docs.tar.gz frontend/docs/dist backend/docs/build/html'
-                archiveArtifacts artifacts: 'docs.tar.gz', fingerprint: true
+                // sh 'tar -czvf docs.tar.gz frontend/docs/dist backend/docs/build/html'
+                // archiveArtifacts artifacts: 'docs.tar.gz', fingerprint: true
                 
                 echo "构建产物已归档"
             }
