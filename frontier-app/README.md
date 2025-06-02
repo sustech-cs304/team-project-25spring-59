@@ -1,5 +1,26 @@
-# Vue 3 + Vite
+# MyWebApp - 用户手册
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+## 1. 访问方式
+- **线上地址**：[https://mywebapp.com](https://mywebapp.com)
+- **本地运行**：
+  ```bash
+  npm install
+  npm run dev
+  ```
+## 2. 功能介绍
+- **登录/注册**：输入用户名密码即可进入系统。
+- **数据查询**：在搜索框输入关键词，点击“搜索”查看结果。
+- **数据导出**：支持CSV格式导出。
 
-Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://vuejs.org/guide/scaling-up/tooling.html#ide-support).
+## 3. 截图示例
+![登录页面](screenshots/login.png)
+![数据查询](screenshots/search.png)
+
+## 4. 常见问题
+Q: 登录失败怎么办？  
+A: 检查用户名密码是否正确，或联系管理员重置密码。
+
+**GitHub 示例链接**（假设项目在GitHub）：
+```
+https://github.com/yourusername/mywebapp/blob/main/frontend/README.md
+```
