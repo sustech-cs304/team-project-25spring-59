@@ -140,7 +140,7 @@ pipeline {
 
                     REM 2. 使用 Plato 分析圈复杂度
                     cd frontier-app
-                    
+                    npx plato -r -d reports ./src
                     cd ..
 
                     REM 3. 使用 jq 统计依赖数量
