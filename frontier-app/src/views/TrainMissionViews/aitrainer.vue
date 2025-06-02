@@ -906,7 +906,12 @@ const generatePlanWithModel = async (
 
     // 尝试解析 JSON 数组
     // 去掉 markdown 代码块标记
-    const cleaned = reply?.replace(/```json\s*([\s\S]*?)\s*```/, '$1').trim()
+    // 清洗 markdown 格式的代码块标记
+    const cleaned = reply
+      ?.replace(/```json/g, '')
+      .replace(/```/g, '')
+      .trim()
+
     if (!cleaned) throw new Error('AI 返回内容为空或格式不正确')
     const parsed = JSON.parse(cleaned)
     if (Array.isArray(parsed)) {

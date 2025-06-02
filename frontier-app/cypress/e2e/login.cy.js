@@ -35,8 +35,8 @@ describe('用户登录流程', () => {
     cy.visit('http://localhost:5173/login');
     cy.get('.login-container').click();
 
-    cy.get('input[placeholder="请输入用户名"]').type('user1');
-    cy.get('input[placeholder="请输入密码"]').type('password1');
+    cy.get('input[placeholder="请输入用户名"]').type('LiuYan');
+    cy.get('input[placeholder="请输入密码"]').type('pass1234');
 
     cy.contains('用户登录').click();
 

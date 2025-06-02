@@ -5,6 +5,7 @@ import flushPromises from 'flush-promises'
 
 let rafSpy: any
 let addEventSpy: ReturnType<typeof vi.spyOn>
+let animationFrameIds: number[] = [] // ✅ 全局声明
 
 beforeEach(() => {
   vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(() => {
@@ -31,13 +32,17 @@ beforeEach(() => {
   })
 
   rafSpy = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {
-    // @ts-ignore
-    return setTimeout(() => cb(), 16) as unknown as number
+    const id = setTimeout(cb, 16) as unknown as number
+    animationFrameIds.push(id) // ✅ 正确访问全局变量
+    return id
+  })
+
+  vi.spyOn(window, 'cancelAnimationFrame').mockImplementation((id) => {
+    clearTimeout(id)
   })
 
   addEventSpy = vi.spyOn(window, 'addEventListener')
 })
-
 
 Object.defineProperty(window, 'innerWidth', {
   writable: true,
@@ -51,10 +56,13 @@ Object.defineProperty(window, 'innerHeight', {
   value: 600
 })
 
-
 afterEach(() => {
+  animationFrameIds.forEach((id) => clearTimeout(id)) // ✅ 清理残留动画帧
+  animationFrameIds = [] // ✅ 重置列表
   vi.restoreAllMocks()
 })
+
+
 
 describe('MouseTrail.vue', () => {
   it('应成功渲染 canvas 元素', () => {
