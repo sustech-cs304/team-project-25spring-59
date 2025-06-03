@@ -39,3 +39,4 @@ docs/source
 docs/make.bat
 docs/Makefile
 backapp/openapi.json
+jenkins_docgen.txt
