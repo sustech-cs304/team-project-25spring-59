@@ -1,5 +1,75 @@
 # final-report-59
 
+## 2. Documentation
+
+### 2.1 面向用户的文档
+
+使用`Markdown`文档编写，为用户提供安装、配置和使用软件的详细指导，确保用户能够快速上手并有效使用软件功能。
+
+#### **大纲内容**
+- **快速入门指南**：
+    - 本地安装和运行
+    - 基础使用说明和示例
+- **功能**：
+    - 核心功能描述
+- **常见问题与解决**：
+    - 列出常见问题及其解决方案。
+
+#### **文档展示**
+[插入展示图片]
+![插入展示图片](./images/quick-start.png)
+
+
+#### **用户文档访问**
+- **GitHub README.md**：[README链接](https://github.com/sustech-cs304/team-project-25spring-59/blob/main/README.md)
+- **Wiki页面**：[Wiki链接](https://github.com/sustech-cs304/team-project-25spring-59/wiki)（如适用）
+
+### 2.2 面向开发者的文档
+
+帮助开发者理解软件的设计、架构和实现细节，便于后续维护、扩展或贡献代码。
+
+#### **实现工具**
+前端使用`vue-docgen-api`+`VitePress`自动提取组件信息并渲染生成静态网站，后端使用`Swagger`自动生成FastAPI文档页面
+
+#### **大纲内容**
+- **前端组件**：
+    - 提供组件中使用的变量、方法等信息
+- **后端API文档**：
+    - 详细描述接口端点、请求/响应格式及认证方式。
+- **代码结构说明**：
+    - 重要模块、类和方法的解释。
+    - 依赖项及其作用。
+- **开发环境配置**：
+    - 搭建开发环境的步骤。
+    - 测试与代码贡献指南。
+
+#### **示例**
+[插入展示图片]
+![API文档](./images/api-docs.png)
+
+#### **位置**
+- **API文档**：[API文档链接](https://github.com/sustech-cs304/team-project-25spring-59/blob/main/docs/api.md)
+- **开发者指南**：[开发者指南链接](https://github.com/sustech-cs304/team-project-25spring-59/blob/main/docs/developer-guide.md)
+
+
+## 2.3 其他补充文档
+- **构建与部署指南**：
+    - 在不同环境中构建和部署软件的详细步骤。
+- **测试指南**：
+    - 如何运行单元测试、集成测试及生成测试报告。
+
+### **位置**
+- [构建指南](./docs/build-guide.md)
+- [测试指南](./docs/testing.md)
+
+### **截图示例**
+![构建指南](./images/build-guide.png)
+
+
+通过以上文档，确保最终用户和开发者能够高效地使用、维护和扩展软件。
+
+---
+
 ## 4. Build
 
 ### **4.1 构建技术、工具、框架与方法**
