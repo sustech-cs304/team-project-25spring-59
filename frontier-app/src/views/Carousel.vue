@@ -1,4 +1,9 @@
 <script setup>
+/**
+ * @file HomeView.vue
+ * @description 主页面视图，包含 Live2D 动画和游戏仪表盘入口
+ */
+
 import { useRouter } from "vue-router"; // 🔹 需要引入 Vue Router
 const router = useRouter(); // 🔹 获取 Vue Router 实例
 
@@ -111,6 +116,75 @@ const infoItems = ref([
   { image: "img/gold.png", text: "114,514" },
   { image: "img/pyroxene.png", text: "24,000" }
 ]);
+
+
+defineExpose({
+  /**
+   * 当前转场动画播放状态
+   * @member {boolean}
+   * @description 用于指示转场动画是否正在播放中
+   * @example
+   * // 在父组件中监测状态
+   * watch(() => templateRef.value.isPlaying, (val) => {
+   *   console.log('转场状态变化:', val);
+   * });
+   */
+  isPlaying,
+
+  /**
+   * 关于弹窗的显示控制状态
+   * @member {boolean}
+   * @description 控制"关于我们"弹窗的显示/隐藏状态
+   * @example
+   * // 在父组件中打开弹窗
+   * templateRef.value.showAbout = true;
+   */
+  showAbout,
+
+  /**
+   * 右上角资源信息配置数组
+   * @member {Array<{image: string, text: string}>}
+   * @description 包含AP点数、金币、钻石等资源信息的配置数组
+   * @example
+   * // 在父组件中更新数据
+   * templateRef.value.infoItems = [
+   *   { image: "img/ap.png", text: "300/300" },
+   *   ...其他数据
+   * ];
+   */
+  infoItems,
+
+  /**
+   * Spine动画实例数据引用
+   * @member {Object|null}
+   * @description 包含Live2D动画的Spine实例数据，可用于高级动画控制
+   * @example
+   * // 在父组件中访问动画数据
+   * console.log('动画数据:', templateRef.value.studentL2D);
+   */
+  studentL2D,
+
+  /**
+   * 触发页面转场效果的方法
+   * @function
+   * @description 播放转场动画并在动画结束后自动跳转到仪表盘页面
+   * @example
+   * // 在父组件中触发转场
+   * templateRef.value.playTransition();
+   */
+  playTransition,
+
+  /**
+   * 视频元素DOM引用
+   * @member {HTMLVideoElement|null}
+   * @description 转场动画视频元素的直接引用，可用于自定义播放控制
+   * @warning 谨慎操作DOM元素
+   * @example
+   * // 在父组件中访问视频元素
+   * templateRef.value.transitionVideo?.pause();
+   */
+  transitionVideo
+});
 </script>
 
 

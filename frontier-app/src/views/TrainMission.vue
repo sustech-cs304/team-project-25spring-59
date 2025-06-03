@@ -47,7 +47,13 @@ onMounted(() => {
   routeBase.value = window.location.origin + '/'  // 自动拼接 /
 })
 
-
+defineExpose({
+  /**
+   * 当前路由的基础路径
+   * @member {import('vue').Ref<string>}
+   */
+  routeBase
+})
 </script>
 
 <style lang="scss">

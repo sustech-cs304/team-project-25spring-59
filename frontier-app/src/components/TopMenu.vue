@@ -1,5 +1,7 @@
 <script setup>
-import { Plus } from "@element-plus/icons-vue";
+/**
+ *  顶部导航栏
+ */
 </script>
 
 <template>

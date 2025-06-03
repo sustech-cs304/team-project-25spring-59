@@ -35,6 +35,30 @@ function submit() {
   })
 }
 
+defineExpose({
+  /**
+   * 表单数据对象
+   * @member {import('vue').Reactive<{
+   *   title: string,
+   *   description: string,
+   *   start_date: string,
+   *   end_date: string,
+   *   challenge_type: string,
+   *   target_value: string,
+   *   created_by: number
+   * }>}
+   */
+  form,
+
+  /**
+   * 提交表单数据
+   * @function
+   * @async
+   * @returns {Promise<void>}
+   * @description 提交挑战表单数据到服务器，成功后显示成功消息并刷新页面
+   */
+  submit,
+})
 </script>
 
 <template>

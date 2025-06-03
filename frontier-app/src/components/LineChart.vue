@@ -21,6 +21,14 @@ onMounted(() => {
     }
   });
 });
+
+defineExpose({
+  /**
+   * Chart.js 图表实例引用
+   * @member {import('vue').Ref<Chart|null>}
+   */
+  lineChart,
+})
 </script>
 
 <style scoped>

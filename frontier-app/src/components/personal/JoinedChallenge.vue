@@ -3,6 +3,11 @@
 import {onMounted, reactive, watch} from "vue";
 import request from "../../utils/request.js";
 
+/**
+ * 定义组件事件
+ * @event clickChallenge - 点击挑战事件
+ * @event createChallenge - 创建挑战事件
+ */
 defineEmits(['clickChallenge', 'createChallenge']);
 
 const challenges = reactive({})
@@ -30,6 +35,13 @@ onMounted(()=>{
       })
 })
 
+defineExpose({
+  /**
+   * 挑战列表数据
+   * @type {import("vue").Reactive<Object>}
+   */
+  challenges,
+});
 </script>
 
 <template>

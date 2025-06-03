@@ -33,3 +33,9 @@ backapp/static/vite.svg
 /backapp/build
 /backapp/personal_health_assistant.egg-info
 /backapp/dist
+
+docs/build
+docs/source
+docs/make.bat
+docs/Makefile
+backapp/openapi.json

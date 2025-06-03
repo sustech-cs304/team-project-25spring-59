@@ -21,6 +21,21 @@ onMounted(() => {
         leaderboard.data = response.data;
       })
 })
+
+defineExpose({
+  /**
+   * 排行榜数据（响应式对象）
+   * @member {Object}
+   * @property {Array} data 排行榜数据数组
+   */
+  leaderboard,
+
+  /**
+   * 当前用户ID（从localStorage获取）
+   * @member {number}
+   */
+  userId
+});
 </script>
 
 <template>

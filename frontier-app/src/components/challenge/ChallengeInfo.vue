@@ -105,6 +105,64 @@ onMounted(()=>{
   })
 })
 
+defineExpose({
+  /**
+   * 挑战详情数据
+   * @member {import('vue').Reactive<Object>}
+   */
+  challenge,
+
+  /**
+   * 处理后的挑战信息
+   * @member {import('vue').Reactive<{data: Object}>}
+   */
+  challengeInfo,
+
+  /**
+   * 参与者的分组数据
+   * @member {import('vue').Reactive<{pairs: Array}>}
+   */
+  participants,
+
+  /**
+   * 当前用户是否已加入挑战
+   * @member {import('vue').Ref<boolean>}
+   */
+  isJoined,
+
+  /**
+   * 挑战是否已结束
+   * @member {import('vue').ComputedRef<boolean>}
+   */
+  isEnd,
+
+  /**
+   * 更新挑战进度
+   * @function
+   * @param {number} value - 新的进度值
+   */
+  update,
+
+  /**
+   * 结束当前挑战
+   * @function
+   */
+  endChallenge,
+
+  /**
+   * 加入当前挑战
+   * @function
+   */
+  joinChallenge,
+
+  /**
+   * 检查是否是当前用户创建的挑战
+   * @function
+   * @param {number} id - 用户ID
+   * @returns {boolean}
+   */
+  isMine
+})
 </script>
 
 <template>

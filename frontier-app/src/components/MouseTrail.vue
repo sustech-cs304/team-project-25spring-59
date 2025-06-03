@@ -173,6 +173,67 @@ onMounted(() => {
 
   animate(); // 启动动画
 });
+
+// 向父组件暴露的变量和方法
+defineExpose({
+  /**
+   * Canvas 画布元素引用
+   * @type {HTMLCanvasElement | null}
+   */
+  canvas,
+
+  /**
+   * 鼠标轨迹点数组
+   * @type {Array<{x: number, y: number, opacity: number}>}
+   */
+  trail,
+
+  /**
+   * 粒子数组
+   * @type {Array<{
+   *   x: number,
+   *   y: number,
+   *   size: number,
+   *   opacity: number,
+   *   speedX: number,
+   *   speedY: number,
+   *   rotation: number
+   * }>}
+   */
+  particles,
+
+  /**
+   * 光环动画数组
+   * @type {Array<{
+   *   x: number,
+   *   y: number,
+   *   radius1: number,
+   *   radius2: number,
+   *   angle: number,
+   *   opacity: number,
+   *   lineWidth: number
+   * }>}
+   */
+  rings,
+
+  /**
+   * 启动鼠标轨迹动画
+   * @function
+   */
+  startMouseTrail,
+
+  /**
+   * 停止鼠标轨迹动画（移除事件监听）
+   * @function
+   */
+  stopMouseTrail,
+
+  /**
+   * 清空所有特效（轨迹/粒子/光环）
+   * @function
+   */
+  clearEffects
+});
 </script>
 
 <style scoped>

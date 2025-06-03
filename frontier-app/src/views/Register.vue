@@ -86,6 +86,54 @@ const register = async () => {
 const goToLogin = () => {
   router.push("/login");
 };
+
+defineExpose({
+  /**
+   * 用户名输入框的值
+   * @member {import('vue').Ref<string>}
+   */
+  username,
+
+  /**
+   * 邮箱输入框的值
+   * @member {import('vue').Ref<string>}
+   */
+  email,
+
+  /**
+   * 密码输入框的值
+   * @member {import('vue').Ref<string>}
+   */
+  password,
+
+  /**
+   * 确认密码输入框的值
+   * @member {import('vue').Ref<string>}
+   */
+  confirmPassword,
+
+  /**
+   * 注册请求的加载状态
+   * @member {import('vue').Ref<boolean>}
+   */
+  loading,
+
+  /**
+   * 提交注册请求的方法
+   * @function
+   * @async
+   * @description 验证表单后提交注册请求，成功则跳转登录页
+   * @throws {Error} 注册失败时抛出错误
+   */
+  register,
+
+  /**
+   * 跳转到登录页面的方法
+   * @function
+   * @description 导航到/login路由
+   */
+  goToLogin
+});
 </script>
 
 <style scoped>

@@ -4,6 +4,26 @@ import { ref } from 'vue'
 const exp = ref(50) // 经验值
 const nextExp = ref(100) // 升级所需经验值
 const name = ref("UserId: "+localStorage.getItem("user_id"));
+defineExpose({
+  /**
+   * 当前经验值
+   * @member {import('vue').Ref<number>}
+   */
+  exp,
+
+  /**
+   * 升级所需经验值
+   * @member {import('vue').Ref<number>}
+   */
+  nextExp,
+
+  /**
+   * 用户名称（包含用户ID）
+   * @member {import('vue').Ref<string>}
+   */
+  name,
+})
+
 </script>
 
 <template>

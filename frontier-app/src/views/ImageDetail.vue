@@ -19,6 +19,46 @@ const imageUrl = computed(() => `/0${id.value}.jpg`); // 根据 ID 显示不同�
 const goBack = () => {
   router.push('/carousel'); // 返回轮播图页面
 };
+
+
+defineExpose({
+  /**
+   * 当前图片ID（来自路由参数）
+   * @member {import('vue').ComputedRef<string>}
+   * @description 从路由参数中获取的当前图片ID（响应式计算属性）
+   */
+  id,
+
+  /**
+   * 根据ID生成的图片URL
+   * @member {import('vue').ComputedRef<string>}
+   * @description 基于ID自动生成的图片资源路径（格式：/0{id}.jpg）
+   */
+  imageUrl,
+
+  /**
+   * 返回轮播图页面
+   * @function
+   * @description 导航回轮播图列表页面
+   */
+  goBack,
+
+  /**
+   * 当前路由对象（只读）
+   * @member {import('vue-router').RouteLocationNormalizedLoaded}
+   * @description Vue Router的当前路由对象
+   * @warning 不建议直接修改
+   */
+  route,
+
+  /**
+   * 路由实例（只读）
+   * @member {import('vue-router').Router}
+   * @description Vue Router实例
+   * @warning 谨慎操作路由跳转
+   */
+  router
+});
 </script>
 
 <style scoped>

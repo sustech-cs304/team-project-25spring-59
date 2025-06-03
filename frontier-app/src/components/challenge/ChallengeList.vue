@@ -27,6 +27,13 @@ onMounted(()=>{
       })
 })
 
+defineExpose({
+  /**
+   * 所有挑战数据
+   * @type {import('vue').Reactive<{data: Array}>}
+   */
+  challenges,
+})
 </script>
 
 <template>

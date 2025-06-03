@@ -21,6 +21,14 @@ onMounted(() => {
     }
   });
 });
+
+defineExpose({
+  /**
+   * Chart.js 实例引用
+   * @member {import('vue').Ref<HTMLCanvasElement|null>}
+   */
+  pieChart,
+})
 </script>
 
 <style scoped>

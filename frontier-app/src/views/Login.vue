@@ -97,6 +97,46 @@ const login = async () => {
 const goToRegister = () => {
   router.push("/register");
 };
+
+defineExpose({
+  /**
+   * 当前输入的用户名
+   * @member {import('vue').Ref<string>}
+   */
+  username,
+
+  /**
+   * 当前输入的密码
+   * @member {import('vue').Ref<string>}
+   */
+  password,
+
+  /**
+   * 登录请求的加载状态
+   * @member {import('vue').Ref<boolean>}
+   */
+  loading,
+
+  /**
+   * 控制登录表单的显示状态
+   * @member {import('vue').Ref<boolean>}
+   */
+  showLoginForm,
+
+  /**
+   * 执行登录操作的方法
+   * @function
+   * @async
+   * @returns {Promise<void>}
+   */
+  login,
+
+  /**
+   * 跳转到注册页面的方法
+   * @function
+   */
+  goToRegister
+});
 </script>
 
 

@@ -43,6 +43,19 @@ const items = [
     action: () => alert("点击了功能 4"),
   },
 ];
+
+defineExpose({
+  /**
+   * 功能项数组配置
+   * @member {Array<{
+   *   image: string,
+   *   title: string,
+   *   buttonText: string,
+   *   action: Function
+   * }>}
+   */
+  items,
+})
 </script>
 
 <style scoped>
