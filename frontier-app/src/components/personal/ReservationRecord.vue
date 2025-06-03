@@ -42,6 +42,46 @@ onMounted(()=>{
       })
 })
 
+defineExpose({
+  /**
+   * 当前登录用户ID
+   * @description 从localStorage中获取的用户唯一标识符
+   * @member {string}
+   */
+  userId,
+
+  /**
+   * 用户预约的课程列表
+   * @description 包含用户所有预约课程信息的响应式对象，数据已按预约时间排序
+   * @member {import("vue").Reactive<{data?: Array<{
+   *   id: number,
+   *   courseName: string,
+   *   reservationTime: string,
+   *   status: string,
+   *   coach: string,
+   *   location: string
+   * }>}>}
+   */
+  personalCourses,
+
+  /**
+   * 处理课程数据的方法
+   * @description 对获取的课程数据进行处理并按预约时间从新到旧排序
+   * @function
+   * @param {Array} data - 从API获取的原始课程数据
+   * @returns {void}
+   */
+  processData,
+
+  /**
+   * 取消课程预约的方法
+   * @description 向服务器发送请求取消指定课程预约，成功后刷新页面
+   * @function
+   * @param {number} courseId - 要取消的课程ID
+   * @returns {Promise<void>}
+   */
+  denyReservation
+});
 </script>
 
 <template>

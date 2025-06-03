@@ -118,6 +118,111 @@ function handleNextClick() {
   }
 }
 
+defineExpose({
+  /**
+   * 当前用户ID
+   * @member {string}
+   */
+  userId,
+
+  /**
+   * 组件属性
+   * @member {Object}
+   * @property {string} gymId - 健身房ID
+   * @property {string} gymName - 健身房名称
+   */
+  props,
+
+  /**
+   * 按日期分组的课程数据
+   * @member {Object}
+   */
+  groupByDate,
+
+  /**
+   * 日期列表
+   * @member {Object}
+   */
+  dateList,
+
+  /**
+   * 当前显示的课程列表
+   * @member {Object}
+   */
+  currentCourses,
+
+  /**
+   * 用户已预约的课程ID列表
+   * @member {Array}
+   */
+  personalCourses,
+
+  /**
+   * 当前显示的日期索引
+   * @member {Object}
+   */
+  index,
+
+  /**
+   * 每次显示的日期范围大小
+   * @member {Object}
+   */
+  range,
+
+  /**
+   * 加载状态
+   * @member {Object}
+   */
+  isLoading,
+
+  /**
+   * 检查课程是否已被预约
+   * @function
+   */
+  isReserved,
+
+  /**
+   * 处理课程数据
+   * @function
+   */
+  processCourses,
+
+  /**
+   * 格式化时间
+   * @function
+   */
+  formatTime,
+
+  /**
+   * 获取用户已预约课程
+   * @function
+   */
+  getPersonalCourses,
+
+  /**
+   * 预约课程
+   * @function
+   */
+  reserveCourse,
+
+  /**
+   * 处理日期点击
+   * @function
+   */
+  handleDateClick,
+
+  /**
+   * 处理向前翻页
+   * @function
+   */
+  handlePrevClick,
+
+  /**
+   * 处理向后翻页
+   * @function
+   */
+  handleNextClick
+});
 </script>
 
 <template>
