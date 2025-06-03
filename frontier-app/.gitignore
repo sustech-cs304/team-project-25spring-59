@@ -27,5 +27,5 @@ docs/*
 !docs/.vitepress
 docs/.vitepress/*
 !docs/.vitepress/config.js
-！docs/index.md
+!docs/index.md
 
