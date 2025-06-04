@@ -198,7 +198,7 @@ pipeline {
                 archiveArtifacts artifacts: 'frontier-app/output.txt', fingerprint: true
 
                 // 归档文档
-                archiveArtifacts artifacts: 'frontier-app/docs/.vuepress/dist/**/*', fingerprint: true
+                archiveArtifacts artifacts: 'frontier-app/docs/.vitepress/dist/**/*', fingerprint: true
                 
                 echo "构建产物已归档"
             }
