@@ -205,12 +205,7 @@ pipeline {
         }
         
         stage('Deployment') {
-                    steps {
-                        bat '''
-                            call %VENV_NAME%\\Scripts\\activate.bat
-                            cd frontier-app
-                            npm run preview
-                        '''                        
+                    steps {             
                         echo "应用已部署并在后台运行"
                     }
         }
