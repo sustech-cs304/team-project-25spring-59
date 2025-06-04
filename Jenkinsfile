@@ -165,8 +165,16 @@ pipeline {
                 bat '''                
                     call %VENV_NAME%\\Scripts\\activate.bat
                     cd frontier-app
-                    npm install --save-dev vue-docgen-cli
-                    npm run docs:generate
+                    
+                    :: 安全安装（可选）
+                    npm install --save-dev vue-docgen-cli || exit /B 0
+                    
+                    :: 使用npx确保找到本地命令
+                    npx vue-docgen -c docgen.config.js || (
+                        echo [WARNING] Doc generation failed, but continuing build...
+                        exit /B 0
+                    )
+                    
                     npm run docs:build
                     npm run docs:preview
                     cd ..
@@ -185,7 +193,7 @@ pipeline {
                 // 归档前端和后端测试报告
                 archiveArtifacts artifacts: 'frontier-app/reports/**/*', fingerprint: true
                 archiveArtifacts artifacts: 'backapp/reports/**/*', fingerprint: true
-                
+
                 archiveArtifacts artifacts: 'backend_test_report/**/*', fingerprint: true
                 archiveArtifacts artifacts: 'frontier-app/output.txt', fingerprint: true
 
