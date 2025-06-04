@@ -1,7 +1,7 @@
 <script setup>
 import {onMounted, reactive, ref, computed} from "vue";
 import request from "../../utils/request.js";
-import {UserFilled, Trophy, Medal, GoldMedal} from "@element-plus/icons-vue";
+import {UserFilled, Trophy, Medal, GoldMedal, ArrowLeft} from "@element-plus/icons-vue";
 import {ElMessage} from "element-plus";
 
 const userId = Number(localStorage.getItem('user_id'))
@@ -175,6 +175,16 @@ defineExpose({
       <el-col :span="16" :offset="4">
         <!-- 挑战信息卡片 -->
         <el-card class="challenge-info-card">
+          <div slot="header">
+            <div class="card-header">
+              <el-button
+                  type="text"
+                  :icon="ArrowLeft"
+                  @click="$emit('backToList')"
+                  class="back-btn"
+              >返回</el-button>
+            </div>
+          </div>
           <el-descriptions :title="challengeInfo.data.title" border>
             <template #extra>
               <el-button
