@@ -22,7 +22,6 @@
 
 #### **用户文档访问**
 - **GitHub README.md**：[README链接](https://github.com/sustech-cs304/team-project-25spring-59/blob/main/README.md)
-- **Wiki页面**：[Wiki链接](https://github.com/sustech-cs304/team-project-25spring-59/wiki)（如适用）
 
 ### 2.2 面向开发者的文档
 
