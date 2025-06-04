@@ -17,7 +17,7 @@
   
   ```
 
-![](C:\Users\bdxly\Desktop\软件工程\team-project-25spring-59\final_report_59\metrics\代码行数.png)
+![](./metrics/代码行数.png)
 
 ### 1.2 圈复杂度（Cyclomatic Complexity）
 
@@ -38,9 +38,9 @@
   radon cc ./backend -a
   ```
 
-![](C:\Users\bdxly\Desktop\软件工程\team-project-25spring-59\final_report_59\metrics\圈复杂度.png)
-![](C:\Users\bdxly\Desktop\软件工程\team-project-25spring-59\final_report_59\metrics\后端复杂度1.png)
-![](C:\Users\bdxly\Desktop\软件工程\team-project-25spring-59\final_report_59\metrics\后端复杂度2.png)
+![](./metrics/圈复杂度.png)
+![](./metrics/后端复杂度1.png)
+![](./metrics/后端复杂度2.png)
 
 ### 1.3 依赖数量
 
@@ -63,10 +63,10 @@
 
 通过上述度量工具和指标分析，我们能够更加系统地把握项目复杂度、依赖性和维护成本，为后续优化与重构提供数据支持。
 
-![](C:\Users\bdxly\Desktop\软件工程\team-project-25spring-59\final_report_59\metrics\前端依赖1.png)
-![](C:\Users\bdxly\Desktop\软件工程\team-project-25spring-59\final_report_59\metrics\前端依赖2.png)
-![](C:\Users\bdxly\Desktop\软件工程\team-project-25spring-59\final_report_59\metrics\后端依赖1.png)
-![](C:\Users\bdxly\Desktop\软件工程\team-project-25spring-59\final_report_59\metrics\后端依赖2.png)
+![](./metrics/前端依赖1.png)
+![](./metrics/前端依赖2.png)
+![](./metrics/后端依赖1.png)
+![](./metrics/后端依赖2.png)
   
 
 
@@ -160,8 +160,8 @@ bash
 编辑
 vitest run --coverage
 
-![](C:\Users\bdxly\Desktop\软件工程\team-project-25spring-59\final_report_59\metrics\前端单元测试1.png)
-![](C:\Users\bdxly\Desktop\软件工程\team-project-25spring-59\final_report_59\metrics\前端单元测试2.png)
+![](./metrics/前端单元测试1.png)
+![](./metrics/前端单元测试2.png)
 
 
 ### 2.2 端到端测试（End-to-End Testing）
@@ -186,7 +186,7 @@ npx cypress run
 所有测试脚本位于 cypress/e2e/ 目录下。
 
 测试前需确保前端服务处于运行状态，或在 cypress.config.ts 中设置自动启动服务。
-![](C:\Users\bdxly\Desktop\软件工程\team-project-25spring-59\final_report_59\metrics\e2e.png)
+![](./metrics/e2e.png)
 
 
 
