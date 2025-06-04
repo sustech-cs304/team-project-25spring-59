@@ -56,8 +56,8 @@ function submit() {
   if (!validateForm()) return
 
   isLoading.value = true
-  form.start_date = toISO(form.start_date)
-  form.end_date = toISO(form.end_date)
+  form.start_date = toISO(new Date(form.start_date))
+  form.end_date = toISO(new Date(form.end_date))
 
   request({
     method: "POST",

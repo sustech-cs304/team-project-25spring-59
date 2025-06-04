@@ -163,10 +163,9 @@ onMounted(()=>{
       </div>
 
       <el-card
-          shadow="hover"
+          shadow="never"
           v-for="sharing in sharings.data"
           class="sharing-card"
-          :body-style="{ padding: '0 20px 20px' }"
       >
         <div class="card-header">
           <el-row align="middle" :gutter="10">
@@ -186,13 +185,11 @@ onMounted(()=>{
 
         <div class="card-content">
           <p class="content-text">{{ sharing.content }}</p>
-          <div class="image-grid" v-if="sharing.imgList.length > 0">
+          <div v-for="url in sharing.imgList" style="display: inline-block">
             <el-image
-                v-for="url in sharing.imgList"
-                :key="url"
+                style="width: 100px; height: 100px; margin: 1px"
                 :src="url"
                 fit="cover"
-                class="post-image"
                 :preview-src-list="sharing.imgList"
             />
           </div>
@@ -312,11 +309,6 @@ onMounted(()=>{
   border-radius: 12px;
   border: none;
   transition: all 0.3s ease;
-}
-
-.sharing-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
 }
 
 .card-header {

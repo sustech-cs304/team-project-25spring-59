@@ -88,8 +88,7 @@
     - 列出常见问题及其解决方案。
 
 #### **文档展示**
-[插入展示图片]
-![插入展示图片](./images/quick-start.png)
+![用户文档](./iamges/用户文档.png)
 
 
 #### **用户文档访问**
@@ -115,13 +114,9 @@
     - 测试与代码贡献指南。
 
 #### **示例**
-[插入展示图片]
-![API文档](./images/api-docs.png)
+![前端API文档](./iamges/前端API文档.png)
 
-#### **位置**
-- **API文档**：[API文档链接](https://github.com/sustech-cs304/team-project-25spring-59/blob/main/docs/api.md)
-- **开发者指南**：[开发者指南链接](https://github.com/sustech-cs304/team-project-25spring-59/blob/main/docs/developer-guide.md)
-
+![后端API文档](./iamges/后端API文档.png)
 
 ## 2.3 其他补充文档
 - **构建与部署指南**：
