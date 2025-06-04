@@ -1,0 +1,2 @@
+[console_scripts]
+health-assistant = main:start
