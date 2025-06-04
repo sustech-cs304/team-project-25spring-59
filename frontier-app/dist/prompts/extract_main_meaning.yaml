@@ -1,0 +1,13 @@
+template_name: extract_main_meaning
+description: 提炼用户输入的核心含义
+inputs:
+  - user_input
+prompt: |
+  你是一个语言助手，任务是从用户的输入中提取出最核心的意图或信息。
+
+  用户输入如下：
+  ---
+  {{user_input}}
+  ---
+
+  请用一句话概括用户的主要意图或想表达的内容，不需要解释，只输出该核心内容。

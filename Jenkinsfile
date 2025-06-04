@@ -185,6 +185,8 @@ pipeline {
                 // 归档前端和后端测试报告
                 archiveArtifacts artifacts: 'frontier-app/reports/**/*', fingerprint: true
                 archiveArtifacts artifacts: 'backapp/reports/**/*', fingerprint: true
+                
+                archiveArtifacts artifacts: 'backend_test_report/**/*', fingerprint: true
                 archiveArtifacts artifacts: 'frontier-app/output.txt', fingerprint: true
 
                 // 归档文档
