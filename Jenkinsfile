@@ -207,13 +207,13 @@ pipeline {
         stage('Deployment') {
                     steps {
                         bat '''
-                            call %VENV_NAME%\\Scripts\\activate.bat
-                            cd frontier-app
-                            npm run preview
+                            // call %VENV_NAME%\\Scripts\\activate.bat
+                            // cd frontier-app
+                            // npm run preview
 
-                            REM 部署后端
-                            cd ..
-                            uvicorn main:app --host 0.0.0.0 --port 8000
+                            // REM 部署后端
+                            // cd ..
+                            // uvicorn main:app --host 0.0.0.0 --port 8000
                         '''                        
                         echo "应用已部署并在后台运行"
                     }
