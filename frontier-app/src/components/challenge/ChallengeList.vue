@@ -1,8 +1,7 @@
 <script setup>
-
 import {onMounted, reactive, watch} from "vue";
 import request from "../../utils/request.js";
-import {Plus} from "@element-plus/icons-vue";
+import {Plus, Clock, Calendar} from "@element-plus/icons-vue";
 
 defineEmits(['clickChallenge', 'createChallenge']);
 
@@ -30,56 +29,162 @@ onMounted(()=>{
 defineExpose({
   /**
    * 所有挑战数据
-   * @type {import('vue').Reactive<{data: Array}>}
+   * @member {import('vue').Reactive<{data: Array}>}
    */
   challenges,
 })
 </script>
 
 <template>
-  <el-row class="challenge-container">
-    <el-col :span="12" :offset="6">
-      <el-card
-          shadow="hover"
-          v-for="challenge in challenges.data"
-          @click="$emit('clickChallenge', challenge.id)">
-        <el-row align="middle">
-          <el-col :span="12">
-            <el-row>
-              {{ challenge.title }}
-            </el-row>
-            <el-row>
-              <el-col :span="8">
-                <el-tag type="primary">{{ challenge.challenge_type }}</el-tag>
-              </el-col>
-              <el-col :span="8">
-                <el-tag type="primary">{{ challenge.status }}</el-tag>
-              </el-col>
-            </el-row>
-          </el-col>
-          <el-col :span="8" :offset="4">
-            <div>
-              开始：<el-text type="info" size="small">{{ challenge.start_date }}</el-text><br/>
-              结束：<el-text type="info" size="small">{{ challenge.end_date }}</el-text>
-            </div>
-          </el-col>
-        </el-row>
-      </el-card>
-    </el-col>
-  </el-row>
+  <div class="challenge-container">
+    <el-row :gutter="20">
+      <el-col :span="16" :offset="4">
+        <div class="challenge-list">
+          <el-card
+              shadow="hover"
+              v-for="challenge in challenges.data"
+              :key="challenge.id"
+              class="challenge-card"
+              @click="$emit('clickChallenge', challenge.id)"
+          >
+            <div class="card-content">
+              <div class="challenge-header">
+                <h3 class="challenge-title">{{ challenge.title }}</h3>
+                <div class="challenge-tags">
+                  <el-tag
+                      :type="challenge.challenge_type === '学习' ? 'success' : 'warning'"
+                      class="type-tag"
+                  >
+                    {{ challenge.challenge_type }}
+                  </el-tag>
+                  <el-tag
+                      :type="challenge.status === '进行中' ? 'danger' : 'info'"
+                      class="status-tag"
+                  >
+                    {{ challenge.status }}
+                  </el-tag>
+                </div>
+              </div>
 
-  <!--fixed navigating bar at the bottom-->
-  <el-affix target=".challenge-container" position="bottom" :offset="20">
-    <el-row>
-      <el-col :span="10" :offset="7">
-        <div style="display: flex; justify-content: center">
-          <el-button :icon="Plus" type="primary" size="large" circle @click="$emit('createChallenge')"></el-button>
+              <div class="challenge-dates">
+                <div class="date-item">
+                  <el-icon><Calendar /></el-icon>
+                  <span class="date-label">开始：</span>
+                  <el-text type="info" size="small">{{ challenge.start_date }}</el-text>
+                </div>
+                <div class="date-item">
+                  <el-icon><Calendar /></el-icon>
+                  <span class="date-label">结束：</span>
+                  <el-text type="info" size="small">{{ challenge.end_date }}</el-text>
+                </div>
+              </div>
+            </div>
+          </el-card>
         </div>
       </el-col>
     </el-row>
-  </el-affix>
+
+    <!-- Floating action button -->
+    <el-affix target=".challenge-container" position="bottom" :offset="20">
+      <el-button
+          :icon="Plus"
+          type="primary"
+          size="large"
+          circle
+          class="create-btn"
+          @click="$emit('createChallenge')"
+      />
+    </el-affix>
+  </div>
 </template>
 
 <style scoped>
+.challenge-container {
+  padding: 20px 0;
+  background-color: #f5f7fa;
+  min-height: 100vh;
+}
 
+.challenge-list {
+  display: grid;
+  gap: 16px;
+}
+
+.challenge-card {
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.challenge-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+.card-content {
+  padding: 16px;
+}
+
+.challenge-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.challenge-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 500;
+  color: #303133;
+}
+
+.challenge-tags {
+  display: flex;
+  gap: 8px;
+}
+
+.type-tag {
+  font-weight: 500;
+}
+
+.status-tag {
+  font-weight: 500;
+}
+
+.challenge-dates {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.date-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.date-item .el-icon {
+  color: #909399;
+  font-size: 14px;
+}
+
+.date-label {
+  color: #606266;
+  font-size: 14px;
+}
+
+.create-btn {
+  width: 56px;
+  height: 56px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  position: fixed;
+  right: 40px;
+  bottom: 40px;
+}
+
+.create-btn:hover {
+  transform: scale(1.05);
+}
 </style>

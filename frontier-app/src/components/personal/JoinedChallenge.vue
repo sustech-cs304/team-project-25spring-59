@@ -38,7 +38,7 @@ onMounted(()=>{
 defineExpose({
   /**
    * 挑战列表数据
-   * @type {import("vue").Reactive<Object>}
+   * @member {import("vue").Reactive<Object>}
    */
   challenges,
 });
