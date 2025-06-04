@@ -36,7 +36,10 @@ backapp/static/vite.svg
 
 docs/build
 docs/source
+docs/dev/*
 docs/make.bat
 docs/Makefile
 backapp/openapi.json
 jenkins_docgen.txt
+Sphinx.md
+user-doc.md
