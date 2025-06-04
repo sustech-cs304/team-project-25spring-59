@@ -102,24 +102,22 @@
     2.  **代码编译**: 执行 `npm run build` 命令，将 Vue.js 组件、JavaScript/TypeScript 代码和 CSS 等静态资源进行编译、代码分割、Tree Shaking、压缩和混淆。
 *   **Backend Build**:
     *   执行 `pip install -r requirements.txt` 命令，安装所有在 [`requirements.txt`](https://github.com/sustech-cs304/team-project-25spring-59/blob/main/requirements.txt) 中声明的 Python 依赖包。
-    *   将前端构建产物 (`frontier-app/dist/` 目录下的所有内容) 复制到后端项目指定的静态文件目录 (`backapp/static/`)。
-
-*   **Generate Frontend Docs**
-    *   生成用户文档和开发者文档
-
-*   **Metrics**:
+    *   将前端构建产物 (`frontier-app/dist/` 目录下的所有内容) 复制到后端项目指定的静态文件目录 (`backapp/static/`)
+*   **Wheel Package Build**
+    *   将整合后的前端后端、requirement等生成wheel包
+*   **Test Report Generation**:
     *   使用 cloc 统计前端代码行数
     *   使用 Plato 分析圈复杂度
     *   使用 jq 统计依赖数量
     *   使用 pipdeptree 导出依赖结构
-*   **Wheel Package Build**
-    *   将整合后的前端后端、requirement等生成wheel包
-
-*   **Testing**
-    *   进行前端和后端的测试，并生成报告
-
+    *   生成前端测试和后端测试报告
+*   **Generate Docs**
+    *   生成用户文档和开发者文档
 *   **Artifact Archiving**
     *   将所有的产物（test report、docs、wheel包）进行归档
+*   **Deployment**
+    *   将应用部署到相应端口上
+
 
 
 ### 4.3 成功构建的最终产物
@@ -127,12 +125,21 @@
 *   **前端静态资源**:
     *   **位置**: [`frontier-app/dist/`](https://github.com/sustech-cs304/team-project-25spring-59/tree/frontier-app/dist)
     *   **内容**: 包含 HTML, CSS, JavaScript 文件以及图片等其他静态资源。这些文件经过了编译、压缩和优化，可以直接部署到任何静态 Web 服务器，或由后端应用提供服务。
+
 *   **配置好的后端应用代码及依赖**:
+
     *   **位置**: `backapp/`
     *   **内容**: 包含所有后端 Python 源代码，并且其运行所需的依赖已通过 `pip install -r requirements.txt` 在虚拟环境中准备好
+
 *   **整合后的应用结构**:
     *   **位置**: [`backapp/static/`](https://github.com/sustech-cs304/team-project-25spring-59/tree//main/backapp/static)
     *   包含前端的`dist/`目录的内容
+
+*   **Jenkins的构建产物**
+
+    *   包含所有的测试报告、wheel包、静态文件、document
+
+    <img src="./iamges/image-20250604120518931.png" alt="image-20250604120518931" style="zoom:33%;" />
 
 ### **4.4 构建文件/脚本**
 
@@ -176,11 +183,11 @@
     
     * **用途**: 部署前端
     
-      <img src=".\iamges\image-20250601195927071.png" alt="image-20250601195927071" style="zoom:33%;" />
+      <img src="./iamges/image-20250604120847100.png" alt="image-20250604120847100" style="zoom:33%;" />
     
 *   **后端的[`backapp/Dockerfile`](https://github.com/sustech-cs304/team-project-25spring-59/blob/main/backapp/Dockerfile)**:
     
-    *   **用途**: 构建后端<img src=".\iamges\image-20250601200059848.png" alt="image-20250601200059848" style="zoom:33%;" />
+    *   **用途**: 构建后端<img src="./iamges/image-20250604120910176.png" alt="image-20250604120910176" style="zoom:33%;" />
     
 *   **[nginx.conf](https://github.com/sustech-cs304/team-project-25spring-59/blob/main/frontier-app/nginx.conf) (Nginx 配置文件)**:
     
@@ -188,7 +195,7 @@
     
 *   **[docker-compose.yml](https://github.com/sustech-cs304/team-project-25spring-59/blob/main/docker-compose.yml)**:
     
-    *   **用途**: 定义和编排多容器应用（前端、后端、数据库）。<img src=".\iamges\image-20250601200352831.png" alt="image-20250601200352831" style="zoom:33%;" />
+    *   **用途**: 定义和编排多容器应用（前端、后端、数据库）。<img src="./iamges/image-20250604120935724.png" alt="image-20250604120935724" style="zoom:33%;" />
     
     
     
@@ -201,3 +208,5 @@
 2.  **应用可访问和功能正常**:
     *   **前端**: 在浏览器中访问为前端服务映射的主机端口（ `http://localhost:80`），能看到应用界面并能与之交互。
     *   **后端**: 后端 API 端点能通过映射的端口（例如 `http://localhost:8000`）被访问，并且前端发起的 API 请求能得到正确响应。
+3.  **上传到 docker hub 上**![image-20250604120202004](./iamges/image-20250604120202004.png)
+
