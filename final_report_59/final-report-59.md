@@ -1,4 +1,76 @@
 # final-report-59
+## 1. Metrics
+
+在本项目中，我们对软件的各项度量指标进行了统计与分析，以评估代码质量和工程结构的合理性。以下是所使用的度量指标及工具说明：
+
+### 1.1 代码行数与源文件数量
+
+- **指标说明**：用于评估项目规模，便于了解代码量与模块划分情况。
+
+- **使用工具**：Cloc（Count Lines of Code）
+
+- **命令示例**：
+
+  ```bash
+  cloc ./frontend
+  cloc ./backend
+  
+  ```
+
+![](C:\Users\bdxly\Desktop\软件工程\team-project-25spring-59\final_report_59\metrics\代码行数.png)
+
+### 1.2 圈复杂度（Cyclomatic Complexity）
+
+- **指标说明**：圈复杂度反映代码的逻辑复杂程度，有助于识别潜在的高风险函数或模块。
+
+- **使用工具**：
+
+  - 前端：Plato（适用于 JavaScript/TypeScript 项目）
+  - 后端：Radon（适用于 Python 项目）
+
+- **命令示例**：
+
+  ```
+  bash复制编辑# 前端
+  plato -r -d report/ ./src
+  
+  # 后端
+  radon cc ./backend -a
+  ```
+
+![](C:\Users\bdxly\Desktop\软件工程\team-project-25spring-59\final_report_59\metrics\圈复杂度.png)
+![](C:\Users\bdxly\Desktop\软件工程\team-project-25spring-59\final_report_59\metrics\后端复杂度1.png)
+![](C:\Users\bdxly\Desktop\软件工程\team-project-25spring-59\final_report_59\metrics\后端复杂度2.png)
+
+### 1.3 依赖数量
+
+- **指标说明**：统计项目所依赖的第三方库数量，可评估项目对外部组件的依赖程度。
+
+- **使用工具**：
+
+  - 前端：npm（通过 `package.json` 统计）
+  - 后端：pipdeptree（基于 Python 虚拟环境）
+
+- **命令示例**：
+
+  ```
+  bash复制编辑# 前端
+  npm list --depth=0
+  
+  # 后端
+  pipdeptree
+  ```
+
+通过上述度量工具和指标分析，我们能够更加系统地把握项目复杂度、依赖性和维护成本，为后续优化与重构提供数据支持。
+
+![](C:\Users\bdxly\Desktop\软件工程\team-project-25spring-59\final_report_59\metrics\前端依赖1.png)
+![](C:\Users\bdxly\Desktop\软件工程\team-project-25spring-59\final_report_59\metrics\前端依赖2.png)
+![](C:\Users\bdxly\Desktop\软件工程\team-project-25spring-59\final_report_59\metrics\后端依赖1.png)
+![](C:\Users\bdxly\Desktop\软件工程\team-project-25spring-59\final_report_59\metrics\后端依赖2.png)
+  
+
+
+
 
 ## 2. Documentation
 
@@ -44,6 +116,60 @@
 通过以上文档，确保最终用户和开发者能够高效地使用、维护和扩展软件。
 
 ---
+
+## 前端单元测试以及E2E测试
+为了保证前端应用的稳定性与可维护性，本项目在不同测试层级实施了以下测试策略：
+
+### 2.1 单元测试（Unit Testing）
+
+- **测试框架**：Vitest
+- **说明**：Vitest 是一个快速、轻量的 Vite 原生单元测试框架，适用于 Vue、React 等现代前端框架。
+- **测试范围**：组件逻辑、工具函数、状态管理逻辑等。
+- **测试命令**：
+  ```bash
+  npm run test
+配置说明：
+
+所有测试文件以 .test.ts 或 .test.js 命名。
+
+测试覆盖率支持 Istanbul 兼容报告，可通过 --coverage 参数生成。
+
+示例命令：
+
+bash
+复制
+编辑
+vitest run --coverage
+
+![](C:\Users\bdxly\Desktop\软件工程\team-project-25spring-59\final_report_59\metrics\前端单元测试1.png)
+![](C:\Users\bdxly\Desktop\软件工程\team-project-25spring-59\final_report_59\metrics\前端单元测试2.png)
+
+
+### 2.2 端到端测试（End-to-End Testing）
+测试工具：Cypress
+
+说明：Cypress 是一款现代化 E2E 测试工具，支持在浏览器中自动化模拟真实用户交互。
+
+测试范围：从页面加载、表单交互、导航行为到后端 API 响应的完整流程。
+
+测试命令：
+
+bash
+复制
+编辑
+# 启动测试 UI 界面
+npx cypress open
+
+# 或以无头模式运行测试
+npx cypress run
+配置说明：
+
+所有测试脚本位于 cypress/e2e/ 目录下。
+
+测试前需确保前端服务处于运行状态，或在 cypress.config.ts 中设置自动启动服务。
+![](C:\Users\bdxly\Desktop\软件工程\team-project-25spring-59\final_report_59\metrics\e2e.png)
+
+
 
 ## 后端自动化测试报告
 
