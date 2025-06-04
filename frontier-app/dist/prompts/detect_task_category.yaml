@@ -1,0 +1,23 @@
+template_name: detect_task_category
+description: 判断用户任务属于哪个预定义的任务范畴
+inputs:
+  - task_goal
+prompt: |
+  你是一个智能分类助手，任务是根据用户的核心目标语句判断该任务属于哪一类。
+
+  用户的任务目标如下：
+  ---
+  {{task_goal}}
+  ---
+
+  请你根据以下预设分类选出最匹配的一项，仅输出一个英文标签：
+
+  - analyze_data：分析运动数据
+  - analyze_plan：分析运动计划
+  - generate_plan：生成运动计划
+  - delete_plan：删除运动计划
+  - other：无法归类
+
+  输出规则：
+  - 只返回标签（如 analyze_data），不要解释。
+  - 不要重复输入内容。

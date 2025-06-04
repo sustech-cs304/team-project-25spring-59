@@ -18,7 +18,32 @@ function goToList() {
   currentCom.value = JoinedChallenge;
 }
 
+defineExpose({
+  /**
+   * 当前用户ID
+   * @type {import("vue").Ref<string>}
+   */
+  userId,
 
+  /**
+   * 当前挑战ID
+   * @type {import("vue").Ref<string>}
+   */
+  challengeId,
+
+  /**
+   * 跳转到指定挑战详情
+   * @function
+   * @param {string} id - 挑战ID
+   */
+  goToChallenge,
+
+  /**
+   * 返回挑战列表
+   * @function
+   */
+  goToList
+});
 </script>
 
 <template>

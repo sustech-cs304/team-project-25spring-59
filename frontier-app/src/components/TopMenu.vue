@@ -1,11 +1,13 @@
 <script setup>
-import { Plus } from "@element-plus/icons-vue";
+/**
+ *  顶部导航栏
+ */
 </script>
 
 <template>
   <el-affix position="top">
     <el-row class="top-menu-row">
-      <el-col :span="10" :offset="7">
+      <el-col :span="24">
         <el-menu
             mode="horizontal"
             router
@@ -34,6 +36,8 @@ import { Plus } from "@element-plus/icons-vue";
 .top-menu {
   background: transparent;
   border-bottom: none;
+  display: flex;  /* 添加flex布局 */
+  justify-content: center; /* 水平居中 */
 }
 
 .home-menu-item {
@@ -45,6 +49,8 @@ import { Plus } from "@element-plus/icons-vue";
   justify-content: center;
   align-items: center;
   height: 60px;
+  flex: 1;  /* 添加flex:1使菜单项占满可用空间 */
+  text-align: center; /* 确保文字居中 */
 }
 
 .home-menu-item:hover {

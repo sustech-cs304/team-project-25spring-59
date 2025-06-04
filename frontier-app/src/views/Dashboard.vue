@@ -139,6 +139,118 @@ const fetchTrainingData = async () => {
 onMounted(() => {
   fetchTrainingData();
 });
+
+/**
+ * 暴露给父组件的API和数据
+ */
+defineExpose({
+  /**
+   * 原始训练记录数据
+   * @member {Array<{date: string, type: string, duration: number, calories: number}>}
+   * @description 包含所有训练记录的数组，每个记录包含日期、类型、时长和卡路里
+   * @example
+   * // 父组件中获取原始数据
+   * const rawData = dashboardRef.value.records;
+   */
+  records,
+
+  /**
+   * 总训练时长（分钟）
+   * @member {number}
+   * @description 计算所有训练记录的总时长（单位：分钟）
+   * @example
+   * // 父组件中获取总时长
+   * const minutes = dashboardRef.value.totalDuration;
+   */
+  totalDuration,
+
+  /**
+   * 总消耗卡路里
+   * @member {number}
+   * @description 计算所有训练记录的总卡路里消耗
+   * @example
+   * // 父组件中获取总卡路里
+   * const cals = dashboardRef.value.totalCalories;
+   */
+  totalCalories,
+
+  /**
+   * 总训练次数
+   * @member {number}
+   * @description 训练记录的总数量
+   * @example
+   * // 父组件中获取训练次数
+   * const sessions = dashboardRef.value.totalSessions;
+   */
+  totalSessions,
+
+  /**
+   * 目标进度百分比
+   * @member {number}
+   * @description 当前训练时长与目标时长的百分比（上限100%）
+   * @example
+   * // 父组件中获取进度
+   * const progress = dashboardRef.value.goalProgress;
+   */
+  goalProgress,
+
+  /**
+   * 根据日期筛选后的记录
+   * @member {Array}
+   * @description 基于selectedDate范围筛选后的训练记录
+   * @example
+   * // 父组件中设置日期范围
+   * dashboardRef.value.selectedDate = [new Date('2023-01-01'), new Date('2023-12-31')];
+   * // 然后获取筛选结果
+   * const filtered = dashboardRef.value.filteredRecords;
+   */
+  filteredRecords,
+
+  /**
+   * 折线图数据
+   * @member {Object}
+   * @property {string[]} labels - 日期标签数组
+   * @property {Object[]} datasets - 图表数据集
+   * @description 用于LineChart组件的格式化数据
+   * @example
+   * // 父组件中获取图表数据
+   * const lineData = dashboardRef.value.chartData;
+   */
+  chartData,
+
+  /**
+   * 饼图数据
+   * @member {Object}
+   * @property {string[]} labels - 训练类型标签
+   * @property {Object[]} datasets - 图表数据集
+   * @description 用于PieChart组件的格式化数据
+   * @example
+   * // 父组件中获取饼图数据
+   * const pieData = dashboardRef.value.pieData;
+   */
+  pieData,
+
+  /**
+   * 重新加载训练数据
+   * @function
+   * @async
+   * @description 强制刷新所有统计数据和图表
+   * @example
+   * // 父组件中刷新数据
+   * await dashboardRef.value.fetchTrainingData();
+   */
+  fetchTrainingData,
+
+  /**
+   * 当前选择的日期范围
+   * @member {[Date, Date]|null}
+   * @description 用于筛选的双日期范围（开始日期和结束日期）
+   * @example
+   * // 父组件中设置日期范围
+   * dashboardRef.value.selectedDate = [new Date(), new Date()];
+   */
+  selectedDate
+});
 </script>
 
 <style scoped>

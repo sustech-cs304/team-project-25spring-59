@@ -7,6 +7,27 @@ import ChallengeRecord from "../components/personal/ChallengeRecord.vue";
 
 const activeName = ref('reservationRecord')
 
+defineExpose({
+  /**
+   * 当前激活的标签页名称
+   * @member {import('vue').Ref<string>}
+   * @description 控制显示'reservationRecord'(预约记录)或'challengeRecord'(挑战记录)
+   * @default 'reservationRecord'
+   */
+  activeName,
+
+  /**
+   * 预约记录组件实例
+   * @member {import('vue').Component}
+   */
+  ReservationRecord,
+
+  /**
+   * 挑战记录组件实例
+   * @member {import('vue').Component}
+   */
+  ChallengeRecord
+});
 </script>
 
 <template>

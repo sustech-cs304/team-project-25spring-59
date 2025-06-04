@@ -69,6 +69,26 @@ onUnmounted(() => {
   clearInterval(intervalId);
   clearInterval(progressInterval);
 });
+
+defineExpose({
+  /**
+   * 当前轮播图的索引
+   * @member {import('vue').Ref<number>}
+   */
+  currentIndex,
+
+  /**
+   * 当前显示的图片URL
+   * @member {import('vue').Ref<string>}
+   */
+  currentImage,
+
+  /**
+   * 下载进度百分比
+   * @member {import('vue').Ref<number>}
+   */
+  progress,
+})
 </script>
 
 <style scoped>

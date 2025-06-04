@@ -97,6 +97,35 @@ const handleTrainMissionClick = async () => {
     console.error("生成用户记录失败:", error)
   }
 }
+
+defineExpose({
+  /**
+   * 当前时间字符串
+   * @member {import('vue').Ref<string>}
+   */
+  currentTime,
+
+  /**
+   * 手动更新时间显示
+   * @function
+   */
+  updateTime,
+
+  /**
+   * 路由导航方法
+   * @function
+   * @param {string} path - 目标路由路径
+   */
+  navigateTo,
+
+  /**
+   * 处理训练任务点击事件
+   * @function
+   * @async
+   * @returns {Promise<void>}
+   */
+  handleTrainMissionClick,
+})
 </script>
 
 

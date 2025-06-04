@@ -58,6 +58,11 @@
 
 
 <script setup>
+/**
+ * 应用启动和登录前页面组件
+ * @name BeforeLogin
+ * @description 处理应用启动动画、初始化检查和登录界面展示
+ */
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
@@ -124,6 +129,71 @@ const simulateLoadingStep = (text, percentage) => {
 const goToLogin = () => {
   router.push("/login");
 };
+
+// 暴露给文档生成器
+defineExpose({
+  /**
+   * 是否显示加载动画
+   * @member {boolean}
+   */
+  isLoading,
+
+  /**
+   * 加载进度百分比
+   * @member {number}
+   */
+  progress,
+
+  /**
+   * 状态显示文本
+   * @member {string}
+   */
+  statusText,
+
+  /**
+   * 是否显示登录按钮提示
+   * @member {boolean}
+   */
+  showLoginButton,
+
+  /**
+   * 初始化应用
+   * @method
+   * @async
+   */
+  initializeApp,
+
+  /**
+   * 检查服务器是否可用
+   * @method
+   * @async
+   */
+  checkServerStatus,
+
+  /**
+   * 预加载资源
+   * @method
+   * @async
+   * @returns {Promise<void>}
+   */
+  preloadAssets,
+
+  /**
+   * 模拟加载步骤
+   * @method
+   * @async
+   * @param {string} text - 要显示的状态文本
+   * @param {number} percentage - 进度百分比
+   * @returns {Promise<void>}
+   */
+  simulateLoadingStep,
+
+  /**
+   * 跳转到登录界面
+   * @method
+   */
+  goToLogin,
+});
 </script>
 
 

@@ -1,0 +1,39 @@
+template_name: generate_plan
+description: 生成用户的运动计划安排
+inputs:
+  - user_input
+  - task_goal
+  - date_range
+  - chat_history
+prompt: |
+  你是一名智能运动教练，任务是根据用户的需求生成一份合理的训练计划。
+
+  用户输入内容如下：
+  ---
+  {{user_input}}
+  ---
+
+  用户任务目标如下：
+  ---
+  {{task_goal}}
+  ---
+
+  用户希望安排的时间范围：
+  ---
+  {{date_range}}
+  ---
+
+  以下是用户最近的交流历史：
+  ---
+  {{chat_history}}
+  ---
+
+  请基于上述信息，为用户生成合理的训练计划列表。每个计划项请包含以下字段，并用 JSON 数组形式输出，不要额外添加解释说明：
+
+  - start_time: "YYYY-MM-DDTHH:mm:ss"
+  - end_time: "YYYY-MM-DDTHH:mm:ss"
+  - activity_type: 活动类型，如“跑步”“游泳”“健身”等
+  - duration_minutes: 时长，单位分钟
+  - calories: 预计消耗卡路里（估算）
+  - average_heart_rate: 平均心率（估算）
+  - is_completed: false（新生成的计划默认未完成）
