@@ -19,14 +19,7 @@ pipeline {
                 checkout scm
                 echo "代码检出完成"
             }
-        }
-        
-        stage('Linting') {
-            steps {
-                echo "这里将进行代码检查"
-                // TODO: 实现代码检查（暂时留空）
-            }
-        }
+        }        
         
         stage('Build Application') {
             parallel {
@@ -99,33 +92,6 @@ pipeline {
             }
         }
         
-        // stage('Testing') {
-        //     steps {
-        //         echo "这里将进行自动化测试"
-        //         echo "启动 FastAPI 后端并执行自动化测试..."
-
-        //         bat '''
-        //             @echo off
-        //             chcp 65001 > nul
-
-        //             REM 启动后端服务到后台
-        //             start "FastAPI Backend" cmd /c "call venv\\Scripts\\activate.bat && uvicorn backapp.main:app --host 0.0.0.0 --port 8000"
-
-        //             REM 等待后端启动
-        //             ping -n 8 127.0.0.1 > nul
-
-        //             REM 安装测试工具（如果尚未安装）
-        //             call venv\\Scripts\\activate.bat
-        //             pip install pytest pytest-cov
-
-        //             REM 执行测试并生成覆盖率报告
-        //             pytest test/ --cov=backapp --cov-report=term-missing --cov-report=html > backapp\\reports\\pytest_output.txt
-        //         '''
-
-        //         echo "测试完成，已生成覆盖率报告"
-        //     }
-        // }
-        
         stage('Test Report Generation') {
             steps {
                 echo "开始生成前端和后端的测试报告..."
@@ -150,9 +116,23 @@ pipeline {
                     echo 所有依赖数量（含 dev）: >> reports\\dependency_summary.txt
                     npm ls --depth=0 --json | ..\\jq.exe "[.dependencies, .devDependencies] | map(keys | length) | add" >> reports\\dependency_summary.txt
 
+                    REM 4. 使用 vitest 运行测试并生成覆盖率报告
                     npx vitest run --coverage > output.txt 2>&1
-
                     cd ..
+
+                    REM 启动后端服务到后台
+                    start "FastAPI Backend" cmd /c "call venv\\Scripts\\activate.bat && uvicorn backapp.main:app --host 0.0.0.0 --port 8000"
+
+                    REM 等待后端启动
+                    ping -n 8 127.0.0.1 > nul
+
+                    REM 安装测试工具（如果尚未安装）
+                    call venv\\Scripts\\activate.bat
+                    pip install pytest pytest-cov
+
+                    REM 执行测试并生成覆盖率报告
+                    pytest test/ --cov=backapp --cov-report=term-missing --cov-report=html > backapp\\reports\\pytest_output.txt
+                    
                 '''
 
                 // ---------- 后端报告 ----------
@@ -179,28 +159,21 @@ pipeline {
                 echo "✅ 所有测试报告已生成：frontier-app/reports 和 backapp/reports"
             }
         }
-        
-        // // 阶段 2：生成前端文档
-        // stage('Generate Frontend Docs') {
-        //     steps {
-        //         dir('frontend') {
-        //             sh 'npm install'
-        //             sh 'npx vuepress build docs'  // 用户文档
-        //             sh 'npx vuese gen --outDir ./docs/components'  // 开发者文档
-        //         }
-        //     }
-        // }
 
-        // // 阶段 3：生成后端文档
-        // stage('Generate Backend Docs') {
-        //     steps {
-        //         dir('backend') {
-        //             sh 'pip install -r requirements.txt sphinx'
-        //             sh 'sphinx-apidoc -o docs/source .'
-        //             sh 'cd docs && make html'
-        //         }
-        //     }
-        // }
+        stage('Generate Docs') {
+            steps {
+                bat '''                
+                    call %VENV_NAME%\\Scripts\\activate.bat
+                    cd frontier-app
+                    npm install --save-dev vue-docgen-cli
+                    npm run docs:generate
+                    npm run docs:build
+                    npm run docs:preview
+                    cd ..
+                '''
+            }
+        }
+
         
         stage('Artifact Archiving') {
             steps {
@@ -209,13 +182,13 @@ pipeline {
                 archiveArtifacts artifacts: 'backapp/static/**/*', fingerprint: true
                 // 归档wheel包
                 archiveArtifacts artifacts: 'backapp/dist/*.whl', fingerprint: true
-                // 归档测试报告
+                // 归档前端和后端测试报告
                 archiveArtifacts artifacts: 'frontier-app/reports/**/*', fingerprint: true
                 archiveArtifacts artifacts: 'backapp/reports/**/*', fingerprint: true
                 archiveArtifacts artifacts: 'frontier-app/output.txt', fingerprint: true
 
-                // sh 'tar -czvf docs.tar.gz frontend/docs/dist backend/docs/build/html'
-                // archiveArtifacts artifacts: 'docs.tar.gz', fingerprint: true
+                // 归档文档
+                archiveArtifacts artifacts: 'frontier-app/docs/.vuepress/dist/**/*', fingerprint: true
                 
                 echo "构建产物已归档"
             }
@@ -223,81 +196,17 @@ pipeline {
         
         stage('Deployment') {
                     steps {
-                        // echo "终止可能运行中的服务..."
-                        // // 使用Windows任务管理器终止进程
-                        // bat '''
-                        //     @echo off
-                        //     chcp 65001 > nul                          // 强制命令行使用 UTF-8 编码
-                        //     taskkill /F /IM node.exe /T >nul 2>&1 || echo 没有Node进程在运行
-                        //     taskkill /F /FI "WINDOWTITLE eq frontend*" >nul 2>&1 || echo 没有前端窗口
-                        //     taskkill /F /FI "WINDOWTITLE eq backend*" >nul 2>&1 || echo 没有后端窗口
-                            
-                        //     REM 尝试停止现有服务（如果有）
-                        //     sc query HealthAssistantService >nul 2>&1
-                        //     if not errorlevel 1 (
-                        //         sc stop HealthAssistantService
-                        //         sc delete HealthAssistantService
-                        //         echo 已停止并删除旧的服务
-                        //     )
-                            
-                        //     REM 杀死可能运行的Python进程
-                        //     taskkill /F /IM python.exe /FI "WINDOWTITLE eq HealthAssistant*" >nul 2>&1 || echo 没有相关Python进程
-                        // '''
-                        
-                        // echo "安装wheel包到部署环境..."
-                        // // 创建部署环境并安装wheel包
-                        // bat '''
-                        //     @echo off
-                        //     chcp 65001 > nul
-                        //     if not exist deploy_env python -m venv deploy_env
-                        //     call deploy_env\\Scripts\\activate.bat
-                        //     pip install --find-links=backapp\\dist\\ personal-health-assistant
-                        // '''
-                        
-                        // echo "创建启动脚本..."
-                        // // 创建启动脚本，以便在Jenkins外部运行
-                        // bat '''
-                        //     @echo off
-                        //     chcp 65001 > nul
-                        //     echo @echo off > run_app.bat
-                        //     echo title HealthAssistant >> run_app.bat
-                        //     echo cd /d %%CD%% >> run_app.bat        // 使用 %%CD%% 替代 %CD% 避免变量转义问题
-                        //     echo call deploy_env\\Scripts\\activate.bat >> run_app.bat
-                        //     echo uvicorn backapp.main:app --host 0.0.0.0 --port 8000 >> run_app.bat
-                            
-                        //     REM 创建PowerShell启动脚本（UTF-8 with BOM编码）
-                        //     powershell -Command "[IO.File]::WriteAllText('start_app.ps1', \\"`$processPath = '%%CD%%\\run_app.bat'`n`$workingDir = '%%CD%%'`nStart-Process -FilePath `$processPath -WorkingDirectory `$workingDir -WindowStyle Normal\\", [Text.Encoding]::UTF8)"
-                        // '''
-                        
-                        // echo "使用后台进程启动应用..."
-                        // // 使用PowerShell启动后台进程
-                        // bat '''
-                        //     @echo off
-                        //     chcp 65001 > nul
-                        //     REM 第一种方法：使用PowerShell后台启动
-                        //     powershell -ExecutionPolicy Bypass -File start_app.ps1
-                            
-                        //     REM 第二种方法：使用start命令（备用方法）
-                        //     start /min cmd /c run_app.bat
-                            
-                        //     REM 等待服务启动（兼容所有Windows版本）
-                        //     ping -n 10 127.0.0.1 > nul              // 替代 timeout /t 10
-                            
-                        //     REM 检查端口是否可访问（改用英文输出避免编码问题）
-                        //     powershell -Command "if ((Test-NetConnection -ComputerName localhost -Port 8000).TcpTestSucceeded) { Write-Output '[成功] 端口8000可访问' } else { Write-Output '[错误] 端口8000不可访问'; exit 1 }"
-                        // '''
-                        
-                        // echo "创建Windows启动项，确保系统重启后自动启动..."
-                        // // 创建Windows启动项
-                        // bat '''
-                        //     @echo off
-                        //     chcp 65001 > nul
-                        //     REM 创建启动文件夹快捷方式
-                        //     powershell -Command "$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('%%APPDATA%%\\Microsoft\\Windows\\Start Menu\\Programs\\Startup\\HealthAssistant.lnk'); $Shortcut.TargetPath = '%%CD%%\\run_app.bat'; $Shortcut.WorkingDirectory = '%%CD%%'; $Shortcut.Save()"
-                        //     echo 已创建Windows启动项，系统重启后应用将自动启动
-                        // '''
-                        
-                        echo "应用已部署并在后台运行：前端访问地址 http://localhost:8000"
+                        // 部署前端
+                        bat '''
+                            call %VENV_NAME%\\Scripts\\activate.bat
+                            cd frontier-app
+                            npm run preview
+
+                            REM 部署后端
+                            cd ..
+                            uvicorn main:app --host 0.0.0.0 --port 8000
+                        '''                        
+                        echo "应用已部署并在后台运行"
                         echo "应用将在系统重启后自动启动"
                     }
         }
